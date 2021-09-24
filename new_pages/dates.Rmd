@@ -1,5 +1,5 @@
 
-# Working with dates {}
+# 日付の操作 {#dates}
 
 
 ```{r, out.width=c('50%'), fig.align='center', echo=F, message=F}
@@ -7,23 +7,23 @@ knitr::include_graphics(here::here("images", "Dates_500x500.png"))
 ```
 
 
-Working with dates in R requires more attention than working with other object classes. Below, we offer some tools and example to make this process less painful. Luckily, dates can be wrangled easily with practice, and with a set of helpful packages such as **lubridate**.  
+Rで日付を扱うときは、他のオブジェクトクラスを扱うときよりも注意が必要です。以下では、この作業を楽にするためのツールや例を紹介します。幸いなことに、日付データは練習すれば簡単に扱えるようになりますし、**lubridate**のような便利なパッケージもあります。  
 
-Upon import of raw data, R often interprets dates as character objects - this means they cannot be used for general date operations such as making time series and calculating time intervals. To make matters more difficult, there are many ways a date can be formatted and you must help R know which part of a date represents what (month, day, hour, etc.). 
+生データをインポートすると、Rはしばしば日付を文字オブジェクトとして解釈します。つまり、時系列の作成や時間間隔の計算など、一般的な日付操作には使用できません。さらに日付には様々な書式があるため、Rに日付のどの部分が何を表しているのか（月、日、時間など）を教える必要があります。 
 
-Dates in R are their own class of object - the `Date` class. It should be noted that there is also a class that stores objects with date *and* time. Date time objects are formally referred to as `POSIXt`, `POSIXct`, and/or `POSIXlt` classes (the difference isn't important). These objects are informally referred to as *datetime* classes.
+Rの日付は独自のオブジェクトクラスである`Date`クラスです。また、日付と時刻を持つオブジェクトを格納するクラスもあるので、注意が必要です。日付と時刻のオブジェクトは、正式には `POSIXt`, `POSIXct`, `POSIXlt` クラスと呼ばれます（これらの違いは重要ではありません）。これらのオブジェクトは非公式には *datetime* クラスと呼ばれています。
 
-* It is important to make R recognize when a column contains dates.  
-* Dates are an object class and can be tricky to work with.  
-* Here we present several ways to convert date columns to Date class.  
+* カラムに日付が含まれている場合、それをRに教えることが重要です。  
+* 日付はオブジェクトクラスであり、扱うのが難しい場合があります。  
+* ここでは、日付の列をDateクラスに変換するいくつかの方法を紹介します。  
 
 
 <!-- ======================================================= -->
-## Preparation
+## 準備
 
-### Load packages {.unnumbered}  
+### パッケージのロード {.unnumbered}  
 
-This code chunk shows the loading of packages required for this page. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with  `library()` from **base** R. See the page on [R basics] for more information on R packages.  
+このコードチャンクは、このページに必要なパッケージのロードを示しています。このハンドブックでは **pacman** の `p_load()` を特に重用しています。これは必要に応じてパッケージをインストールする*と同時に*、パッケージをロードします。また、インストールされているパッケージを **base** R の `library()` でロードすることもできます。Rのパッケージについては、[Rの基礎知識](#basics)のページを参照してください。  
 
 ```{r dates_packages, warning=F, message=F}
 # Checks if package is installed, installs if necessary, and loads package for current session
@@ -37,9 +37,9 @@ pacman::p_load(
   rio)        # data import/export
 ```
 
-### Import data {.unnumbered}  
+### データのインポート {.unnumbered}  
 
-We import the dataset of cases from a simulated Ebola epidemic. If you want to download the data to follow along step-by-step, see instruction in the [Download handbook and data] page. We assume the file is in the working directory so no sub-folders are specified in this file path.  
+エボラ出血熱のシミュレーションで得られた症例のデータセットをインポートします。データをダウンロードしてステップ・バイ・ステップで作業を進めたい場合は、[ハンドブックとデータのダウンロード](#data_used)ページを参照してください。ここではファイルが作業ディレクトリにあると仮定し、ファイルパスにサブフォルダを指定しません。  
 
 ```{r,  echo=F}
 linelist <- rio::import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
@@ -54,9 +54,9 @@ linelist <- import("linelist_cleaned.xlsx")
 
 
 <!-- ======================================================= -->
-## Current date  
+## 現在の日付  
 
-You can get the current "system" date or system datetime of your computer by doing the following with **base** R.  
+コンピュータにおける「システム」の現在の日付や日時を取得するには、 **base** R を使って次のように行います。  
 
 ```{r}
 # get the system date - this is a DATE class
@@ -67,20 +67,20 @@ Sys.time()
 ```
 
 
-With the **lubridate** package these can also be returned with `today()` and `now()`, respectively. `date()` returns the current date and time with weekday and month names.  
+**lubridate** パッケージでは、それぞれを `today()` と `now()` で返すこともできます。 `date()` は現在の日付と時刻を、曜日と月名とともに返します。  
   
   
 
 <!-- ======================================================= -->
-## Convert to Date  
+## Date クラスに変換  
 
-After importing a dataset into R, date column values may look like "1989/12/30", "05/06/2014", or "13 Jan 2020". In these cases, R is likely still treating these values as Character values. R must be *told* that these values are dates... and what the format of the date is (which part is Day, which is Month, which is Year, etc).  
+データセットを R にインポートすると、日付列の値が「1989/12/30」、「05/06/2014」、「13 Jan 2020」のようになることがあります。このような場合、 R はこれらの値を Character として扱っていると思われます。 R には、これらの値が日付であること、そして日付のフォーマット（どの部分が日で、どの部分が月で、どの部分が年であるかなど）を*教える*必要があります。  
 
-Once told, R converts these values to class Date. In the background, R will store the dates as numbers (the number of days from its "origin" date 1 Jan 1970). You will not interface with the date number often, but this allows for R to treat dates as continuous variables and to allow special operations such as calculating the distance between dates.  
+一度教えられると、 これらの値を Date クラスに変換します。バックグラウンドでは、日付を数字（「原点」の1970年1月1日からの日数）として保存しています。日付の数値を頻繁に扱うことはありませんが、これにより日付を連続変数として扱い、日付間の距離を計算するなどの特殊な操作が可能になります。  
 
-By default, values of class Date in R are displayed as YYYY-MM-DD. Later in this section we will discuss how to change the display of date values.  
+デフォルトでは、 Date クラスの値はYYYY-MM-DDで表示されます。この後、日付の値の表示を変更する方法について説明します。  
 
-Below we present two approaches to converting a column from character values to class Date.  
+以下では、列を文字値からDateクラスに変換するための2つのアプローチを紹介します。  
 
 
 <span style="color: darkgreen;">**_TIP:_** You can check the current class of a column with **base** R function `class()`, like `class(linelist$date_onset)`.</span>  
@@ -89,18 +89,18 @@ Below we present two approaches to converting a column from character values to 
 
 ### **base** R {.unnumbered}  
 
-`as.Date()` is the standard, **base** R function to convert an object or column to class Date (note capitalization of "D").  
+`as.Date()`（大文字の"D"に注意）は、オブジェクトやカラムを Date クラスに変換する標準的な**base**Rの関数です。  
 
-Use of `as.Date()` requires that:  
+`as.Date()`を使用するには、以下が必要です:  
 
-* You *specify the **existing** format of the raw character date* or the origin date if supplying dates as numbers (see section on Excel dates)  
-* If used on a character column, all date values must have the same exact format (if this is not the case, try `guess_dates()` from the **linelist** package)  
+* *生の文字の日付の**既存の**形式を指定します*。または、日付を数値として提供する場合は、元の日付を指定します（Excelの日付に関するセクションを参照）。  
+* 文字列として使用する場合、すべての日付値は同じ正確なフォーマットでなければなりません（そうでない場合は、**linelist**パッケージの`guess_dates()`をお試しください）。  
 
-**First**, check the class of your column with `class()` from **base** R. If you are unsure or confused about the class of your data (e.g. you see "POSIXct", etc.) it can be easiest to first convert the column to class Character with `as.character()`, and then convert it to class Date.  
+**まず**、**base** Rの`class()`でカラムのクラスを確認してください。データのクラスがわからない場合（例えば "POSIXct"と表示される場合など）は、まず`as.character()`でカラムをCharacterクラスに変換し、その後Dateクラスに変換するのが最も簡単です。  
 
-**Second**, within the `as.Date()` function, use the `format =` argument to tell R the *current* format of the character date components - which characters refer to the month, the day, and the year, and how they are separated. If your values are already in one of R's standard date formats ("YYYY-MM-DD" or "YYYY/MM/DD") the `format =` argument is not necessary.  
+**次に**、`as.Date()`関数の中で、`format =`引数を使って、日付を構成する文字の*現在の*フォーマット、つまり、どの文字が月、日、年を表すのか、どのように分けられているのかをRに伝えます。Rの標準的な日付フォーマット（"YYYY-MM-DD "または "YYYY/MM/DD"）を既に使用している場合は、`format =`引数は必要ありません。  
 
-To `format = `, provide a character string (in quotes) that represents the *current* date format using the special "strptime" abbreviations below. For example, if your character dates are currently in the format "DD/MM/YYYY", like "24/04/1968", then you would use `format = "%d/%m/%Y"` to convert the values into dates. **Putting the format in quotation marks is necessary. And don't forget any slashes or dashes!**  
+`format = `には、以下の特別な "strptime"の略語を使用して、*現在の*日付フォーマットを表す文字列（引用符で囲む）を指定します。例えば、"24/04/1968 "のように、現在の日付が "DD/MM/YYYY "のフォーマットである場合、`format = "%d/%m/%Y"`を使用して値を日付に変換します。**書式を引用符で囲む必要があります。また、スラッシュやダッシュも忘れずに！**。  
 
 ```{r eval=F}
 # Convert to class date
@@ -108,7 +108,7 @@ linelist <- linelist %>%
   mutate(date_onset = as.Date(date_of_onset, format = "%d/%m/%Y"))
 ```
 
-Most of the strptime abbreviations are listed below. You can see the complete list by running `?strptime`.  
+strptimeの略語のほとんどを以下に示します。完全なリストは、以下を実行して見ることができます。 `?strptime`.  
 
 %d = Day number of month (5, 17, 28, etc.)  
 %j = Day number of the year (Julian day 001-366)  
@@ -133,7 +133,7 @@ Most of the strptime abbreviations are listed below. You can see the complete li
 
 <span style="color: darkgreen;">**_TIP:_** Be sure that in the `format =` argument you use the *date-part separator* (e.g. /, -, or space) that is present in your dates.</span>  
 
-Once the values are in class Date, R will by default display them in the standard format, which is YYYY-MM-DD.
+Dateクラスに値を入れると、RはデフォルトでYYYY-MM-DDという標準的なフォーマットで表示します。
 
 
 
