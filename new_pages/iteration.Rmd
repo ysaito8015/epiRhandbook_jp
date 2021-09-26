@@ -1,229 +1,230 @@
-# 反復、ループ、リスト {# iteration}
+# 反復、ループ、リスト {\# iteration}
 
 疫学者は、しばしば、国、地区、年齢階級などに層別化されたサブグループを対象として同じ分析を繰り返す必要に迫られます。このほかにも、非常にたくさんの場面で*反復処理*が必要となります。以下では、より速く、より正確に、より短く、このような反復処理をコードする方法を示します。
 
 このページでは、反復処理を行うための2つの方法、すなわち、*for ループ*を使用する方法と **purrr** パッケージを使用する方法を紹介します。
 
-1)  *for loops* iterate code across a series of inputs, but are less common in R than in other programming languages. Nevertheless, we introduce them here as a learning tool and reference\
-2)  The **purrr** package is the **tidyverse** approach to iterative operations - it works by "mapping" a function across many inputs (values, columns, datasets, etc.)
+1)  一連の入力に対してコードを反復する *for ループ* は、他のプログラミング言語に比べて R ではあまり一般的ではありません。しかし、ここでは学習の一貫として参考までに紹介します。
 
-Along the way, we'll show examples like:
+2)  **purrr** パッケージは、反復処理に対する **tidyverse** パッケージ群の中の反復処理を行うためのパッケージであり、多くの入力（値、列、データセットなど）に対して関数を "マッピング" することで機能します。
 
--   Importing and exporting multiple files\
--   Creating epicurves for multiple jurisdictions\
--   Running T-tests for several columns in a data frame
+反復処理のコードの紹介の中で、以下のような内容にも触れます。
 
-In the **purrr** [section](#iter_purrr) we will also provide several examples of creating and handling `lists`.
+-   複数のファイルのインポート／エクスポート
+-   複数の管轄区ごとの流行曲線の作成
+-   データフレーム内の複数の列に対する T 検定の実行
 
-## Preparation
+また、**purrr** [セクション](#iter_purrr)では、`リスト`の作成と処理の例をいくつか紹介します。
 
-### Load packages {.unnumbered}
+## 準備
 
-This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with `library()` from **base** R. See the page on [R basics] for more information on R packages.
+### パッケージの読み込み {.unnumbered}
+
+次のコードチャンクは、分析に必要なパッケージの読み込みを示しています。このハンドブックでは，**pacman**の`p_load()`を用いています。`p_load()`は，必要に応じてパッケージをインストールし，*そして*パッケージの読み込みまで行ってくれます。R の **base** パッケージ内の `library()` を用いても、パッケージの読み込みを行うことが出来ます。パッケージの詳細については [R の基本]のページを参照してください。 
 
 ```{r}
 pacman::p_load(
-     rio,         # import/export
-     here,        # file locator
-     purrr,       # iteration
-     tidyverse    # data management and visualization
+     rio,         # インポート／エクスポートのためのパッケージ
+     here,        # ファイルの場所の指定のためのパッケージ
+     purrr,       # 反復処理のためのパッケージ
+     tidyverse    # データ管理と視覚化のためのパッケージ
 )
 ```
 
-### Import data {.unnumbered}
+### データのインポート {.unnumbered}
 
-We import the dataset of cases from a simulated Ebola epidemic. If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>click to download the "clean" linelist</a> (as .rds file). Import data with the `import()` function from the **rio** package (it handles many file types like .xlsx, .csv, .rds - see the [Import and export] page for details).
+エボラ出血熱のシミュレーション症例のデータセットをインポートします。同じように行いたい場合は、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして"クリーニングされた（cleaned）" linelist をダウンロードしてください</a>（.rds ファイル）。データをインポートする際には、**rio** パッケージの `import()` 関数を使用します（.xlsx, .csv, .rds などの多くのファイルを扱うことができます - 詳細は [Import and export] ページをご覧ください）。
 
 ```{r, echo=F}
-# import the linelist into R
+# linelist を R にインポートする
 linelist <- rio::import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
 ```
 
 ```{r, eval=F}
-# import the linelist
+# linelist をインポートする
 linelist <- import("linelist_cleaned.rds")
 ```
 
-The first 50 rows of the linelist are displayed below.
+linelist の始めの50行が示されています。
 
 ```{r, message=FALSE, echo=F}
-# display the linelist data as a table
+# linelist データをテーブルとして表示する
 DT::datatable(head(linelist, 50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap')
 ```
 
 <!-- ======================================================= -->
 
-## *for loops*
+## *for ループ*
 
-### *for loops* in R {#iter_loops .unnumbered}
+### R における *for ループ* {#iter_loops .unnumbered}
 
-*for loops* are not emphasized in R, but are common in other programming languages. As a beginner, they can be helpful to learn and practice with because they are easier to "explore", "de-bug", and otherwise grasp exactly what is happening for each iteration, especially when you are not yet comfortable writing your own functions.
+*for ループ*は R ではあまり取り沙汰されることがないですが、他のプログラミング言語では一般的な方法です。初心者の場合、特に自分で関数を書くことに慣れていないときには、反復処理ごとに何が起こっているのかを正確に把握し、"探索"したりや"デバッグ"を行ったりすることが容易になるため、学習や練習に役立ちます。
 
-You may move quickly through *for loops* to iterating with mapped functions with **purrr** (see [section below](#iter_purrr)).
+*for ループ*を飛ばして、**purrr** パッケージのマッピングされた関数を使用して反復処理を行う方法へ移動しても構いません。（[以下のセクション](#iter_purrr)を参照）。
 
-### Core components {.unnumbered}
+### 中心となる要素 {.unnumbered}
 
-A *for loop* has three core parts:
+*for ループ*は 3 つの主要な部分から成り立っています。
 
-1)  The **sequence** of items to iterate through\
-2)  The **operations** to conduct per item in the sequence\
-3)  The **container** for the results (optional)
+1) 繰り返し実行するアイテムの**シーケンス**。
+2) シーケンス内の各アイテムに対して実行される**オペレーション** 
+3) 結果を格納する**コンテナ** (オプション)
 
-The basic syntax is: `for (item in sequence) {do operations using item}`. Note the parentheses and the curly brackets. The results could be printed to console, or stored in a container R object.
+基本的な構文は以下の通りです。基本的な構文は、`for (アイテム in シーケンス) {アイテムを用いたオペレーションの指示}`です。括弧と中括弧に注意してください。結果は、コンソールに出力したり、コンテナに格納したりすることができます。
 
-A simple *for loop* example is below.
+簡単な *for ループ*の例を以下に示します。
 
 ```{r}
-for (num in c(1,2,3,4,5)) {  # the SEQUENCE is defined (numbers 1 to 5) and loop is opened with "{"
-  print(num + 2)             # The OPERATIONS (add two to each sequence number and print)
-}                            # The loop is closed with "}"                            
-                             # There is no "container" in this example
+for (num in c(1,2,3,4,5)) {  # シーケンスの定義 (1 から 5 の数) と "{" によるループの開始
+  print(num + 2)             # オペレーション (それぞれのシーケンス内の数に 2 を足して表示してください)
+}                            # "}" によるループの終了                            
+                             # この例ではコンテナは示していません
 ```
 
-### Sequence {.unnumbered}
+### シーケンス {.unnumbered}
 
-This is the "for" part of a *for loop* - the operations will run "for" each item in the sequence. The sequence can be a series of values (e.g. names of jurisdictions, diseases, column names, list elements, etc), or it can be a series of consecutive numbers (e.g. 1,2,3,4,5). Each approach has their own utilities, described below.
+これは、*for ループ*において "for" で示されている部分です。オペレーションはシーケンス内の各アイテムに対して ("for" each item) 実行されます。シーケンスには、一連の値（管轄区名、疾患名、列名、リスト要素など）や、一連の連続した数値（1, 2, 3, 4, 5 など）を指定することができます。以下に説明するように、それぞれに実用性があります。
 
-The basic structure of a sequence statement is `item in vector`.
+シーケンス文の基本構造は，`アイテム in ベクトル`です．
 
--   You can write any character or word in place of "item" (e.g. "i", "num", "hosp", "district", etc.). The value of this "item" changes with each iteration of the loop, proceeding through each value in the vector.\
--   The *vector* could be of character values, column names, or perhaps a sequence of numbers - these are the values that will change with each iteration. You can use them within the *for loop* operations using the "item" term.
+- "アイテム"の部分には任意の文字や単語を書くことができます（例："i", "num", "hosp", "district" など）。この"アイテム"の値は、ループを繰り返すたびにベクトル内の各値に順番に変化していきます。
+- *ベクトル*には、文字列や列名、あるいは数字列などを用いることが出来ます。ループを繰り返すたびに順番に変化していく値であり、これらの値は、"アイテム"を用いたオペレーションの指示により、"for ループ"の中で使用されます。
 
-**Example: sequence of character values**
+**例: 文字列のシーケンス**
 
-In this example, a loop is performed for each value in a pre-defined character vector of hospital names.
+この例では、あらかじめ定義された病院名の文字ベクトル内の各値に対してループを実行します。
 
 ```{r}
-# make vector of the hospital names
+# 病院名のベクトルを作成する
 hospital_names <- unique(linelist$hospital)
-hospital_names # print
+hospital_names # 表示する
 ```
 
-We have chosen the term `hosp` to represent values from the vector `hospital_names`. For the first iteration of the loop, the value of `hosp` will be `hospital_names[[1]]`. For the second loop it will be `hospital_names[[2]]`. And so on...
+ここでは、`hospital_names` の値を、`hosp` という用語を使って示しています。ループの最初の繰り返しでは、`hosp` の値は `hospital_names[[1]]` となります。2回目のループでは`hospital_names[[2]]`となります。といった具合になります。
 
 ```{r, eval=F}
-# a 'for loop' with character sequence
+# 文字列シーケンスに対する 'for ループ'
 
-for (hosp in hospital_names){       # sequence
+for (hosp in hospital_names){       # シーケンス
   
-       # OPERATIONS HERE
+       # オペレーションがここに来ます
   }
 ```
 
-**Example: sequence of column names**
+**例: 列名のシーケンス**
 
-This is a variation on the character sequence above, in which the names of an existing R object are extracted and become the vector. For example, the column names of a data frame. Conveniently, in the operations code of the *for loop*, the column names can be used to *index* (subset) their original data frame
+これは、上記の文字列のバリエーションで、既存の R オブジェクトの名前（例えば、データフレームの列名など）を抽出してベクトルとするものです。便利なことに，*for ループ*のオペレーションコードでは，列名を用いて元のデータフレームを*インデックス*（サブセット）することが出来ます。
 
-Below, the sequence is the `names()` (column names) of the `linelist` data frame. Our "item" name is `col`, which will represent each column name as the loops proceeds.
+下の例では、シーケンスとして `linelist` データフレームの `names()`（列名）を指定しています。"アイテム"の名前は `col` で、ループが繰り返すのに従って各列名を表していきます。
 
-For purposes of example, we include operations code inside the *for loop*, which is run for every value in the sequence. In this code, the sequence values (column names) are used to *index* (subset) `linelist`, one-at-a-time. As taught in the [R basics] page, double branckets `[[ ]]` are used to subset. The resulting column is passed to `is.na()`, then to `sum()` to produce the number of values in the column that are missing. The result is printed to the console - one number for each column.
+例として、*for ループ*の中に、シーケンスの各値に対して実行されるオペレーションを加えます。このコードでは、シーケンスの値（列名）を使って、`linelist` を順番に*インデックス*（サブセット）しています。[R の基本]の章で説明したように、2 重ブランケット `[[ ]]` は、サブセットするのに用いられます。ループにより指定された列は `is.na()`、次に `sum()` に渡され、列内の欠損値の数が算出されます。結果は各列に対して1 つの数値がコンソールに表示されます。
 
-A note on indexing with column names - whenever referencing the column itself *do not just write "col"!* `col` represents just the character column name! To refer to the entire column you must use the column name as an *index* on `linelist` via `linelist[[col]]`.
+列名を用いてインデックスする場合の注意点 - 列自体を指定したいときには、 *単に "col" と書いてはいけません！* `col` は、単に列の名前を表しています。列内の値全体を指定するには、`linelist[[col]]` と書いて列名を `linelist` の *index* として使用する必要があります。
 
 ```{r}
-for (col in names(linelist)){        # loop runs for each column in linelist; column name represented by "col" 
+for (col in names(linelist)){        # linelist内の各列に対するループ; 列名は "col" で表されている
   
-  # Example operations code - print number of missing values in column
-  print(sum(is.na(linelist[[col]])))  # linelist is indexed by current value of "col"
+  # オペレーションコードの例 - 各列の欠損地の数を表示してください 
+  print(sum(is.na(linelist[[col]])))  # linelist は "col" の現在の値によってインデックスされている
      
 }
 ```
 
-**Sequence of numbers**
+**数のシーケンス**
 
-In this approach, the sequence is a series of consecutive numbers. Thus, the value of the "item" is not a character value (e.g. "Central Hospital" or "date_onset") but is a number. This is useful for looping through data frames, as you can use the "item" number inside the *for loop* to index the data frame by *row number*.
+この方法では、シーケンスは連続した数字の列となります。したがって、"アイテム"の値は文字値（"Central Hospital "や "date_onset "など）ではなく、数字となります。これは、データフレームをループする際に便利で、*for ループ*内で "item" の番号を使うことで、データフレームを*行番号*でインデックスすることができます。
 
-For example, let's say that you want to loop through every row in your data frame and extract certain information. Your "items" would be numeric row numbers. Often, "items" in this case are written as `i`.
+例えば、データフレーム内のすべての行をループして、ある情報を抽出したいとします。この場合、"アイテム"は行番号になります。この場合、"アイテム"は `i` と書かれることが多いです。
 
-The *for loop* process could be explained in words as "for every item in a sequence of numbers from 1 to the total number of rows in my data frame, do X". For the first iteration of the loop, the value of "item" `i` would be 1. For the second iteration, `i` would be 2, etc.
+*for ループ*の処理は、言葉で説明すると、「1からデータフレームの行のトータル数までの数からなるシーケンス内のすべてのアイテムに対して、Xを行う」となります。ループの最初の繰り返しでは、"アイテム" `i` の値は 1 です。2 回目の繰り返しでは、`i` は 2 になります。
 
-Here is what the sequence looks like in code: `for (i in 1:nrow(linelist)) {OPERATIONS CODE}` where `i` represents the "item" and `1:nrow(linelist)` produces a sequence of consecutive numbers from 1 through the number of rows in `linelist`.
+このシーケンスをコードにすると、次のようになります: `for (i in 1:nrow(linelist)) {オペレーションのコード}`。`i` は"アイテム"を表し、`1:nrow(linelist)` は、1 から `linelist` のトータルの行数までの連続した数字からなるシーケンスを表しています。
 
 ```{r, eval=F}
-for (i in 1:nrow(linelist)) {  # use on a data frame
-  # OPERATIONS HERE
+for (i in 1:nrow(linelist)) {  # データフレームに対して使用
+  # オペレーションのコードがここに来ます
 }  
 ```
 
-If you want the sequence to be numbers, but you are starting from a vector (not a data frame), use the shortcut `seq_along()` to return a sequence of numbers for each element in the vector. For example, `for (i in seq_along(hospital_names) {OPERATIONS CODE}`.
+シーケンスを数字にしたいが、（データフレームではなく）ベクトルから始める場合には、ショートカットの `seq_along()` を使うことで，ベクトルの各要素に対する数字のシーケンスを得ることが出来ます。例えば，`for (i in seq_along(hospital_names) {オペレーションのコード}`とします。
 
-The below code actually returns numbers, which would become the value of `i` in their respective loop.
+以下のコードによって数字を得ることが出来、その数字がそれぞれのループの中における `i` の値になります。
 
 ```{r}
-seq_along(hospital_names)  # use on a named vector
+seq_along(hospital_names)  # 名前のついているベクトルに対して使用
 ```
 
-One advantage of using numbers in the sequence is that is easy to also use the `i` number to index a *container* that stores the loop outputs. There is an example of this in the Operations section below.
+シーケンスに数字を使うと、ループの出力を格納する*コンテナ*のインデックスとして、`i` 番号を簡単に使用できるという利点があります。これについては、以下のオペレーションのセクションで例を示しています。
 
-### Operations {.unnumbered}
+### オペレーション {.unnumbered}
 
-This is code within the curly brackets `{ }` of the *for loop*. You want this code to run for each "item" in the *sequence*. Therefore, be careful that every part of your code that changes by the "item" is correctly coded such that it actually changes! E.g. remember to use `[[ ]]` for indexing.
+これは、*for ループ*の中の中括弧 `{ }` の中に記述されているコードです。このコードが、*シーケンス*内の各"アイテム"ごとに実行される必要があります。したがって、"アイテム"によって変化するコードのすべての部分が、実際に変化するように正しくコードされているかどうか注意する必要があります。例えば、インデックスには `[[ ]]` を使うことを忘れないでください。
 
-In the example below, we iterate through each row in the `linelist`. The `gender` and `age` values of each row are pasted together and stored in the container character vector `cases_demographics`. Note how we also use indexing `[[i]]` to save the loop output to the correct position in the "container" vector.
+以下の例では、`linelist` の各行を繰り返し処理します。各行の `gender` と `age` の値が貼り合わせ、コンテナの文字ベクトルである `cases_demographics` に格納する作業を行います。また、`[[i]]` を使ってインデックスすることで、ループの出力を"コンテナ"ベクトルの正しい位置に保存しているところもポイントです。
 
 ```{r}
-# create container to store results - a character vector
+# 結果を格納するコンテナを作成する - 文字ベクトル
 cases_demographics <- vector(mode = "character", length = nrow(linelist))
 
-# the for loop
+# for ループ
 for (i in 1:nrow(linelist)){
   
-  # OPERATIONS
-  # extract values from linelist for row i, using brackets for indexing
+  # オペレーション
+  # ブラケットをインデックスに用いることで、linelist の i 行の値を取り出す
   row_gender  <- linelist$gender[[i]]
-  row_age     <- linelist$age_years[[i]]    # don't forget to index!
+  row_age     <- linelist$age_years[[i]]    # インデックスを忘れずに！
      
-  # combine gender-age and store in container vector at indexed location
+  # genderとageを貼り合わせ、コンテナのベクトルにおけるインデックスされた場所に格納する
   cases_demographics[[i]] <- str_c(row_gender, row_age, sep = ",") 
 
-}  # end for loop
+}  # ループの終了
 
 
-# display first 10 rows of container
+# 最初の 10 行を示す
 head(cases_demographics, 10)
 ```
 
-### Container {.unnumbered}
+### コンテナ {.unnumbered}
 
-Sometimes the results of your *for loop* will be printed to the console or RStudio Plots pane. Other times, you will want to store the outputs in a "container" for later use. Such a container could be a vector, a data frame, or even a list.
+*for ループ* の結果をコンソールに表示したり、RStudio プロットペインに出力したりすることがあります。また、後で使用するために出力を"コンテナ"に保存しておきたい場合もあります。出力を保存するコンテナとして、ベクトル、データフレーム、あるいはリストなどを使用することが出来ます。
 
-It is most efficient to create the container for the results *before* even beginning the *for loop*. In practice, this means creating an empty vector, data frame, or list. These can be created with the functions `vector()` for vectors or lists, or with `matrix()` and `data.frame()` for a data frame.
+結果を保存するコンテナは、*for ループ*を開始する*前に*作成するのが最も効率的です。実際には，空のベクトル、データフレーム、またはリストを作成することになります。これらは，ベクトルやリストであれば，関数 `vector()` で，データフレームであれば，関数 `matrix()` や 関数 `data.frame()` で作成することができます．
 
-**Empty vector**
+**空のベクトル**
 
-Use `vector()` and specify the `mode =` based on the expected class of the objects you will insert - either "double" (to hold numbers), "character", or "logical". You should also set the `length =` in advance. This should be the length of your *for loop* sequence.
+`vector()` を使用します。また、挿入するオブジェクトのクラスに従って、`mode =` を指定します（"double"（数を格納する場合）, "character", または "logical"）。また、事前に `length =` を設定する必要があります。これは、*for ループ*のシーケンスの長さになります。
 
-Say you want to store the median delay-to-admission for each hospital. You would use "double" and set the length to be the number of expected outputs (the number of unique hospitals in the data set).
+例えば、各病院の入院までの時間の中央値を格納したいとします。その場合、"double" を使用し、予想される出力数（データセット内の病院の数）を length として設定します。
 
 ```{r}
 delays <- vector(
-  mode = "double",                            # we expect to store numbers
-  length = length(unique(linelist$hospital))) # the number of unique hospitals in the dataset
+  mode = "double",                            # 数字を格納します
+  length = length(unique(linelist$hospital))) # データセット内の病院の数
 ```
 
-**Empty data frame**
+**空のデータフレーム**
 
-You can make an empty data frame by specifying the number of rows and columns like this:
+次のように行と列の数を指定することで、空のデータフレームを作ることができます。
 
 ```{r, eval=F}
 delays <- data.frame(matrix(ncol = 2, nrow = 3))
 ```
 
-**Empty list**
+**空のリストEmpty list**
 
-You may want store some plots created by a *for loop* in a list. A list is like vector, but holds other R objects within it that can be of different classes. Items in a list could be a single number, a dataframe, a vector, and even another list.
+*for ループ*で作成したプロットをリストに格納したい場合もあるでしょう。リストはベクトルに似ていますが、リストは中に異なるクラスの R オブジェクトを格納することが出来ます。リストのアイテムは、数値、データフレーム、ベクトル、そして別のリストである可能性もあります。
 
-You actually initialize an empty list using the same `vector()` command as above, but with `mode = "list"`. Specify the length however you wish.
+実際に空のリストを作成するには，上記と同じ `vector()` コマンドを用いますが、`mode = "list"` とする必要があります。長さは好きなように指定してください。
 
 ```{r, eval=F}
 plots <- vector(mode = "list", length = 16)
 ```
 
-### Printing {.unnumbered}
+### 表示 {.unnumbered}
 
-Note that to print from within a *for loop* you will likely need to explicitly wrap with the function `print()`.
+なお，*for ループ*内で表示することを指示するには、関数 `print()` で明示する必要があります。
 
-In this example below, the sequence is an explicit character vector, which is used to subset the linelist by hospital. The results are not stored in a container, but rather are printed to console with the `print()` function.
+以下の例では、シーケンスは文字ベクトルであり、これを使用して病院ごとに linelist をサブセットしています。結果はコンテナには保存されず、`print()` 関数によってコンソールに出力されています。
 
 ```{r}
 for (hosp in hospital_names){ 
@@ -232,62 +233,62 @@ for (hosp in hospital_names){
 }
 ```
 
-### Testing your for loop {.unnumbered}
+### for ループの動作確認 {.unnumbered}
 
-To test your loop, you can run a command to make a temporary assignment of the "item", such as `i <- 10` or `hosp <- "Central Hospital"`. Do this *outside the loop* and then run your operations code only (the code within the curly brackets) to see if the expected results are produced.
+ループがきちんと動作するか確認するために、`i <- 10` や `hosp <- "Central Hospital"` など、"アイテム"を一時的に代入するコマンドを実行します。これを*ループの外*で行い、その後、オペレーションコードのみ（中括弧内のコード）を実行して、期待通りの結果が得られるかどうかを確認します。
 
-### Looping plots {.unnumbered}
+### プロットをループする {.unnumbered}
 
-To put all three components together (container, sequence, and operations) let's try to plot an epicurve for each hospital (see page on [Epidemic curves]).
+3つの要素（コンテナ、シーケンス、オペレーション）を全部使って、各病院の流行曲線をプロットしてみましょう（[Epidemic curve]のページを参照）。
 
-We can make a nice epicurve of *all* the cases by gender using the **incidence2** package as below:
+以下のように **incidence2** パッケージを使って、性別ごとの*全て*の症例を示した epicurve を作ることができます。
 
 ```{r, warning=F, message=F}
-# create 'incidence' object
+# 'incidence' のオブジェクトを作成する
 outbreak <- incidence2::incidence(   
-     x = linelist,                   # dataframe - complete linelist
-     date_index = date_onset,        # date column
-     interval = "week",              # aggregate counts weekly
-     groups = gender,                # group values by gender
-     na_as_group = TRUE)             # missing gender is own group
+     x = linelist,                   # データフレーム - linelist全体
+     date_index = date_onset,        # 日付の列
+     interval = "week",              # 週ごとに集計
+     groups = gender,                # 性別によるグルーピング
+     na_as_group = TRUE)             # 性別の欠損値は欠損のグループとして扱う
 
-# plot epi curve
-plot(outbreak,                       # name of incidence object
-     fill = "gender",                # color bars by gender
-     color = "black",                # outline color of bars
-     title = "Outbreak of ALL cases" # title
+# 流行曲線をプロットする
+plot(outbreak,                       # incidence のオブジェクト名
+     fill = "gender",                # 性別ごとにバーの色を変更
+     color = "black",                # バーの外枠の色指定
+     title = "Outbreak of ALL cases" # タイトル
      )
 ```
 
-To produce a separate plot for each hospital's cases, we can put this epicurve code within a *for loop*.
+各病院の症例について個別のプロットを作成するには、この流行曲線のコードを *for ループ*の中に入れます。
 
-First, we save a named vector of the unique hospital names, `hospital_names`. The *for loop* will run once for each of these names: `for (hosp in hospital_names)`. Each iteration of the *for loop*, the current hospital name from the vector will be represented as `hosp` for use within the loop.
+まず、病院名の入ったベクトル `hospital_names` を保存します。この *for ループ*は、これら病院の名前ごとに一度だけ実行されます: `for (hosp in hospital_names)`. *for ループ*が繰り返されるたびに、ベクトル内のそれぞれの病院名が `hosp` として表現され、ループ内で使用されます。
 
-Within the loop operations, you can write R code as normal, but use the "item" (`hosp` in this case) knowing that its value will be changing. Within this loop:
+ループ内では、通常通り R のコードを書くことができますが、"アイテム"（この場合は `hosp`）の値が変化することに注意してください。このループ内では:
 
--   A `filter()` is applied to `linelist`, such that column `hospital` must equal the current value of `hosp`\
--   The incidence object is created on the filtered linelist\
--   The plot for the current hospital is created, with an auto-adjusting title that uses `hosp`\
--   The plot for the current hospital is temporarily saved and then printed\
--   The loop then moves onward to repeat with the next hospital in `hospital_names`
+- 列 `hospital` が `hosp` の現在の値と等しくなるように、`linelist` に `filter()` を適用する。
+- incidence オブジェクトは、フィルタリングされた linelistに対して作成される。
+- 現在の病院についてのプロットには、`hosp` を用いたタイトルが自動生成されます。
+- 現在の病院についてのプロットは、一時的に保存されたのちに、表示されます。
+- ループは次に進み、`hospital_names` 内の次の病院に対して同じことが繰り返されます。
 
 ```{r, out.width='50%', message = F}
-# make vector of the hospital names
+# 病院名のベクトルを作成する
 hospital_names <- unique(linelist$hospital)
 
-# for each name ("hosp") in hospital_names, create and print the epi curve
+# hospital_names 内のそれぞれの病院名（"hosp"）に対して、流行曲線を作成し表示する
 for (hosp in hospital_names) {
      
-     # create incidence object specific to the current hospital
+     # 現在の病院に対して incidence オブジェクトを作成する
      outbreak_hosp <- incidence2::incidence(
-          x = linelist %>% filter(hospital == hosp),   # linelist is filtered to the current hospital
+          x = linelist %>% filter(hospital == hosp),   # 現在の病院名によって linelist をフィルタリングする
           date_index = date_onset,
           interval = "week", 
           groups = gender,
           na_as_group = TRUE
      )
      
-     # Create and save the plot. Title automatically adjusts to the current hospital
+     # プロットを作成し保存する。タイトルは現在の病院名に合わせて自動生成される。
      plot_hosp <- plot(
        outbreak_hosp,
        fill = "gender",
@@ -295,22 +296,22 @@ for (hosp in hospital_names) {
        title = stringr::str_glue("Epidemic of cases admitted to {hosp}")
      )
      
-     # print the plot for the current hospital
+     # 現在の病院のプロットを表示する
      print(plot_hosp)
      
-} # end the for loop when it has been run for every hospital in hospital_names 
+} # hospital_names 内の全ての病院名に対してオペレーションが行われたら for ループを終了する 
 ```
 
-### Tracking progress of a loop {.unnumbered}
+### ループの進行状況を確認する {.unnumbered}
 
-A loop with many iterations can run for many minutes or even hours. Thus, it can be helpful to print the progress to the R console. The `if` statement below can be placed *within* the loop operations to print every 100th number. Just adjust it so that `i` is the "item" in your loop.
+反復回数の多いループは、実行終了までに何分、何時間もかかることがあります。そのため，進捗状況を R のコンソールに表示すると便利です．以下の `if` 文をループのオペレーション*の中に*配置することで、100番目の数字ごとに結果を表示することができます。コード内で用いる際には、`i`が自分の作成したループ内の"アイテム"となるように適宜変更してください。
 
 ```{r, eval=F}
-# loop with code to print progress every 100 iterations
+# 進捗を 100 回の反復処理のたびに示すループ
 for (i in seq_len(nrow(linelist))){
 
   # print progress
-  if(i %% 100==0){    # The %% operator is the remainder
+  if(i %% 100==0){    # 演算子 %% は剰余を示す
     print(i)
 
 }
@@ -318,66 +319,66 @@ for (i in seq_len(nrow(linelist))){
 
 <!-- ======================================================= -->
 
-## **purrr** and lists {#iter_purrr}
+## **purrr** とリスト {#iter_purrr}
 
-Another approach to iterative operations is the **purrr** package - it is the **tidyverse** approach to iteration.
+反復処理のもう一つの方法として、**purrr** パッケージを用いるものがあります。これは **tidyverse** 内の反復処理を行うパッケージです。
 
-If you are faced with performing the same task several times, it is probably worth creating a generalised solution that you can use across many inputs. For example, producing plots for multiple jurisdictions, or importing and combining many files.
+同じタスクを何度も実行しなければならない場合、多くの入力に対して使用可能な解決策を作成することは非常に有意義です。例えば、複数の管轄区域のプロットを作成したり、多くのファイルをインポートして結合したりする場合などです。
 
-There are also a few other advantages to **purrr** - you can use it with pipes `%>%`, it handles errors better than normal *for loops*, and the syntax is quite clean and simple! If you are using a *for loop*, you can probably do it more clearly and succinctly with **purrr**!
+**purrr**には他にもいくつかの利点があります。パイプ `%>%` と一緒に使用できること、通常の *for ループ*よりもエラー処理に優れていること、そして構文が非常にすっきりとしてシンプルであること、などが挙げられます。もし *for ループ*を使っているのであれば、**purrr**を使うことでより明確で簡潔にコードを書くことができるでしょう。
 
-Keep in mind that **purrr** is a *functional programming tool*. That is, the operations that are to be iteratively applied are wrapped up into *functions*. See the [Writing functions] page to learn how to write your own functions.
+覚えておくべきなのは、**purrr**は*関数型のプログラミングツール*であるということです。つまり、繰り返し適用されるオペレーションは、*関数*内に示す必要があります。自分で関数を書く方法については、[Writing functions]のページを参照してください。
 
-**purrr** is also almost entirely based around *lists* and *vectors* - so think about it as applying a function to each element of that list/vector!
+**purrr**はまた、多くの場合*リスト*と*ベクトル*に対して働きます - なので、リスト/ベクトルの各要素に関数を適用すると考えてください!
 
-### Load packages {.unnumbered}
+### パッケージの読み込み {.unnumbered}
 
-**purrr** is part of the **tidyverse**, so there is no need to install/load a separate package.
+**purrr** は **tidyverse** の一部なので、別々にパッケージをインストール/読み込む必要はありません。
 
 ```{r}
 pacman::p_load(
-     rio,            # import/export
-     here,           # relative filepaths
-     tidyverse,      # data mgmt and viz
-     writexl,        # write Excel file with multiple sheets
-     readxl          # import Excel with multiple sheets
+     rio,            # インポート/エクスポート
+     here,           # ファイルパス
+     tidyverse,      # データの管理と視覚化
+     writexl,        # 複数のシートからなるエクセルファイルを作成
+     readxl          # 複数のシートからなるエクセルファイルをインポート
 )
 ```
 
 ### `map()` {.unnumbered}
 
-One core **purrr** function is `map()`, which "maps" (applies) a function to each input element of a list/vector you provide.
+**purrr**の中核となる関数の 1 つが `map()` で、これは与えられたリストやベクトルの各入力要素に関数を「マッピング」（適用）するものです。
 
-The basic syntax is `map(.x = SEQUENCE, .f = FUNCTION, OTHER ARGUMENTS)`. In a bit more detail:
+基本的な構文は、`map(.x = シーケンス, .f = 関数, その他の引数)`です。もう少し詳しく説明すると:
 
--   `.x =` are the *inputs* upon which the `.f` function will be iteratively applied - e.g. a vector of jurisdiction names, columns in a data frame, or a list of data frames\
--   `.f =` is the *function* to apply to each element of the `.x` input - it could be a function like `print()` that already exists, or a custom function that you define. The function is often written after a tilde `~` (details below).
+- `.x =` は、`.f` 関数が繰り返し適用される *入力* であり、例えば、管轄区名のベクトル、データフレームの列、またはデータフレームのリストです。
+- `.f =` は、入力 `.x` の各要素に対して適用される *関数* です。これは、既に存在する `print()` のような関数でも、自分で定義したカスタム関数でも構いません。関数は、チルダ `~` の後に書かれることが多いです（詳細は後述）。
 
-A few more notes on syntax:
+構文についての注意点です:
 
--   If the function needs no further arguments specified, it can be written with no parentheses and no tilde (e.g. `.f = mean`). To provide arguments that will be the same value for each iteration, provide them within `map()` but outside the `.f =` argument, such as the `na.rm = T` in `map(.x = my_list, .f = mean, na.rm=T)`.\
--   You can use `.x` (or simply `.`) *within* the `.f =` function as a placeholder for the `.x` value of that iteration\
--   Use tilde syntax (`~`) to have greater control over the function - write the function as normal with parentheses, such as: `map(.x = my_list, .f = ~mean(., na.rm = T))`. Use this syntax particularly if the value of an argument will change each iteration, or if it is the value `.x` itself (see examples below)
+- 関数がそれ以上の引数を指定する必要がない場合は、括弧やチルダを使わずに書くことができます（例: `.f = mean`）。全ての反復処理において同じ値になる引数がある場合、`map()` の中、かつ `.f =` の外で指定します（例: `map(.x = my_list, .f = mean, na.rm = T)` の `na.rm = T`）。
+- `.x` (または単に`.`)は、反復処理の `.x` 値の代用値として、`.f =` 関数*の中*で使用することができます。
+- 関数をより細かく設定するには、チルダ構文（`~`）を使用してください - 関数を、括弧を用いて通常通り書いてください（例: `map(.x = my_list, .f = ~mean(., na.rm = T))`）。特に、引数の値が反復処理ごとに変化する場合や、値が `.x` 自体である場合には、この構文を使用してください（以下の例を参照）。
 
-**The output of using `map()` is a *list*** - a list is an object class like a vector but whose elements can be of different classes. So, a list produced by `map()` could contain many data frames, or many vectors, many single values, or even many lists! There are alternative versions of `map()` explained below that produce other types of outputs (e.g. `map_dfr()` to produce a data frame, `map_chr()` to produce character vectors, and `map_dbl()` to produce numeric vectors).
+**`map()` を用いた際の出力は*リスト*になります** - リストはベクトルに似ていますが、構成要素が異なります。すなわち、`map()`によって生成されるリストには、多くのデータフレーム、多くのベクトル、多くの単一の値、あるいは多くのリストが含まれる可能性があります。以下に説明するように、他のタイプの出力を生成する `map()` の代替関数があります (例えば、データフレームを生成する `map_dfr()`、文字ベクトルを生成する `map_chr()`、数字ベクトルを生成する `map_dbl()` など)。
 
-#### Example - import and combine Excel sheets {#iter_combined .unnumbered}
+#### 例 - エクセルシートをインポートし、結合する {#iter_combined .unnumbered}
 
-**Let's demonstrate with a common epidemiologist task:** - *You want to import an Excel workbook with case data, but the data are split across different named sheets in the workbook. How do you efficiently import and combine the sheets into one data frame?*
+**疫学者の一般的なタスクで説明しましょう:** - *症例データの入った Excel ワークブックをインポートしたいが、データがワークブック内の異なる名前のシートに分かれているとします。どうすれば効率的にシートをインポートして 1 つのデータフレームにまとめることができるでしょうか？
 
-Let's say we are sent the below Excel workbook. Each sheet contains cases from a given hospital.
+以下のような Excel ワークブックが送られてきたとします。各シートには、それぞれの病院の症例が含まれています。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "hospital_linelists_excel_sheets.png"))
 ```
 
-Here is one approach that uses `map()`:
+ここでは、`map()` を使った方法を紹介します。
 
-1)  `map()` the function `import()` so that it runs for each Excel sheet\
-2)  Combine the imported data frames into one using `bind_rows()`\
-3)  Along the way, preserve the original sheet name for each row, storing this information in a new column in the final data frame
+1) 関数 `import()` を、各 Excel シートごとに実行するように `map()` する。
+2) インポートされたデータフレームを `bind_rows()` を用いて 1 つにまとめる。
+3) 各行の元のシート名を保存し、最終的なデータフレームの新しい列にこの情報を保存する。
 
-First, we need to extract the sheet names and save them. We provide the Excel workbook's file path to the function `excel_sheets()` from the package **readxl**, which extracts the sheet names. We store them in a character vector called `sheet_names`.
+まず、シート名を抽出して保存する必要があります。**readxl** というパッケージの関数 `excel_sheets()` に Excel ワークブックのファイルパスを渡して、シート名を抽出します。抽出されたシート名は、`sheet_names` という文字ベクトルに格納されます。
 
 ```{r, echo=F}
 sheet_names <- readxl::excel_sheets(here::here("data", "example", "hospital_linelists.xlsx"))
@@ -388,19 +389,19 @@ sheet_names <- readxl::excel_sheets(here::here("data", "example", "hospital_line
 sheet_names <- readxl::excel_sheets("hospital_linelists.xlsx")
 ```
 
-Here are the names:
+これが名前です:
 
 ```{r}
 sheet_names
 ```
 
-Now that we have this vector of names, `map()` can provide them one-by-one to the function `import()`. In this example, the `sheet_names` are `.x` and `import()` is the function `.f`.
+これで名前のベクトルができたので、`map()` を用いて関数 `import()` に 1 つずつ名前を渡すことができます。この例では、`sheet_names` が `.x` であり、`import()` が `.f` となります。
 
-Recall from the [Import and export] page that when used on Excel workbooks, `import()` can accept the argument `which =` specifying the sheet to import. Within the `.f` function `import()`, we provide `which = .x`, whose value will change with each iteration through the vector `sheet_names` - first "Central Hospital", then "Military Hospital", etc.
+[インポートとエクスポート]のページで説明したように、Excel のワークブックで使用する場合、`import()` 内に、インポートするシートを指定する引数 `which =` を用いることが出来ます。`.f` 関数 `import()` 内で、`which = .x` と指定していますが、ベクトル `sheet_names` を繰り返すたびに値が変化することが分かります - 最初は "Central Hospital" 、次に "Military Hospital" となります。
 
-Of note - because we have used `map()`, the data in each Excel sheet will be saved as a separate data frame within a list. We want each of these list elements (data frames) to have a *name*, so before we pass `sheet_names` to `map()` we pass it through `set_names()` from **purrr**, which ensures that each list element gets the appropriate name.
+注意点としては、`map()` を使用しているので、各 Excel シートのデータは、リスト内のデータフレームとして別々に保存されます。各リスト要素（データフレーム）に適切な*名前*を付けるために、`sheet_names` を `map()` に渡す前に、**purrr** の `set_names()` に渡しています。
 
-We save the output list as `combined`.
+出力されたリストは `combined` という名前で保存されます。
 
 ```{r, echo=F}
 combined <- sheet_names %>% 
@@ -414,15 +415,15 @@ combined <- sheet_names %>%
   map(.f = ~import("hospital_linelists.xlsx", which = .x))
 ```
 
-When we inspect output, we see that the data from each Excel sheet is saved in the list with a name. This is good, but we are not quite finished.
+出力を確認すると、各 Excel シートのデータが名前付きでリストに保存されていることがわかります。これでいいのですが、まだ完成ではありません。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "sheets_as_list.png"))
 ```
 
-Lastly, we use the function `bind_rows()` (from **dplyr**) which accepts the list of similarly-structured data frames and combines them into one data frame. To create a new column from the list element *names*, we use the argument `.id =` and provide it with the desired name for the new column.
+最後に、似たような構造のデータフレームのリストを受け取り、それらを 1 つのデータフレームに結合する関数 `bind_rows()` (**dplyr** より)を使用します。リスト要素である *names* から新しい列を作成するには、`.id =` を使用して、新しい列に必要な名前を指定します。
 
-Below is the whole sequence of commands:
+以下が一連のコマンドの流れです。
 
 ```{r, echo=F}
 sheet_names <- readxl::excel_sheets(here::here("data", "example", "hospital_linelists.xlsx"))
@@ -434,34 +435,34 @@ combined <- sheet_names %>%
 ```
 
 ```{r, eval=F}
-sheet_names <- readxl::excel_sheets("hospital_linelists.xlsx")  # extract sheet names
+sheet_names <- readxl::excel_sheets("hospital_linelists.xlsx")  # シート名を抽出する
  
-combined <- sheet_names %>%                                     # begin with sheet names
-  purrr::set_names() %>%                                        # set their names
-  map(.f = ~import("hospital_linelists.xlsx", which = .x)) %>%  # iterate, import, save in list
-  bind_rows(.id = "origin_sheet") # combine list of data frames, preserving origin in new column  
+combined <- sheet_names %>%                                     # シート名から開始
+  purrr::set_names() %>%                                        # 名前を指定
+  map(.f = ~import("hospital_linelists.xlsx", which = .x)) %>%  # 反復処理を行い、インポートし、リストに保存する
+  bind_rows(.id = "origin_sheet") # データフレームのリストを結合し、新しい列に元データを保存する  
 ```
 
-And now we have one data frame with a column containing the sheet of origin!
+これで元のシートが保存された列を含むデータフレームができました。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "sheets_as_df.png"))
 ```
 
-There are variations of `map()` that you should be aware of. For example, `map_dfr()` returns a data frame, not a list. Thus, we could have used it for the task above and not have had to bind rows. But then we would not have been able to capture which sheet (hospital) each case came from.
+`map()`には様々なバリエーションがあります。例えば、`map_dfr()` はリストではなく、データフレームを返します。そのため、上記のタスクに使用する場合、行を結合する必要はありません。しかし、各症例がどのシート（病院）から来たのかを把握することはできません。
 
-Other variations include `map_chr()`, `map_dbl()`. These are very useful functions for two reasons. Firstly. they automatically convert the output of an iterative function into a vector (not a list). Secondly, they can explicitly control the class that the data comes back in - you ensure that your data comes back as a character vector with `map_chr()`, or numeric vector with `map_dbl()`. Lets return to these later in the section!
+他には、`map_chr()` や `map_dbl()` があります。これらは 2 つの理由から非常に便利な関数だと言えます。第一に、反復関数の出力を自動的に（リストではなく）ベクトルに変換してくれます。第二に、データがどのような形式で返ってくるかを指定することが出来ます - `map_chr()` では文字ベクトル、`map_dbl()` では数字ベクトルとしてデータが戻ってきます。これらについては、後ほど詳しくみてみましょう！
 
-The functions `map_at()` and `map_if()` are also very useful for iteration - they allow you to specify which elements of a list you should iterate at! These work by simply applying a vector of indexes/names (in the case of `map_at()`) or a logical test (in the case of `map_if()`).
+関数 `map_at()` と `map_if()` は、反復処理を行う際にも非常に便利です。インデックス/名前のベクトル（`map_at()` の場合）や、論理的テスト（`map_if()` の場合）を適用するだけで、リストのどの要素を反復処理するかを指定することが出来ます。
 
-Lets use an example where we didn't want to read the first sheet of hospital data. We use `map_at()` instead of `map()`, and specify the `.at =` argument to `c(-1)` which means to *not* use the first element of `.x`. Alternatively, you can provide a vector of positive numbers, or names, to `.at =` to specify which elements to use.
+例えば、病院のデータの最初のシートを読みたくない場合を考えてみましょう。ここでは、`map()` の代わりに `map_at()` を使用し、`.at =` の引数に `c(-1)` を指定します。これは、`.x` の最初の要素を使用*しない*ことを意味します。また、`.at =` に正の数のベクトルや名前を指定して、使用する要素を指定することもできます。
 
 ```{r, echo=F}
 sheet_names <- readxl::excel_sheets(here::here("data", "example", "hospital_linelists.xlsx"))
 
 combined <- sheet_names %>% 
      purrr::set_names() %>% 
-     # exclude the first sheet
+     # 最初のシートは除く
      map_at(.f = ~import(here::here("data", "example", "hospital_linelists.xlsx"), which = .x),
             .at = c(-1))
 ```
@@ -471,47 +472,47 @@ sheet_names <- readxl::excel_sheets("hospital_linelists.xlsx")
 
 combined <- sheet_names %>% 
      purrr::set_names() %>% 
-     # exclude the first sheet
+     # 最初のシートは除く
      map_at(.f = ~import( "hospital_linelists.xlsx", which = .x),
             .at = c(-1))
 ```
 
-Note that the first sheet name will still appear as an element of the output list - but it is only a single character name (not a data frame). You would need to remove this element before binding rows. We will cover how to remove and modify list elements in a later section.
+最初のシート名は出力リストの要素として表示されますが、これは単なる文字名（データフレームではない）であることに注意してください。行を結合する前に、この要素を削除する必要があります。リストの要素を削除したり変更したりする方法については、後のセクションで説明します。
 
-### Split dataset and export {.unnumbered}
+### データセットを分割しエクスポートする {.unnumbered}
 
-Below, we give an example of how to split a dataset into parts and then use `map()` iteration to export each part as a separate Excel sheet, or as a separate CSV file.
+以下では、データセットをパーツに分割し、`map()` の繰り返しを使って、各パーツを個別の Excel シート、または個別の CSV ファイルとしてエクスポートする方法を例示します。
 
-#### Split dataset {.unnumbered}
+#### データの分割 {.unnumbered}
 
-Let's say we have the complete case `linelist` as a data frame, and we now want to create a separate linelist for each hospital and export each as a separate CSV file. Below, we do the following steps:
+例えば、コンプリートケースである `linelist` をデータフレームがあるとします。各病院ごとに個別の linelist を作成し、それぞれを個別の CSV ファイルとしてエクスポートしたいとします。次のような手順で行います:
 
-Use `group_split()` (from **dplyr**) to split the `linelist` data frame by unique values in column `hospital`. The output is a list containing one data frame per hospital subset.
+`group_split()`（**dplyr** より）を使用して、`linelist` データフレームを列 `hospital` 内の値で分割します。出力は、すなわち、病院のサブセット別のデータフレームを含むリストを出力します。
 
 ```{r}
 linelist_split <- linelist %>% 
      group_split(hospital)
 ```
 
-We can run `View(linelist_split)` and see that this list contains 6 data frames ("tibbles"), each representing the cases from one hospital.
+`View(linelist_split)`を実行すると、このリストには 6 つのデータフレーム（"tibbles"）があり、それぞれが 1 つの病院の症例を表していることがわかります。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "purrr_linelist_split.png"))
 ```
 
-However, note that the data frames in the list do not have names by default! We want each to have a name, and then to use that name when saving the CSV file.
+ただし、リスト内のデータフレームには、デフォルトでは名前が付いていないことに注意してください！それぞれのデータフレームに名前を付けて，CSVファイルを保存するときにその名前を使うようにしたいと思います。
 
-One approach to extracting the names is to use `pull()` (from **dplyr**) to extract the `hospital` column from each data frame in the list. Then, to be safe, we convert the values to character and then use `unique()` to get the name for that particular data frame. All of these steps are applied to each data frame via `map()`.
+名前を抽出するための方法として、**dplyr** の `pull()` を使って、リストの各データフレームから `hospital` 列を抽出する方法があります。次に、エラーの無いように、値を文字に変換してから、`unique()` を使って、データフレームの名前を得ます。これらのステップはすべて、`map()` を介して各データフレームに適用されます。
 
 ```{r}
-names(linelist_split) <- linelist_split %>%   # Assign to names of listed data frames 
-     # Extract the names by doing the following to each data frame: 
-     map(.f = ~pull(.x, hospital)) %>%        # Pull out hospital column
-     map(.f = ~as.character(.x)) %>%          # Convert to character, just in case
-     map(.f = ~unique(.x))                    # Take the unique hospital name
+names(linelist_split) <- linelist_split %>%   # リストされたデータフレームの名前を指定する 
+     # それぞれのデータフレームに以下の関数を適用することで、名前を抽出する: 
+     map(.f = ~pull(.x, hospital)) %>%        # hospital 列を取り出す
+     map(.f = ~as.character(.x)) %>%          # 取り出した値を、念のため、文字に変換する
+     map(.f = ~unique(.x))                    # 病院名を抽出する
 ```
 
-We can now see that each of the list elements has a name. These names can be accessed via `names(linelist_split)`.
+これで，リストの各要素に名前を付けることが出来ました。これらの名前は `names(linelist_split)` で確認することが出来ます。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "purrr_linelist_split_named.png"))
