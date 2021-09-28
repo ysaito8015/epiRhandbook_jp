@@ -9,14 +9,22 @@ This tab demonstrates the use of several packages for time series analysis.
 It primarily relies on packages from the [**tidyverts**](https://tidyverts.org/) 
 family, but will also use the RECON [**trending**](https://github.com/reconhub/trending) 
 package to fit models that are more appropriate for infectious disease epidemiology. 
+このタブでは、時系列分析のためのいくつかのパッケージの使用方法を示します。
+
+主に[**tidyverts**](https://tidyverts.org/)ファミリーのパッケージを使用しますが、RECON [**trending**](https://tidyverts.org/)も使用します。
+ファミリーのパッケージに依存していますが、RECON [**trending**](https://github.com/reconhub/trending) 
+パッケージを使用して、感染症の疫学に適したモデルをフィットさせます。
 
 Note in the below example we use a dataset from the **surveillance** package 
-on Campylobacter in Germany (see the [data chapter](https://epirhandbook.com/download-handbook-and-data.html), 
-of the handbook for details). However, if you wanted to run the same code on a dataset
-with multiple countries or other strata, then there is an example code template for this in the 
-[r4epis github repo](https://github.com/R4EPI/epitsa). 
+on Campylobacter in Germany (see the [data chapter](https://epirhandbook.com/download-handbook-and-data.html), of the handbook for details). However, if you wanted to run the same code on a dataset
+with multiple countries or other strata, then there is an example code template for this in the  [r4epis github repo](https://github.com/R4EPI/epitsa). 
+
+以下の例では、ドイツのCampylobacterに関する**surveillance**パッケージのデータセットを使用しています。
+のデータセットを使用しています（詳細はハンドブックの[data chapter](https://epirhandbook.com/download-handbook-and-data.html)を参照してください）。しかし、同じコードを複数の国や他の層を持つデータセットで実行したい場合はの場合、 [r4epis github repo](https://github.com/R4EPI/epitsa)にそのためのコードテンプレートの例があります。
 
 Topics covered include:  
+トピックは以下の通りです。 
+
 
 1.  Time series data 
 2.  Descriptive analysis 
@@ -25,30 +33,39 @@ Topics covered include:
 5.  Outbreak detection
 6.  Interrupted time series
 
+1.  時系列データ  
+2.  記述統計  
+3.  回帰式のあてはめ  
+4.  2つの時系列の関係  
+5.  アウトブレイクの検出  
+6.  遮断された時系列  
 
 <!-- ======================================================= -->
 ## Preparation {  }
+## 準備{ }
 
 ### Packages {.unnumbered}
+# ###パッケージ {.unnumbered}
 
 This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load packages with `library()` from **base** R. See the page on [R basics](https://epirhandbook.com/r-basics.html) for more information on R packages.  
+このコードチャンクは、分析に必要なパッケージのロードを示しています。このハンドブックでは、**pacman**の`p_load()`を強調しています。これは、必要に応じてパッケージをインストールし、*使用するためにロードします。また、**base** Rの`library()`を使ってパッケージをロードすることもできます。Rパッケージの詳細については、[R basics (https://epirhandbook.com/r-basics.html)]のページを参照してください。
 
 ```{r load_packages}
-pacman::p_load(rio,          # File import
-               here,         # File locator
-               tidyverse,    # data management + ggplot2 graphics
-               tsibble,      # handle time series datasets
-               slider,       # for calculating moving averages
-               imputeTS,     # for filling in missing values
-               feasts,       # for time series decomposition and autocorrelation
-               forecast,     # fit sin and cosin terms to data (note: must load after feasts)
-               trending,     # fit and assess models 
-               tmaptools,    # for getting geocoordinates (lon/lat) based on place names
-               ecmwfr,       # for interacting with copernicus sateliate CDS API
-               stars,        # for reading in .nc (climate data) files
-               units,        # for defining units of measurement (climate data)
-               yardstick,    # for looking at model accuracy
-               surveillance  # for aberration detection
+pacman::p_load(rio,          # File import      # ファイルのインポート
+               here,         # File locator     # ファイルのロケーター
+               tidyverse,    # data management + ggplot2 graphics # データマネジメント + ggplot2の描画
+               tsibble,      # handle time series datasets        # 時系列データセットの操作
+               slider,       # for calculating moving averages    # 移動平均の計算のため
+               imputeTS,     # for filling in missing values      # 欠損値のフィルタリングのため
+               feasts,       # for time series decomposition and autocorrelation              # 時系列分解と自己相関のため
+               forecast,     # fit sin and cosin terms to data (note: must load after feasts) # sinとcosの項をデータに当てはめる（注：feastsの後に読み込む必要がある）
+               trending,     # fit and assess models              # モデルの当てはめと査定
+               tmaptools,    # for getting geocoordinates (lon/lat) based on place names      # 地名から地理座標（lon/lat）を取得する機能
+               ecmwfr,       # for interacting with copernicus sateliate CDS API              # copernicus sateliate CDS APIとのインタラクションのため
+               stars,        # for reading in .nc (climate data) files                        # .nc（天候データ）ファイルの読み込みのため
+               units,        # for defining units of measurement (climate data)               # 測定ユニット（天候データ）の定義のため
+               yardstick,    # for looking at model accuracy                                  # 適切なモデルを探すため
+               surveillance  # for aberration detection                                       # 異常検知のため
                )
 ``` 
 
