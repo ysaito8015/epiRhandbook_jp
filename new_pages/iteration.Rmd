@@ -522,9 +522,9 @@ knitr::include_graphics(here::here("images", "purrr_linelist_split_named.png"))
 names(linelist_split)
 ```
 
-##### More than one `group_split()` column {.unnumbered}
+##### 2 つ以上の `group_split()` 列 {.unnumbered}
 
-If you wanted to split the linelist by *more than one grouping column*, such as to produce subset linelist by intersection of hospital AND gender, you will need a different approach to naming the list elements. This involves collecting the unique "group keys" using `group_keys()` from **dplyr** - they are returned as a data frame. Then you can combine the group keys into values with `unite()` as shown below, and assign these conglomerate names to `linelist_split`.
+例えば、病院と性別の組み合わせで linelist のサブセットを作成するなど、*複数の列により条件づけて* linelist を分割したい場合は、リストの要素に名前を付ける際に異なる方法が必要になります。まず、**dplyr** の `group_keys()` を使って、病院・性別の全ての組み合わせに対する"グループキー"を作成します（これは、データフレームとして作成されます）。次に、以下のように、`unite()`を使ってグループキーを値に結合し、変数の組み合わせ名を`linelist_split`に割り当てます。
 
 ```{r}
 # split linelist by unique hospital-gender combinations
