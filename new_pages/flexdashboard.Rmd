@@ -1,46 +1,50 @@
-
-# Dashboards with R Markdown { }
+<!--nn: link to original content:  -->
+# R Markdownで作るダッシュボード { flexdashboard }
 
 ```{r out.width = "100%", fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "flexdashboard_output.png"))
 ```
 
-This page will cover the basic use of the **flexdashboard** package. This package allows you to easily format R Markdown output as a dashboard with panels and pages. The dashboard content can be text, static figures/tables or interactive graphics.  
+このページでは、 **flexdashboard** パッケージの基本的な使い方を解説します。このパッケージは、R Markdown の出力をパネルやページを持つダッシュボードとして簡単に整えることができます。ダッシュボードの内容は、文章、図/表、インタラクティブな内容などとすることができます。
 
-Advantages of **flexdashboard**:  
+**flexdashboard** のメリット：
 
-* It requires minimal non-standard R coding - with very little practice you can quickly create a dashboard  
-* The dashboard can usually be emailed to colleagues as a self-contained HTML file - no server required  
-* You can combine **flexdashboard** with **shiny**, **ggplotly**, and other *"html widgets"* to add interactivity  
+* 標準的でない R のコードは最小限の記載で済みます。わずかな練習ですぐにダッシュボードを作成することができます。
+* ダッシュボードは、自己完結型のHTMLファイルとして同僚に電子メールで送信することができます。サーバーは不要です。
+* **flexdashboard** は、**shiny** や **ggplotly** などの *"html widgets"* と組み合わせて、インタラクティブなダッシュボードとすることができます。
 
-Disadvantages of **flexdashboard**:  
+**flexdashboard**のデメリット： 
 
-* Less customization as compared to using **shiny** alone to create a dashboard  
+* **shiny** 単独でダッシュボードを作成するのに比べて、カスタマイズ性に劣ります。
 
+このページで紹介されている **flexdashboard** の使い方に関する包括的なチュートリアルは、「リソース」セクションにあります。以下では、パッケージの主要な機能を説明した上で、`linelist` データを使ってアウトブレイクを調査するダッシュボードの構築例を紹介します。  
 
-Very comprehensive tutorials on using **flexdashboard** that informed this page can be found in the Resources section. Below we describe the core features and give an example of building a dashboard to explore an outbreak, using the case `linelist` data.  
+## 準備
 
-
-## Preparation
-
-### Load packages {.unnumbered}  
+### パッケージの読み込み {.unnumbered}
 
 In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with  `library()` from **base** R. See the page on [R basics] for more information on R packages.  
+このハンドブックでは、**pacman** の `p_load()` の利用を推奨しています。`p_load()`は、必要に応じてパッケージをインストールして *かつ* 利用するために読み込んでくれます。あるいは、 **base** パッケージの `library()` を用いてインストールされたパッケージを読み込むことが可能です。R のパッケージの詳細については、[R Basics] のページを参照してください。  
 
 ```{r}
 pacman::p_load(
-  rio,             # data import/export     
-  here,            # locate files
-  tidyverse,       # data management and visualization
-  flexdashboard,   # dashboard versions of R Markdown reports
-  shiny,           # interactive figures
-  plotly           # interactive figures
+  rio,             # データのインポート/エクスポート
+  here,            # ローカルファイル
+  tidyverse,       # データの加工と可視化
+  flexdashboard,   # R Markdown レポートのダッシュボード版
+  shiny,           # インタラクティブな図表
+  plotly           # インタラクティブな図
 )
 ```
 
-### Import data {.unnumbered}  
+### データのインポート {.unnumbered}  
 
 We import the dataset of cases from a simulated Ebola epidemic. If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>click to download the "clean" linelist</a> (as .rds file). Import data with the `import()` function from the **rio** package (it handles many file types like .xlsx, .csv, .rds - see the [Import and export] page for details). 
+
+エボラ出血熱の流行をシミュレーションした症例のデータセットを取り込みます。 
+If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>click to download the "clean" linelist</a> (as .rds file). Import data with the `import()` function from the **rio** package (it handles many file types like .xlsx, .csv, .rds - see the [Import and export] page for details). 
+
+コードを追いたい人は、 <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>ここをクリックして「キレイな」データを取得</a>してください（`.rds` ファイルとして取得できます）。データを **rio** パッケージの `import()`を利用して読み込んでください。（これは、 .xlsx、.csv、.rds などのたくさんの種類のファイルを扱うことがｄけいます。詳しくは、[Imprort and export] のページをみてください。）
 
 ```{r, echo=F}
 # import the linelist into R
