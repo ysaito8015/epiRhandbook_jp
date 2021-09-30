@@ -1,4 +1,5 @@
-# Cleaning data and core functions
+\#データ前処理と主要関数　{\# Cleaning data and core functions}\
+\# Cleaning data and core functions
 
 ```{r, out.height = "10%", fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "cleaning.png"))
@@ -8,37 +9,109 @@ This page demonstrates common steps used in the process of "cleaning" a dataset,
 
 To demonstrate data cleaning, this page begins by importing a raw case linelist dataset, and proceeds step-by-step through the cleaning process. In the R code, this manifests as a "pipe" chain, which references the "pipe" operator `%>%` that passes a dataset from one operation to the next.
 
+このページでは、データセットの前処理で使用する一般的な手順を示し、Rのデータ管理に不可欠な多くの機能を説明します。
+
+データクリーニングを実演するために、このページではraw case linelist データセットのインポートから開始し、前処理を段階的に進めていきます。Rコードでは上図の処理は"pipe"チェーンとして明示されます。"パイプ"演算子`%>%`を参照し、データセットをある操作から次の操作に渡すことが出来ます。
+
 ### Core functions {.unnumbered}
 
 This handbook emphasizes use of the functions from the [**tidyverse**](https://www.tidyverse.org/) family of R packages. The essential R functions demonstrated in this page are listed below.
 
 Many of these functions belong to the [**dplyr**](https://dplyr.tidyverse.org/) R package, which provides "verb" functions to solve data manipulation challenges (the name is a reference to a "data frame-[plier](https://www.thefreedictionary.com/plier#:~:text=also%20ply%C2%B7er%20(pl%C4%AB%E2%80%B2,holding%2C%20bending%2C%20or%20cutting.)%22). **dplyr** is part of the **tidyverse** family of R packages (which also includes **ggplot2**, **tidyr**, **stringr**, **tibble**, **purrr**, **magrittr**, and **forcats** among others).
 
+このハンドブックでは、Rパッケージの[tidyverse](https://www.tidyverse.org/)ファミリーの関数を使用することに重点を置いています。このページで紹介されている基本のR関数を以下に示します。
+
+これらの関数の多くは、データ操作の課題を解決するための"verb" 関数を提供するRパッケージ[dplyr](https://dplyr.tidyverse.org/) に属しています（名前は「data frame-[plier](https://www.thefreedictionary.com/plier#:~:text=also%20ply%C2%B7er%20(pl%C4%AB%E2%80%B2,holding%2C%20bending%2C%20or%20cutting.)%22).」にちなんでいます。 **dplyr** は、Rパッケージの**tidyverse**ファミリー（**ggplot2**、**tidyr**、**stringr**、**tibble**、**purrr**、**magrittr**、**forcats**なども含まれています）の一部です。)
+
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | Function                                            | Utility                                                        | Package                   |
-|-----------------------------------------------------|----------------------------------------------------------------|---------------------------|
+|                                                     |                                                                |                           |
+| **関数**                                            | 効用                                                           | パッケージ                |
++=====================================================+================================================================+===========================+
 | `%>%`                                               | "pipe" (pass) data from one function to the next               | **magrittr**              |
+|                                                     |                                                                |                           |
+|                                                     | ある関数から次の関数へデータをパイプ（渡す）                   |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `mutate()`                                          | create, transform, and re-define columns                       | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 列の作成、変換、再定義                                         |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `select()`                                          | keep, remove, select, or re-name columns                       | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 列の保持、削除、選択、名前の変更                               |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `rename()`                                          | rename columns                                                 | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 列名の変更                                                     |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `clean_names()`                                     | standardize the syntax of column names                         | **janitor**               |
+|                                                     |                                                                |                           |
+|                                                     | 列名の構文を標準化                                             |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `as.character()`, `as.numeric()`, `as.Date()`, etc. | convert the class of a column                                  | **base** R                |
+|                                                     |                                                                |                           |
+|                                                     | 列のクラスを変換                                               |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `across()`                                          | transform multiple columns at one time                         | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 複数の列を一度に変換                                           |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | **tidyselect** functions                            | use logic to select columns                                    | **tidyselect**            |
+|                                                     |                                                                |                           |
+|                                                     | ロジックを使った列の選択                                       |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `filter()`                                          | keep certain rows                                              | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 特定の行を維持                                                 |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `distinct()`                                        | de-duplicate rows                                              | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 重複する行の削除                                               |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `rowwise()`                                         | operations by/within each row                                  | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 各行の中での操作                                               |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `add_row()`                                         | add rows manually                                              | **tibble**                |
+|                                                     |                                                                |                           |
+|                                                     | 手動で行を追加                                                 |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `arrange()`                                         | sort rows                                                      | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 行の並べ替え                                                   |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `recode()`                                          | re-code values in a column                                     | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 列の値を再コード化                                             |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `case_when()`                                       | re-code values in a column using more complex logical criteria | **dplyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 複数の論理基準を使用し列値を再コード化                         |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `replace_na()`, `na_if()`, `coalesce()`             | special functions for re-coding                                | **tidyr**                 |
+|                                                     |                                                                |                           |
+|                                                     | 再定義のための専用関数                                         |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `age_categories()` and `cut()`                      | create categorical groups from a numeric column                | **epikit** and **base** R |
+|                                                     |                                                                |                           |
+|                                                     | 数値列からカテゴリーグループを作成                             |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `clean_variable_spelling()`                         | re-code/clean values using a data dictionary                   | **linelist**              |
+|                                                     |                                                                |                           |
+|                                                     | データ辞書を使った値の再定義/処理                              |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 | `which()`                                           | apply logical criteria; return indices                         | **base** R                |
+|                                                     |                                                                |                           |
+|                                                     | 論理的基準を適用し、インデックスを返す                         |                           |
++-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
 
 If you want to see how these functions compare to Stata or SAS commands, see the page on [Transition to R].
 
 You may encounter an alternative data management framework from the **data.table** R package with operators like `:=` and frequent use of brackets `[ ]`. This approach and syntax is briefly explained in the [Data Table] page.
+
+これらの関数をStataやSASのコマンドと比較したい場合は、[[Transition to R]](https://epirhandbook.com/transition-to-r.html#transition-to-r)のページを参照してください。
+
+Rパッケージの**data.table**では、`:=`のような演算子や括弧`[ ]`が頻繁に使用されており、別のデータ管理フレームワークを目にすることがあるかもしれません。この手法と構文については、[[Data Table]](https://epirhandbook.com/data-table.html#data-table)のページで簡単に説明しています。
 
 ### Nomenclature {.unnumbered}
 
@@ -50,6 +123,16 @@ In "tidy" datasets, each column is a variable, each row is an observation, and e
 
 Most of this handbook is about managing and transforming data, so referring to the concrete data structures of rows and columns is more relevant than the more abstract observations and variables. Exceptions occur primarily in pages on data analysis, where you will see more references to variables and observations.
 
+**用語体系**
+
+このハンドブックでは、一般的に「変数」や「観測値」の代わりに「列」や「行」を使用します。["tidy data"](https://tidyr.tidyverse.org/articles/tidy-data.html)の入門で説明したように、ほとんどの疫学統計データセットは、行、列、値の構造で構成されています。
+
+「変数」は、同じ基本属性を測定する値（年齢層、転帰、発症日など）を含みます。「観測値」は、同じ単位（人、サイト、ラボのサンプルなど）で測定されたすべての値を含みます。そのため、これらの側面を明確に定義することは困難です。
+
+"tidy" データセットでは、各列が変数、各行が観測値、そして各セルが1つの値です。しかし、データセットの中には、この型に当てはまらないものもあります。"wide" フォーマットのデータセットでは、変数が複数の列に分かれていることがあります（[Pivoting data](https://epirhandbook.com/pivoting-data.html#pivoting-data) ページの例を参照）。同様に、観測値が複数の行に分かれていることもあります。
+
+このハンドブックのほとんどがデータの管理と変換に関するものですので、抽象的な観測値や変数よりも、行や列といった具体的なデータ構造を示す方が適切です。例外として、データ分析のページでは、変数や観測値を取り上げることがあります。
+
 <!-- ======================================================= -->
 
 <!-- ======================================================= -->
@@ -60,7 +143,7 @@ Most of this handbook is about managing and transforming data, so referring to t
 
 **This page proceeds through typical cleaning steps, adding them sequentially to a cleaning pipe chain.**
 
-In epidemiological analysis and data processing, cleaning steps are often performed sequentially, linked together. In R, this often manifests as a cleaning "pipeline", where *the raw dataset is passed or "piped" from one cleaning step to another*.
+In epidemiological analysis and data processing, cleaning steps are often performed sequentially, linked together. In R, this often manifests as a cleaning "pipeline", where the raw dataset is passed or "piped" from one cleaning step to another.
 
 Such chains utilize **dplyr** "verb" functions and the **magrittr** pipe operator `%>%`. This pipe begins with the "raw" data ("linelist_raw.xlsx") and ends with a "clean" R data frame (`linelist`) that can be used, saved, exported, etc.
 
@@ -71,6 +154,26 @@ In a cleaning pipeline the order of the steps is important. Cleaning steps might
 -   De-duplication\
 -   Column creation and transformation (e.g. re-coding or standardising values)\
 -   Rows filtered or added
+
+**パイプラインのデータ前処理**
+
+**このページでは、代表的なデータ前処理の手順を実行し、パイプ連鎖に順次追加しながら進めていきます。**
+
+疫学的な分析やデータ処理では、前処理の手順ががしばしば連続して実行され、互いに関連しています。Rでは、これは多くの場合、前処理のパイプラインとして示されます。このパイプラインでは、生のデータセットが1つのデータ処理ステップから別のデータ処理ステップに渡されます。
+
+このような連続処理は、**dplyr**の「動詞」関数と**magrittr**のパイプ演算子`%>%`を利用します。このパイプ処理は生データ ("linelist_raw.xlsx")から開始し、使用、保存、エクスポートなどが可能な整ったRデータフレーム（`linelist`）で終了します。
+
+パイプラインのデータ処理は、ステップの順番が重要です。前処理のステップには以下のようなものがあります。
+
+-   データのインポート\
+
+-   列名の修正または変更\
+
+-   重複の排除\
+
+-   列の作成と変換（例：値の再コード化または標準化）。\
+
+-   行のフィルタリングまたは追加\
 
 <!-- ======================================================= -->
 
@@ -814,7 +917,7 @@ Now we see the spellings in the `hospital` column have been corrected and consol
 table(linelist$hospital, useNA = "always")
 ```
 
-[***TIP:*** The number of spaces before and after an equals sign does not matter. Make your code easier to read by aligning the = for all or most rows. Also, consider adding a hashed comment row to clarify for future readers which side is OLD and which side is NEW. ]{style="color: darkgreen;"}
+[***TIP:*** The number of spaces before and after an equals sign does not matter. Make your code easier to read by aligning the = for all or most rows. Also, consider adding a hashed comment row to clarify for future readers which side is OLD and which side is NEW.]{style="color: darkgreen;"}
 
 [***TIP:*** Sometimes a *blank* character value exists in a dataset (not recognized as R's value for missing - `NA`). You can reference this value with two quotation marks with no space inbetween ("").]{style="color: darkgreen;"}
 
