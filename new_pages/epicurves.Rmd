@@ -1,33 +1,37 @@
-# Epidemic curves
+# 流行曲線（エピカーブ） {#epicurves}
 
 ```{r, out.width=c('75%'), echo=F, message=F}
 knitr::include_graphics(here::here("images", "epicurve_top.png"))
 ```
 
-An epidemic curve (also known as an "epi curve") is a core epidemiological chart typically used to visualize the temporal pattern of illness onset among a cluster or epidemic of cases.
+流行曲線（「エピカーブ」とも呼ばれる）は流行集団（クラスター）の疾病の発症の時間的パターンを可視化するための基本的な疫学グラフです。
 
-Analysis of the epicurve can reveal temporal trends, outliers, the magnitude of the outbreak, the most likely time period of exposure, time intervals between case generations, and can even help identify the mode of transmission of an unidentified disease (e.g. point source, continuous common source, person-to-person propagation). One online lesson on interpretation of epi curves can be found at the website of the [US CDC](https://www.cdc.gov/training/quicklearns/epimode/index.html).
+流行曲線を分析することで、時間的な傾向、異常値、アウトブレイクの規模、曝露の可能性が最も高い時期、症例の世代間の時間間隔などが明らかになり、さらには未知の新しい疾患の伝播様式（点源、継続的な共通感染源、人から人への伝播など）を特定するのにも役立ちます。流行曲線の解釈に関するオンラインレッスンの1つとして [US CDC](https://www.cdc.gov/training/quicklearns/epimode/index.html) のウェブサイトがあります。
 
-In this page we demonstrate two approaches to producing epicurves in R:
+この章ではRで流行曲線を作成するための2つのアプローチを紹介します。
 
--   The **incidence2** package, which can produce an epi curve with simple commands\
--   The **ggplot2** package, which allows for advanced customizability via more complex commands
+-   簡単なコマンドのみで流行曲線を作成することが出来る **incidence2** パッケージ の使用\
+-   より複雑なコマンドを使用することで高度なカスタマイズが可能な **ggplot2** パッケージ の使用
 
-Also addressed are specific use-cases such as:
+また以下のような具体的な使用例にも対応しています。
 
--   Plotting aggregated count data\
--   Faceting or producing small-multiples\
--   Applying moving averages\
--   Showing which data are "tentative" or subject to reporting delays\
--   Overlaying cumulative case incidence using a second axis
+-   集計データのプロット\
+
+-   ファセット化（複数グラフの作成）\
+
+-   移動平均の適用\
+
+-   報告が遅れている「暫定」データの表示
+
+-   累積症例数を第2軸で重ね合わせたプロット
 
 <!-- ======================================================= -->
 
-## Preparation
+## 準備
 
-### Packages {.unnumbered}
+### パッケージをロード {.unnumbered}
 
-This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with `library()` from **base** R. See the page on \[R basics\] for more information on R packages.
+解析に必要な標準パッケージをロードします。 このハンドブックでは、**pacman** の `p_load()` を使うことを強調しています。`p_load()` は、必要に応じてパッケージをインストールし、そして使用するためにパッケージをロードします。base R から `library()` を使用してパッケージをロードすることもできます。Rのパッケージについての詳細は\[R basics\]のページを参照してください。
 
 ```{r message=F, warning=F}
 pacman::p_load(
@@ -44,14 +48,14 @@ pacman::p_load(
 ) 
 ```
 
-### Import data {.unnumbered}
+### **データをインポート**
 
-Two example datasets are used in this section:
+この章では2つのデータセットを使用します。
 
--   Linelist of individual cases from a simulated epidemic\
--   Aggregated counts by hospital from the same simulated epidemic
+-   流行のシミュレーションデータから作成された症例ごとのデータ（ラインリスト）\
+-   同じ流行のシミュレーションデータから作成された病院ごとの症例数の集計値
 
-The datasets are imported using the `import()` function from the **rio** package. See the page on \[Import and export\] for various ways to import data.
+データセットは、**rio** パッケージの `import()` 関数を使ってインポートします。データをインポートする様々な方法については、\[Import and export\]のページを参照してください。
 
 ```{r, echo=F, message=F}
 # import the linelist into R
@@ -398,19 +402,19 @@ An epicurve produced by **incidence2** can be modified via these arguments *with
 
 **Here are `plot()` arguments that modify the date axis:**
 
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
-| Argument(s)        | Description                                                                                                       |
-+====================+===================================================================================================================+
-| `centre_dates =`   | TRUE/FALSE as to whether date displays appear under center of bars, or at beginning of bars                       |
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
-| `date_format =`    | Adjust the date display format using strptime ("%") syntax. Only works if `centre_dates = FALSE` (details below). |
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
-| `n.breaks =`       | Approximate number of x-axis label breaks desired.                                                                |
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
-| `angle =`          | Angle of x-axis date labels (number of degrees)                                                                   |
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
-| `size =`           | Size of text in points                                                                                            |
-+--------------------+-------------------------------------------------------------------------------------------------------------------+
++------------------+-------------------------------------------------------------------------------------------------------------------+
+| Argument(s)      | Description                                                                                                       |
++==================+===================================================================================================================+
+| `centre_dates =` | TRUE/FALSE as to whether date displays appear under center of bars, or at beginning of bars                       |
++------------------+-------------------------------------------------------------------------------------------------------------------+
+| `date_format =`  | Adjust the date display format using strptime ("%") syntax. Only works if `centre_dates = FALSE` (details below). |
++------------------+-------------------------------------------------------------------------------------------------------------------+
+| `n.breaks =`     | Approximate number of x-axis label breaks desired.                                                                |
++------------------+-------------------------------------------------------------------------------------------------------------------+
+| `angle =`        | Angle of x-axis date labels (number of degrees)                                                                   |
++------------------+-------------------------------------------------------------------------------------------------------------------+
+| `size =`         | Size of text in points                                                                                            |
++------------------+-------------------------------------------------------------------------------------------------------------------+
 
 Note that the `date_breaks =` argument only works if `centre_dates = FALSE`. Provide a character value in quotation marks using the strptime syntax below, as detailed in the \[Working with dates\] page. You can use `\n` for a "newline".
 
@@ -437,17 +441,17 @@ Note that the `date_breaks =` argument only works if `centre_dates = FALSE`. Pro
 
 **Here are `plot()` arguments that modify plot labels:**
 
-+--------------------+-------------------------------------------------------------------------+
-| Argument(s)        | Description                                                             |
-+====================+=========================================================================+
-| `title =`          | Title of plot                                                           |
-+--------------------+-------------------------------------------------------------------------+
-| `xlab =`           | Title of x-axis                                                         |
-+--------------------+-------------------------------------------------------------------------+
-| `ylab =`           | Title of y-axis                                                         |
-+--------------------+-------------------------------------------------------------------------+
-| `size =`           | Size of x-axis text in pts (use ggplot's theme() to adjust other sizes) |
-+--------------------+-------------------------------------------------------------------------+
++--------------+-------------------------------------------------------------------------+
+| Argument(s)  | Description                                                             |
++==============+=========================================================================+
+| `title =`    | Title of plot                                                           |
++--------------+-------------------------------------------------------------------------+
+| `xlab =`     | Title of x-axis                                                         |
++--------------+-------------------------------------------------------------------------+
+| `ylab =`     | Title of y-axis                                                         |
++--------------+-------------------------------------------------------------------------+
+| `size =`     | Size of x-axis text in pts (use ggplot's theme() to adjust other sizes) |
++--------------+-------------------------------------------------------------------------+
 
 An example using many of the above arguments:
 
@@ -1749,7 +1753,7 @@ The most recent data shown in epicurves should often be marked as tentative, or 
 
 2)  Group the data by tentative status and color those bars differently
 
-[***CAUTION:*** You might try `geom_rect()` to draw a rectangle, but adjusting the transparency does not work in a linelist context. This function overlays one rectangle for each observation/row!. Use either a very low alpha (e.g. 0.01), or another approach. ]{style="color: orange;"}
+[***CAUTION:*** You might try `geom_rect()` to draw a rectangle, but adjusting the transparency does not work in a linelist context. This function overlays one rectangle for each observation/row!. Use either a very low alpha (e.g. 0.01), or another approach.]{style="color: orange;"}
 
 ### Using `annotate()` {.unnumbered}
 
