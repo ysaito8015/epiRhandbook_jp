@@ -185,6 +185,10 @@ In a cleaning pipeline the order of the steps is important. Cleaning steps might
 
 This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with `library()` from **base** R. See the page on [R basics] for more information on R packages.
 
+パッケージの読み込み
+
+このコードブロックは、分析に必要なパッケージの読み込みを示しています。このハンドブックでは **pacman** の `p_load()` を重視しています。p_load() は必要に応じてパッケージをインストールし、使用するためにパッケージを読み込みます。インストールされたパッケージは**base** Rの`library()` で読み込むことができます。Rのパッケージに関する詳細は[R basics](https://epirhandbook.com/r-basics.html#r-basics)のページをご覧ください。
+
 ```{r, message = F}
 pacman::p_load(
   rio,        # importing data  
@@ -206,13 +210,23 @@ pacman::p_load(
 
 ### Import {.unnumbered}
 
-Here we import the "raw" case linelist Excel file using the `import()` function from the package **rio**. The **rio** package flexibly handles many types of files (e.g. .xlsx, .csv, .tsv, .rds. See the page on [Import and export] for more information and tips on unusual situations (e.g. skipping rows, setting missing values, importing Google sheets, etc).
+Here we import the "raw" case linelist Excel file using the `import()` function from the package **rio**. The **rio** package flexibly handles many types of files (e.g. .xlsx, .csv, .tsv, .rds. See the page on [Import and export](https://epirhandbook.com/import-and-export.html#import-and-export) for more information and tips on unusual situations (e.g. skipping rows, setting missing values, importing Google sheets, etc).
 
-If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_raw.xlsx' class='download-button'>click to download the "raw" linelist</a> (as .xlsx file).
+If you want to follow along, [click to download the "raw" linelist](https://github.com/appliedepi/epirhandbook_eng/raw/master/data/case_linelists/linelist_raw.xlsx) (as .xlsx file).
 
 If your dataset is large and takes a long time to import, it can be useful to have the import command be separate from the pipe chain and the "raw" saved as a distinct file. This also allows easy comparison between the original and cleaned versions.
 
 Below we import the raw Excel file and save it as the data frame `linelist_raw`. We assume the file is located in your working directory or R project root, and so no sub-folders are specified in the file path.
+
+インポートデータ
+
+インポート
+
+ここでは、**rio**パッケージの`import()`関数を使って、生の症例リストExcelファイルをインポートします。**rio**パッケージは、さまざまな種類のファイル（.xlsx、.csv、.tsv、.rdsなど）を柔軟に扱うことができます。詳しい情報や、通常とは異なる状況（行のスキップ、欠損値の設定、Googleシートのインポートなど）でのヒントについては、[Import and export](https://epirhandbook.com/import-and-export.html#import-and-export)のページをご覧ください。
+
+ご覧になりたい方は、クリックして "生 "のラインリストをダウンロードしてください（.xlsxファイルとして出力）。
+
+データセットが大きく、インポートに時間がかかる場合は、インポートコマンドをパイプチェーンとは別に用意し、生データを別のファイルとして保存すると便利です。これにより、オリジナルとクリーンアップしたバージョンの比較が容易になります。
 
 ```{r, echo=F, message=F}
 # HIDDEN FROM READER
@@ -226,6 +240,10 @@ linelist_raw <- import("linelist_raw.xlsx")
 
 You can view the first 50 rows of the the data frame below. Note: the **base** R function `head(n)` allow you to view just the first `n` rows in the R console.
 
+以下に、データフレームの最初の50行を見ることができます。
+
+注：Rの基本関数である `head(n)` を使うと，Rコンソールで最初の`n`行だけを表示することができます．
+
 ```{r message=FALSE, echo=F}
 # display the linelist data as a table
 DT::datatable(head(linelist_raw,50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
@@ -234,6 +252,10 @@ DT::datatable(head(linelist_raw,50), rownames = FALSE, options = list(pageLength
 ### Review {.unnumbered}
 
 You can use the function `skim()` from the package **skimr** to get an overview of the entire dataframe (see page on [Descriptive tables] for more info). Columns are summarised by class/type such as character, numeric. Note: "POSIXct" is a type of raw date class (see [Working with dates].
+
+レビュー
+
+**skimr**パッケージの関数`skim()` を使うと、データフレーム全体の概要を把握することができます（詳しくは[Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables)のページを参照）。カラムは、character, numericなどのクラス/タイプ別にまとめられています。注："POSIXct "は生の日付クラスの一種です（[Working with dates](https://epirhandbook.com/working-with-dates.html#working-with-dates-1)を参照してください。
 
 ```{r, eval=F}
 skimr::skim(linelist_raw)
@@ -268,15 +290,40 @@ The columns names of `linelist_raw` are printed below using `names()` from **bas
 -   Different naming patterns are used for dates (`date onset` vs. `infection date`)\
 -   There must have been a *merged header* across the two last columns in the .xlsx. We know this because the name of two merged columns ("merged_header") was assigned by R to the first column, and the second column was assigned a placeholder name "...28" (as it was then empty and is the 28th column).
 
+列名
+
+Rでは、列名は列の「ヘッダー」または「トップ」の値です。コード内では列を参照するために使用され、図ではデフォルトのラベルとして使用されます。
+
+SASやSTATAなどの他の統計ソフトでは、短いカラム名を長く表示した「ラベル」が共存しています。Rではデータに列ラベルを追加することができますが、実際にはあまり重視されていません。列名を図の表示に適したものにするには、通常、出力を作成するプロットコマンドの中でその表示を調整します（例えば、プロットの軸や凡例のタイトル、表示される表の列ヘッダーなどです-[scales section of the ggplot tips ](https://epirhandbook.com/ggplot-tips.html#ggplot_tips_scales)と[Tables for presentation](https://epirhandbook.com/tables-for-presentation.html#tables-for-presentation)のページを参照してください）。データに列ラベルを付けたい場合は、[こちら](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html)と[こちら](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html)をご覧ください。
+
+Rのカラム名は非常に頻繁に使用されるため、「きれいな」構文である必要があります。以下のように提案します：
+
+-   短い名前
+-   スペースを使わない（アンダースコア \_ に置き換えてください）
+-   特殊な文字は使用しない (&, \#, \<, \>,など)\
+-   似たようなスタイルの用語体系（例：すべての日付カラムの名前が date_onset, date_report, date_deathなど）
+
+`linelist_raw`の列名は、**base R**の`names()`を使って以下のように表示されています。
+
+-   スペースを含む名前がある(例: `infection date`)\
+-   日付には異なる命名パターンが使用されている(`date onset` と. `infection date`)\
+-   .xlsxの最後の2列には、マージされたヘッダがあったはずです。これは、2つのマージされた列の名前（"merged_header"）がRによって最初の列に割り当てられ、2番目の列にはプレースホルダー名「...28」が割り当てられていることからわかります（当時は空欄であり、28番目の列であったため）。
+
 ```{r}
 names(linelist_raw)
 ```
 
 [***NOTE:*** To reference a column name that includes spaces, surround the name with back-ticks, for example: linelist\$`` ` '\x60infection date\x60'` ``. note that on your keyboard, the back-tick (\`) is different from the single quotation mark (').]{style="color: black;"}
 
+注：スペースを含む列名を参照するには、その名前をバックスティックで囲みます。例：linelist\$`` ` '\x60infection date\x60'` ``　キーボードでは、バックティック（\`）とシングルクォーテーションマーク（'）は異なりますのでご注意ください。
+
 ### Labels {.unnumbered}
 
 Some other statistical software such as SAS have variable *labels*
+
+ラベル
+
+SASなどの他の統計ソフトでは、変数のラベルが付いています。
 
 ### Automatic cleaning {.unnumbered}
 
@@ -290,6 +337,19 @@ The function `clean_names()` from the package **janitor** standardizes column na
 
 Below, the cleaning pipeline begins by using `clean_names()` on the raw linelist.
 
+自動クリーニング
+
+**janitor**パッケージの関数`clean_names()`は、以下のようにして列名を標準化し、ユニークにします：
+
+-   すべての名前をアンダーライン、数字、文字のみで構成されるように変換します。\
+-   アクセント記号付きの文字はASCIIに音訳されます（例：ドイツ語のoにウムラウト記号を付けると "o"、スペイン語の "enye "は "n "になります）。\
+-   新しい列名の大文字小文字の区別は、 `case =` 引数を使って指定できます（ "snake"がデフォルトで、他に "sentence"、"title"、"small_camel"などがあります）。\
+-   `replace =` 引数にベクトルを与えることで、特定の名前の置換を指定することができます（例：`replace = c(onset = "date_of_onset")`)
+-   
+-   ここでは、 [vignette](https://cran.r-project.org/web/packages/janitor/vignettes/janitor.html#cleaning)を紹介します。
+
+以下では、クリーニングのパイプラインは、生のラインリストに対して`clean_names()`を使用することから始めます。
+
 ```{r clean_names}
 # pipe the raw dataset through the function clean_names(), assign result as "linelist"  
 linelist <- linelist_raw %>% 
@@ -300,6 +360,8 @@ names(linelist)
 ```
 
 [***NOTE:*** The last column name "...28" was changed to "x28".]{style="color: black;"}
+
+注：最後の列名「...28」を「x28」に変更しました。
 
 ### Manual name cleaning {.unnumbered}
 
