@@ -188,17 +188,15 @@ linelist %>%
     n_males    = sum(gender == "m", na.rm=T))
 ```
 
-[***TIP:*** The summarise function works with both UK and US spelling - `summarise()` and `summarize()` call the same function]{style="color: darkgreen;"}
-
 [**ヒント**： summary関数は、英国と米国の両方のスペルで機能します。summarise`()`とsummary`()`は同じ関数を呼び出します。]{style="color: darkgreen;"}
 
-## Counts and tallies
+## Counts and tallies カウントと集計
 
-`count()` and `tally()` provide similar functionality but are different. Read more about the distinction between `tally()` and `count()` [here](https://dplyr.tidyverse.org/reference/tally.html)
+`count()` と `tally()` は同じような機能を提供しますが、異なるものです。 　`count()` と `tally()` の違いについて詳しくは、[こちら](https://dplyr.tidyverse.org/reference/tally.html) をご覧ください。
 
 ### `tally()` {.unnumbered}
 
-`tally()` is shorthand for `summarise(n = n())`, and *does not* group data. Thus, to achieve grouped tallys it must follow a `group_by()` command. You can add `sort = TRUE` to see the largest groups first.
+`tally()` は `summarise(n = n())` の省略形であり、データをグループ化しません。グループ化された集計をするには、 `group_by()` コマンドの後に書く必要があります。 `sort = TRUE` を追加すると、最大のグループを一番上に表示できます。
 
 ```{r}
 linelist %>% 
@@ -213,31 +211,31 @@ linelist %>%
 
 ### `count()` {.unnumbered}
 
-In contrast, `count()` does the following:
+対照的に `count()` は次のことを行います:
 
-1)  applies `group_by()` on the specified column(s)\
-2)  applies `summarise()` and returns column `n` with the number of rows per group\
-3)  applies `ungroup()`
+1)  指定された列に `group_by()` を適応\
+2)  `summarise()` を適用し、グループごとの行数が表示される `n` 列を返します\
+3)   `ungroup()` を適応
 
 ```{r}
 linelist %>% 
   count(outcome)
 ```
 
-Just like with `group_by()` you can create a new column within the `count()` command:
+`group_by()` と同様に `count()` コマンド内に新しい列を作成できます。
 
 ```{r}
 linelist %>% 
   count(age_class = ifelse(age >= 18, "adult", "child"), sort = T)
 ```
 
-`count()` can be called multiple times, with the functionality "rolling up". For example, to summarise the number of hospitals present for each gender, run the following. Note, the name of the final column is changed from default "n" for clarity (with `name  =`).
+`count()` は、「ロールアップ」機能を使用して複数回呼び出すことができます。たとえば、性別ごとに存在する病院の数を要約するには、次のようにします。わかりやすくするために、最後の列の名前が（`name  =` を使って）デフォルトの「n」から変更されていることに注意してください。
 
 ```{r}
 linelist %>% 
-  # produce counts by unique outcome-gender groups
+  # 一意なoutcome - genderグループをカウントします
   count(gender, hospital) %>% 
-  # gather rows by gender (3) and count number of hospitals per gender (6)
+  # 性別ごとに行を集計し（3）、性別ごとに病院の数を数えます（6）
   count(gender, name = "hospitals per gender" ) 
 ```
 
