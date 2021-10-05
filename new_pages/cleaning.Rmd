@@ -294,7 +294,7 @@ The columns names of `linelist_raw` are printed below using `names()` from **bas
 
 Rでは、列名は列の「ヘッダー」または「トップ」の値です。コード内では列を参照するために使用され、図ではデフォルトのラベルとして使用されます。
 
-SASやSTATAなどの他の統計ソフトでは、短いカラム名を長く表示した「ラベル」が共存しています。Rではデータに列ラベルを追加することができますが、実際にはあまり重視されていません。列名を図の表示に適したものにするには、通常、出力を作成するプロットコマンドの中でその表示を調整します（例えば、プロットの軸や凡例のタイトル、表示される表の列ヘッダーなどです-[scales section of the ggplot tips ](https://epirhandbook.com/ggplot-tips.html#ggplot_tips_scales)と[Tables for presentation](https://epirhandbook.com/tables-for-presentation.html#tables-for-presentation)のページを参照してください）。データに列ラベルを付けたい場合は、[こちら](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html)と[こちら](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html)をご覧ください。
+SASやSTATAなどの他の統計ソフトでは、短いカラム名を長く表示した「ラベル」が共存しています。Rではデータに列ラベルを追加することができますが、実際にはあまり重視されていません。列名を図の表示に適したものにするには、通常、出力を作成するプロットコマンドの中でその表示を調整します（例えば、プロットの軸や凡例のタイトル、表示される表の列ヘッダーなどです-[scales section of the ggplot tips](https://epirhandbook.com/ggplot-tips.html#ggplot_tips_scales)と[Tables for presentation](https://epirhandbook.com/tables-for-presentation.html#tables-for-presentation)のページを参照してください）。データに列ラベルを付けたい場合は、[こちら](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html)と[こちら](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html)をご覧ください。
 
 Rのカラム名は非常に頻繁に使用されるため、「きれいな」構文である必要があります。以下のように提案します：
 
@@ -351,7 +351,9 @@ Below, the cleaning pipeline begins by using `clean_names()` on the raw linelist
 以下では、クリーニングのパイプラインは、生のラインリストに対して`clean_names()`を使用することから始めます。
 
 ```{r clean_names}
-# pipe the raw dataset through the function clean_names(), assign result as "linelist"  
+# pipe the raw dataset through the function
+# 生のデータセットを関数にパイプする
+clean_names(), assign result as "linelist"  
 linelist <- linelist_raw %>% 
   janitor::clean_names()
 
@@ -368,6 +370,12 @@ names(linelist)
 Re-naming columns manually is often necessary, even after the standardization step above. Below, re-naming is performed using the `rename()` function from the **dplyr** package, as part of a pipe chain. `rename()` uses the style `NEW = OLD` - the new column name is given before the old column name.
 
 Below, a re-naming command is added to the cleaning pipeline. Spaces have been added strategically to align code for easier reading.
+
+手動による名前のクリーニング
+
+上記の標準化ステップの後でも、カラムの名前を手動で変更することはしばしば必要です。 `rename()`は `NEW = OLD` というスタイルを採用しており、新しい列名が古い列名の前に与えられます。
+
+以下では、クリーニング・パイプラインに名前変更コマンドを追加しています。読みやすいようにコードを並べるため、戦略的にスペースを追加しています。
 
 ```{r}
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
@@ -386,13 +394,19 @@ linelist <- linelist_raw %>%
 
 Now you can see that the columns names have been changed:
 
+これで、列名が変更されていることがわかります。
+
 ```{r message=FALSE, echo=F}
 names(linelist)
 ```
 
-#### Rename by column position {.unnumbered}
+**Rename by column position**
 
 You can also rename by column position, instead of column name, for example:
+
+#### 列の位置による名前の変更 {.unnumbered}
+
+列名ではなく、列の位置で名前を変更することもできます。
 
 ```{r, eval=F}
 rename(newNameForFirstColumn  = 1,
@@ -402,6 +416,10 @@ rename(newNameForFirstColumn  = 1,
 #### Rename via `select()` and `summarise()` {.unnumbered}
 
 As a shortcut, you can also rename columns within the **dplyr** `select()` and `summarise()` functions. `select()` is used to keep only certain columns (and is covered later in this page). `summarise()` is covered in the [Grouping data] and [Descriptive tables] pages. These functions also uses the format `new_name = old_name`. Here is an example:
+
+#### `select()`および`summarise()`による名前の変更 {.unnumbered}
+
+ショートカットとして、**dplyr**の`select()`関数や `summarise()`関数でも列の名前を変更することができます。`select()`は特定の列だけを残すために使用します（このページで後述します）。`summarise()`については、[Grouping data](https://epirhandbook.com/grouping-data.html#grouping-data)や[Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables)のページで説明します。これらの関数は、`new_name = old_name` というフォーマットも使用します。以下はその例です。
 
 ```{r, eval=F}
 linelist_raw %>% 
@@ -422,7 +440,7 @@ You can clean these names manually by referencing their position number (see exa
 
 Merged cells in an Excel file are a common occurrence when receiving data. As explained in [Transition to R], merged cells can be nice for human reading of data, but are not "tidy data" and cause many problems for machine reading of data. R cannot accommodate merged cells.
 
-Remind people doing data entry that **human-readable data is not the same as machine-readable data**. Strive to train users about the principles of [**tidy data**](https://r4ds.had.co.nz/tidy-data.html). If at all possible, try to change procedures so that data arrive in a tidy format without merged cells.
+Remind people doing data entry that human-readable data is not the same as machine-readable data. Strive to train users about the principles of tidy data. If at all possible, try to change procedures so that data arrive in a tidy format without merged cells.
 
 -   Each variable must have its own column.\
 -   Each observation must have its own row.\
@@ -432,11 +450,37 @@ When using **rio**'s `import()` function, the value in a merged cell will be ass
 
 One solution to deal with merged cells is to import the data with the function `readWorkbook()` from the package **openxlsx**. Set the argument `fillMergedCells = TRUE`. This gives the value in a merged cell to all cells within the merge range.
 
+**その他の課題**
+
+空白のExcelカラム名
+
+Rは、列名（ヘッダー）のないデータセット列を持つことはできません。したがって、データはあるが列のヘッダーがないExcelデータセットをインポートした場合、Rは「...1」や「...2」といった名前でヘッダーを埋めることになります。数字は列番号を表します（例：データセットの4列目にヘッダーがない場合、Rはその列を「...4」と命名します）。
+
+これらの名前は、ポジション番号（上記の例を参照）または割り当てられた名前(`linelist_raw$...1`)を参照することで、手動でクリーニングすることができます。
+
+**Excelの列名とセルの結合**
+
+Excelファイル中のマージセルは、データを受け取る際によく起きています。[Transition to R](https://epirhandbook.com/transition-to-r.html#transition-to-r)
+
+で説明したように、マージされたセルは、人間がデータを読むときには良いのですが、 "tidy data"ではなく、機械がデータを読むときには多くの問題を引き起こします。Rはマージされたセルに対応できません。
+
+人間が読めるデータと機械が読めるデータは別物であることをデータ入力担当者に伝えてください。整頓されたデータの原則をユーザーに教えるように努めてください。可能な限り、セルが結合されていない整頓されたフォーマットでデータが届くように手順を変更しましょう。
+
+-   各変数はそれぞれの列を持たなければなりません。\
+-   各観測値は、それぞれの行を持つ必要があります。\
+-   それぞれの値は、それぞれのセルを持っていなければなりません。
+
+**rio**の`import()`関数を使用した場合、マージされたセルの値は最初のセルに割り当てられ、それ以降のセルは空になります。
+
+併合されたセルを処理するための一つの解決策は、**openxlsx**パッケージの関数`readWorkbook()`でデータをインポートすることです。引数`fillMergedCells = TRUE`を設定します。これにより、マージされたセルの値を、マージ範囲内のすべてのセルに与えることができます。
+
 ```{r, eval=F}
 linelist_raw <- openxlsx::readWorkbook("linelist_raw.xlsx", fillMergedCells = TRUE)
 ```
 
 [***DANGER:*** If column names are merged with `readWorkbook()`, you will end up with duplicate column names, which you will need to fix manually - R does not work well with duplicate column names! You can re-name them by referencing their position (e.g. column 5), as explained in the section on manual column name cleaning.]{style="color: red;"}
+
+[***危険***`readWorkbook()`で列名をマージすると、列名が重複してしまうので、手動で修正する必要があります - Rは列名が重複するとうまく動作しません! 手動での列名のクリーニングのセクションで説明したように、その位置（例えば5列目）を参照して列名を再設定することができます。]{style="color: red;"}
 
 <!-- ======================================================= -->
 
@@ -452,6 +496,14 @@ Use `select()` from **dplyr** to select the columns you want to retain, and to s
 
 **Here are ALL the column names in the linelist at this point in the cleaning pipe chain:**
 
+列の選択と並び替え
+
+dplyrの`select()`を使って、保持したい列を選択し、データフレーム内の順番を指定します。
+
+[***注意：***以下の例では、`linelist`データフレームを`select()`で変更して表示していますが、保存はしていません。これはデモンストレーションのためです。変更された列名は、データフレームを`names()`にパイプすることで表示されます。]{style="color: orange;"}
+
+ここでは、クリーニング・パイプ・チェーンのこの時点での[`linelist`]{style="color: orange;"}の全列名を示しています:
+
 ```{r}
 names(linelist)
 ```
@@ -462,8 +514,15 @@ names(linelist)
 
 Put their names in the `select()` command, with no quotation marks. They will appear in the data frame in the order you provide. Note that if you include a column that does not exist, R will return an error (see use of `any_of()` below if you want no error in this situation).
 
+**列を残す**
+
+残しておきたい列のみを選択します。
+
+`select()`コマンドの中で、列の名前を引用符を使わずに記述します。これらの列は、指定した順序でデータフレームに表示されます。存在しない列を入れた場合、Rはエラーを返すことに注意してください（このような場合にエラーを出さないようにするには、後述の`any_of()`の使い方を参照してください）。
+
 ```{r}
 # linelist dataset is piped through select() command, and names() prints just the column names
+# ラインリストのデータセットはselect()コマンドに渡され、names()は列名だけを表示します。
 linelist %>% 
   select(case_id, date_onset, date_hospitalisation, fever) %>% 
   names()  # display the column names
@@ -475,8 +534,15 @@ These helper functions exist to make it easy to specify columns to keep, discard
 
 For example, if you want to re-order the columns, `everything()` is a useful function to signify "all other columns not yet mentioned". The command below moves columns `date_onset` and `date_hospitalisation` to the beginning (left) of the dataset, but keeps all the other columns afterward. Note that `everything()` is written with empty parentheses:
 
+**"tidyselect" ヘルパー関数**
+
+これらのヘルパー関数は、保持、破棄、または変換する列を簡単に指定するために存在します。これらは、**tidyverse**に含まれる**tidyselect**パッケージのもので、**dplyr**関数で列を選択する方法の基礎となっています。
+
+例えば、列の順番を変えたい場合、`everything()`は「まだ記載されていない他のすべての列」を意味する便利な関数です。以下のコマンドは、`date_onset`と`date_hospitalisation`の列をデータセットの最初（左）に移動させますが、それ以降の他の列はすべて保持します。`everything()`は空の括弧で書かれていることに注意してください。
+
 ```{r}
 # move date_onset and date_hospitalisation to beginning
+# date_onsetとdate_hospitalisationを先頭に移動させる
 linelist %>% 
   select(date_onset, date_hospitalisation, everything()) %>% 
   names()
@@ -516,8 +582,43 @@ In addition, use normal operators such as `c()` to list several columns, `:` for
 
 Use `where()` to specify logical criteria for columns. If providing a function inside `where()`, do not include the function's empty parentheses. The command below selects columns that are class Numeric.
 
+ここでは、`select()`、`across()`、`summary()`などの**dplyr**関数内でも動作する他の「tidyselect」ヘルパー関数を紹介します。
+
+-   `everything()`- 記載されていない他のすべての列\
+
+-   `last_col()`- 最後の列です。\
+
+-   `where()` - すべての列に関数を適用し、TRUEとなるものを選択します。\
+
+-   `contains()` - ある文字列を含む列\
+
+    -   例：`select(contains("time"))`\
+
+-   starts_with() - 指定された接頭辞にマッチします。
+
+    -   例：`select(starts_with("date_"))`\
+
+-   `ends_with()`- 指定された接尾辞にマッチします。\
+
+    -   例：`select(ends_with("_post"))`\
+
+-   `matches()` - 正規表現(regex)を適用する\
+
+    -   例：`select(matches("[pt]al"))`\
+
+-   `num_range()` - x01, x02, x03のような数値の範囲を指定します。\
+
+-   `any_of()`- カラムが存在する場合はマッチしますが、見つからない場合はエラーを返しません。\
+
+    -   例：`select(any_of(date_onset, date_death, cardiac_arrest))`\
+
+さらに、複数の列を列挙するには`c()`、連続した列には`:`、反対の列には`!`,`AND`には `&`, `OR`には `|`などの通常の演算子を使用します。
+
+列の論理的な条件を指定するには、`where()`を使用します。`where()`の中に関数を入れる場合は、関数の空の括弧は入れないでください。以下のコマンドは、Numericクラスの列を選択します。
+
 ```{r}
 # select columns that are class Numeric
+# Numericクラスのカラムを選択
 linelist %>% 
   select(where(is.numeric)) %>% 
   names()
@@ -525,8 +626,11 @@ linelist %>%
 
 Use `contains()` to select only columns in which the column name contains a specified character string. `ends_with()` and `starts_with()` provide more nuance.
 
+列名に指定した文字列が含まれている列のみを選択するには、`contains()`を使用します。 `ends_with()`や `starts_with()`を使用すると、より詳細な情報が得られます。
+
 ```{r}
 # select columns containing certain characters
+# 特定の文字を含む列を選択する
 linelist %>% 
   select(contains("date")) %>% 
   names()
@@ -534,8 +638,11 @@ linelist %>%
 
 The function `matches()` works similarly to `contains()` but can be provided a regular expression (see page on [Characters and strings]), such as multiple strings separated by OR bars within the parentheses:
 
+関数 `matches()`は、`contains()`と同様の動作をしますが、括弧内のORバーで区切られた複数の文字列などの正規表現（[Characters and strings](https://epirhandbook.com/characters-and-strings.html#characters-and-strings)のページを参照）を指定することができます。
+
 ```{r}
 # searched for multiple character matches
+# 複数の文字にマッチするものを検索
 linelist %>% 
   select(matches("onset|hosp|fev")) %>%   # note the OR symbol "|"
   names()
@@ -544,6 +651,10 @@ linelist %>%
 [***CAUTION:*** If a column name that you specifically provide does not exist in the data, it can return an error and stop your code. Consider using `any_of()` to cite columns that may or may not exist, especially useful in negative (remove) selections.]{style="color: orange;"}
 
 Only one of these columns exists, but no error is produced and the code continues without stopping your cleaning chain.
+
+[***注意***：特に指定した列名がデータに存在しない場合、エラーを返してコードを停止させることがあります。存在するかどうかわからない列を引用するために、`any_of()`を使用することを検討してください。これは、特に否定的な（削除）選択において有用です。]{style="color: orange;"}
+
+これらの列のうち1つだけが存在しますが、エラーは発生せず、コードはクリーニングチェーンを停止することなく継続されます。
 
 ```{r}
 linelist %>% 
@@ -555,24 +666,37 @@ linelist %>%
 
 **Indicate which columns to remove** by placing a minus symbol "-" in front of the column name (e.g. `select(-outcome)`), or a vector of column names (as below). All other columns will be retained.
 
+**列の削除**
+
+削除する列を示すには、列名の前にマイナス記号「-」を付けるか（例：`select(-outcome)`）、列名のベクトルを付けます（以下のように）。その他の列はすべて維持されます。
+
 ```{r}
 linelist %>% 
   select(-c(date_onset, fever:vomit)) %>% # remove date_onset and all columns from fever to vomit
+# date_onsetとfeverからvomitまでの全ての列を削除する。
   names()
 ```
 
 You can also remove a column using **base** R syntax, by defining it as `NULL`. For example:
 
+Rの基本的な構文を使って、NULLと定義して列を削除することもできます。例えば、以下のようになります。
+
 ```{r, eval=F}
 linelist$date_onset <- NULL   # deletes column with base R syntax 
+# Rの基本的な構文でカラムを削除する
 ```
 
 ### Standalone {.unnumbered}
 
 `select()` can also be used as an independent command (not in a pipe chain). In this case, the first argument is the original dataframe to be operated upon.
 
+**独立型**
+
+`select()`は、独立したコマンドとして使用することもできます（パイプ・チェーンではありません）。この場合、最初の引数は操作対象となる元のデータフレームです。
+
 ```{r}
 # Create a new linelist with id and age-related columns
+# IDと年齢に関連した列を持つ新しいラインリストを作成する
 linelist_age <- select(linelist, case_id, contains("age"))
 
 # display the column names
@@ -583,27 +707,37 @@ names(linelist_age)
 
 In the `linelist_raw`, there are a few columns we do not need: `row_num`, `merged_header`, and `x28`. We remove them with a `select()` command in the cleaning pipe chain:
 
+#### パイプチェーンに追加 {.unnumbered}
+
+`linelist_raw`には、`row_num`、`merged_header`、`x28`という必要のない列があります。これらをクリーニング・パイプ・チェーンの`select()`コマンドで削除します。
+
 ```{r}
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
 ##################################################################################
 
 # begin cleaning pipe chain
+# パイプチェーンの処理開始
 ###########################
 linelist <- linelist_raw %>%
     
     # standardize column name syntax
+     #列名構文の標準化
     janitor::clean_names() %>% 
     
     # manually re-name columns
-           # NEW name             # OLD name
+     # 手動で列名を変更
+           # NEW name　　　　　　　# OLD name
+     　　　#　新しい名前　　　　　 #古い名前
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
     # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+     上記は、すでに説明した上流側の処理手順
     #####################################################
 
     # remove column
+ 　 #列の除去
     select(-c(row_num, merged_header, x28))
 ```
 
