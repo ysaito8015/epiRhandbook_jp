@@ -196,7 +196,7 @@ linelist %>%
 
 ### `tally()` {.unnumbered}
 
-`tally()` は `summarise(n = n())` の省略形であり、データをグループ化しません。グループ化された集計をするには、 `group_by()` コマンドの後に書く必要があります。 `sort = TRUE` を追加すると、最大のグループを一番上に表示できます。
+`tally()` は `summarise(n = n())` の省略形であり、データをグループ化しません。グループ化された集計をするには、 `group_by()` コマンドの後に書かないといけません。 `sort = TRUE` を追加すると、最大のグループが一番上に表示されます。
 
 ```{r}
 linelist %>% 
@@ -215,7 +215,7 @@ linelist %>%
 
 1)  指定された列に `group_by()` を適応\
 2)  `summarise()` を適用し、グループごとの行数が表示される `n` 列を返します\
-3)   `ungroup()` を適応
+3)  `ungroup()` を適応
 
 ```{r}
 linelist %>% 
@@ -239,36 +239,36 @@ linelist %>%
   count(gender, name = "hospitals per gender" ) 
 ```
 
-### Add counts {.unnumbered}
+### 総数を追加する {.unnumbered}
 
-In contrast to `count()` and `summarise()`, you can use `add_count()` to *add* a new column `n` with the counts of rows per group *while retaining all the other data frame columns*.
+`count()` と `summarise()`とは対照的に、`add_count()` を使用すると、[データフレームの他のすべての列を保持しつつ]{.ul}、グループごとの行数を含む新しい列 `n` を[追加]{.ul}できます。
 
-This means that a group's count number, in the new column `n`, will be printed in each row of the group. For demonstration purposes, we add this column and then re-arrange the columns for easier viewing. See the section below on [filter on group size](#group_filter_grp_size) for another example.
+新しい列 `n` のグループのカウント番号が、グループの各行に出力されます。デモンストレーションのために、この列を追加してから、見やすくなるように列を並べ替えています。他の例については、[filter on group size](#group_filter_grp_size)のセクションを参照してください。
 
 ```{r}
 linelist %>% 
-  as_tibble() %>%                   # convert to tibble for nicer printing 
-  add_count(hospital) %>%           # add column n with counts by hospital
-  select(hospital, n, everything()) # re-arrange for demo purposes
+  as_tibble() %>%                   # 出力が綺麗になるようにtibbleに変換
+  add_count(hospital) %>%           # 病院ごとのカウント列n を追加
+  select(hospital, n, everything()) # デモ目的に列を並び替え
 ```
 
-### Add totals {.unnumbered}
+###  合計を追加する {.unnumbered}
 
-To easily add total *sum* rows or columns after using `tally()` or `count()`, see the **janitor** section of the [Descriptive tables](#tbl_janitor) page. This package offers functions like `adorn_totals()` and `adorn_percentages()` to add totals and convert to show percentages. Below is a brief example:
+`tally()` か `count()` を使用した後、合計行または列の[合計]{.ul}を簡単に追加するには、[Descriptive tables](#tbl_janitor) ページの **janitor** セクションを参照してください。このパッケージは `adorn_totals()` や `adorn_percentages()` のような、合計を追加し、パーセンテージを表示するような関数を提供します。以下は簡単な例です。
 
 ```{r}
-linelist %>%                                  # case linelist
-  tabyl(age_cat, gender) %>%                  # cross-tabulate counts of two columns
-  adorn_totals(where = "row") %>%             # add a total row
-  adorn_percentages(denominator = "col") %>%  # convert to proportions with column denominator
-  adorn_pct_formatting() %>%                  # convert proportions to percents
-  adorn_ns(position = "front") %>%            # display as: "count (percent)"
-  adorn_title(                                # adjust titles
+linelist %>%                                  # 症例のラインリスト
+  tabyl(age_cat, gender) %>%                  # 2つの列の数をクロス集計
+  adorn_totals(where = "row") %>%             # 合計行を追加
+  adorn_percentages(denominator = "col") %>%  # 列の分母を使用して比率に変換
+  adorn_pct_formatting() %>%                  # 比率をパーセントに変換
+  adorn_ns(position = "front") %>%            # 「数（パーセント）」と表示
+  adorn_title(                                # タイトルを調整
     row_name = "Age Category",
     col_name = "Gender")
 ```
 
-To add more complex totals rows that involve summary statistics other than *sums*, see [this section of the Descriptive Tables page](#tbl_dplyr_totals).
+より複雑な合計行、たとえば合計以外の要約統計量を含むようなものを追加するには、 [this section of the Descriptive Tables page](#tbl_dplyr_totals) を参照。
 
 ## Grouping by date
 
