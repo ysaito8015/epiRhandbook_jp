@@ -1,31 +1,24 @@
 # 推奨パッケージ
 
-このコードをコピーして実行すれば、これらのパッケージはすべてCRANからインストールされ、現在のRセッションで使用するためにロードされます。パッケージが既にインストールされている場合は、使用するためだけにロードされます。
+以下は、Rでの一般的な疫学作業に推奨されるパッケージの長いリストです。このコードをコピーして実行すると、これらのパッケージはすべてCRANからインストールされ、現在のRセッションで使用するためにロードされます。 パッケージがすでにインストールされている場合は、使用目的でのみロードされます。
 
-このコードを`#`記号で修正して、必要のないパッケージを除外することができます。
+`#`記号を使用してコードを変更し、不要なパッケージを除外することができます。
 
 注意点:
 
--   以下のコードを実行する前に、まず **pacman** パッケージをインストールしてください。これは `install.packages("pacman")`でできます。このハンドブックでは **pacman** の `p_load()` を強調しています。`p_load()` は必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。また、すでにインストールされているパッケージを**base** R の `library()` でロードすることもできます。
+-   以下のコードを実行する前に、まず **pacman** パッケージをインストールしてください。これは `install.packages("pacman")`によって行うことができます。このハンドブックでは **pacman** の `p_load()` を強調しています。`p_load()` は必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。また、すでにインストールされているパッケージを**base** R の `library()` でロードすることもできます。
 
--   以下のコードでは、他のパッケージをインストール/ロードする際に含まれるパッケージは、インデントとハッシュで示されています。例えば、**ggplot2**が**tidyverse**の下に記載されています。
+```{=html}
+<!-- -->
+```
+-   以下のコードでは、他のパッケージをインストール/ロードする際に含まれるパッケージは、インデントとハッシュで示されています。例えば、**ggplot2**は**tidyverse**の下に記載されています。
 
 -   複数のパッケージが同じ名前の関数を持っている場合、より最近ロードされたパッケージの関数が優先されることでマスキングが発生することがあります。詳しくは\[R basics\]のページをご覧ください。このようなコンフリクトを管理するために、**conflicted**パッケージの使用を検討してください。
 
 **pacman** や masking についての詳しい情報は \[R basics\] のパッケージの項を見て下さい。
 
-このハンドブックの制作に使用された R、RStudio、R パッケージのバージョンを見るには、\[Editorial and technical notes\]のページをご覧ください。
+このハンドブックの制作に使用された R、RStudio、R パッケージのバージョンを見るには、\[Editorial and technical notes\]のページをご覧ください。\
 
-# Suggested packages
-
-Below is a long list of suggested packages for common epidemiological work in R. You can copy this code, run it, and all of these packages will install from CRAN and load for use in the current R session. If a package is already installed, it will be loaded for use only.
-
-You can modify the code with `#` symbols to exclude any packages you do not want.
-
-Of note:
-
--   Install the **pacman** package first before running the below code. You can do this with `install.packages("pacman")`. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use in the current R session. You can also load packages that are already installed with `library()` from **base** R.\
--   In the code below, packages that are included when installing/loading another package are indicated by an indent and hash. For example how **ggplot2** is listed under **tidyverse**.\
 -   If multiple packages have functions with the same name, *masking* can occur when the function from the more recently-loaded package takes precedent. Read more in the \[R basics\] page. Consider using the package **conflicted** to manage such conflicts.\
 -   See the \[R basics\] section on packages for more information on **pacman** and masking.
 
