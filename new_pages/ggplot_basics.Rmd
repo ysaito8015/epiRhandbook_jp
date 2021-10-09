@@ -520,71 +520,71 @@ ggplot(malaria_data, aes(x = data_date, y = malaria_tot)) +
 
 [ファセット内]{.ul}の因子レベルの順序を変更する方法については、こちらの[記事](https://juliasilge.com/blog/reorder-within/)を参照してください
 
-## Storing plots
+## プロットの保存
 
-### Saving plots {.unnumbered}
+### プロットの保存 {.unnumbered}
 
-By default when you run a `ggplot()` command, the plot will be printed to the Plots RStudio pane. However, you can also save the plot as an object by using the assignment operator `<-` and giving it a name. Then it will not print unless the object name itself is run. You can also print it by wrapping the plot name with `print()`, but this is only necessary in certain circumstances such as if the plot is created inside a *for loop* used to print multiple plots at once (see \[Iteration, loops, and lists\] page).
+デフォルトでは `ggplot()` コマンドを実行すると、プロットは RStudio の Plots ペインに表示されます。しかし、代入演算子 `<-` を使い、名前を付けてプロットをオブジェクトとして保存することもできます。そうすれば、オブジェクト名自体が実行されない限り、印刷されません。プロット名を `print()` で囲んで印刷することもできますが、これは、複数のプロットを一度に印刷するための [for ループ]{.ul}の中でプロットを作成する場合など、特定の状況でのみ必要となります（ \[Iteration, loops, and lists\] ページを参照）。
 
 ```{r, warning=F, message=F}
-# define plot
+# プロットを定義する
 age_by_wt <- ggplot(data = linelist, mapping = aes(x = age_years, y = wt_kg, color = age_years))+
   geom_point(alpha = 0.1)
 
-# print
+# 印刷する
 age_by_wt    
 ```
 
-### Modifying saved plots {.unnumbered}
+### 保存されたプロットの修正 {.unnumbered}
 
-One nice thing about **ggplot2** is that you can define a plot (as above), and then add layers to it starting with its name. You do not have to repeat all the commands that created the original plot!
+**ggplot2** の良いところは、（上記のように）プロットを定義して、その名前から始まるレイヤーを追加できることです。元のプロットを作ったすべてのコマンドを繰り返す必要はありません。
 
-For example, to modify the plot `age_by_wt` that was defined above, to include a vertical line at age 50, we would just add a `+` and begin adding additional layers to the plot.
+例えば、上で定義したプロット `age_by_wt` を修正して、50 歳のところに縦線を入れるには、単に `+` を追加して、プロットにレイヤーを追加し始めます。
 
 ```{r, warning=F, message=F}
 age_by_wt+
   geom_vline(xintercept = 50)
 ```
 
-### Exporting plots {.unnumbered}
+### プロットのエクスポート {.unnumbered}
 
-Exporting ggplots is made easy with the `ggsave()` function from **ggplot2**. It can work in two ways, either:
+ggplot のエクスポートは、**ggplot2** の `ggsave()` 関数で簡単にできます。これは2つの方法で動作します。
 
--   Specify the name of the plot object, then the file path and name with extension
+-   プロットオブジェクトの名前を指定した後、ファイルのパスと拡張子付きの名前を指定します。
 
-    -   For example: `ggsave(my_plot, here("plots", "my_plot.png"))`\
+    -   例： `ggsave(my_plot, here("plots", "my_plot.png"))`
 
--   Run the command with only a file path, to save the last plot that was printed
+-   ファイルパスのみを指定してコマンドを実行すると、最後に出力されたプロットが保存されます。
 
-    -   For example: `ggsave(here("plots", "my_plot.png"))`
+    -   例： `ggsave(here("plots", "my_plot.png"))`
 
-You can export as png, pdf, jpeg, tiff, bmp, svg, or several other file types, by specifying the file extension in the file path.
+ファイルパスに拡張子を指定することで、png、pdf、jpeg、tiff、bmp、svgなどのファイル形式でエクスポートすることができます。
 
-You can also specify the arguments `width =`, `height =`, and `units =` (either "in", "cm", or "mm"). You can also specify `dpi =` with a number for plot resolution (e.g. 300). See the function details by entering `?ggsave` or reading the [documentation online](https://ggplot2.tidyverse.org/reference/ggsave.html).
+また、引数として、`width =`、`height =`、`units =`（"in"、"cm"、"mm" のいずれか）を指定することができます。また、プロットの解像度を表す数字（例：300）で `dpi ＝` を指定することもできます。関数の詳細については、`?ggsave` を入力するか、[オンラインのドキュメント](https://ggplot2.tidyverse.org/reference/ggsave.html)を参照してください。
 
-Remember that you can use `here()` syntax to provide the desired file path. See the \[Import and export\] page for more information.
+また、`here()` 構文を使って、必要なファイルパスを指定することもできます。詳しくは、\[Import and export\] のページをご覧ください。
 
-## Labels
+## ラベル
 
-Surely you will want to add or adjust the plot's labels. These are most easily done within the `labs()` function which is added to the plot with `+` just as the geoms were.
+プロットのラベルを追加したり調整したりしたくなるでしょう。これらは、`labs()`関数の中で最も簡単に行うことができます。`labs()` 関数は、geom と同じように `+` でプロットに追加されます。
 
-Within `labs()` you can provide character strings to these arguements:
+`labs()` では、これらの引数に文字列を指定することができます。
 
--   `x =` and `y =` The x-axis and y-axis title (labels)\
--   `title =` The main plot title\
--   `subtitle =` The subtitle of the plot, in smaller text below the title\
--   `caption =` The caption of the plot, in bottom-right by default
+-   `x =` と `y =` x 軸と y 軸のタイトル（ラベル）\
+-   `title =` プロットのメインタイトル\
+-   `subtitle =` プロットのサブタイトル、タイトルの下に小さいテキストで表示\
+-   `caption =` プロットのキャプション、デフォルトでは右下に表示される
 
-Here is a plot we made earlier, but with nicer labels:
+以下は、以前に作成したプロットですが、ラベルがきれいになっています。
 
 ```{r, warning=F, message=F}
 age_by_wt <- ggplot(
-  data = linelist,   # set data
+  data = linelist,   # データを設定
   mapping = aes(     # map aesthetics to column values
-         x = age,           # map x-axis to age            
-         y = wt_kg,         # map y-axis to weight
-         color = age))+     # map color to age
-  geom_point()+           # display data as points
+         x = age,           # x 軸に age をマッピング
+         y = wt_kg,         # y 軸に weight をマッピング
+         color = age))+     # 色に age をマッピング
+  geom_point()+           # データを点として表示
   labs(
     title = "Age and weight distribution",
     subtitle = "Fictional Ebola outbreak, 2014",
@@ -596,22 +596,22 @@ age_by_wt <- ggplot(
 age_by_wt
 ```
 
-Note how in the caption assignment we used `str_glue()` from the **stringr** package to implant dynamic R code within the string text. The caption will show the "Data as of: " date that reflects the maximum hospitalization date in the linelist. Read more about this in the page on \[Characters and strings\].
+キャプションの割り当てでは、**stringr** パッケージの `str_glue()` を使って、文字列テキストの中にダイナミックな R コードを埋め込んだことに注目してください。キャプションには、"Data as of:" キャプションには、linelist の最大入院日を反映した "Data as of: "の日付が表示されます。詳しくは、\[Characters and strings\] のページをご覧ください。
 
-A note on specifying the *legend* title: There is no one "legend title" argument, as you could have multiple scales in your legend. Within `labs()`, you can write the argument for the plot aesthetic used to create the legend, and provide the title this way. For example, above we assigned `color = age` to create the legend. Therefore, we provide `color =` to `labs()` and assign the legend title desired ("Age" with capital A). If you create the legend with `aes(fill = COLUMN)`, then in `labs()` you would write `fill =` to adjust the title of that legend. The section on color scales in the \[ggplot tips\] page provides more details on editing legends, and an alternative approach using `scales_()` functions.
+[凡例]{.ul}のタイトルを指定する際の注意点。凡例には複数の尺度を設定できるため、"凡例タイトル" の引数は1つではありません。`labs()` の中で、凡例の作成に使われるプロットの美学の引数を書き、この方法でタイトルを指定することができます。たとえば、上記では、`color = age` を割り当てて凡例を作成しました。したがって、`color =` を `labs()` に指定し、希望する凡例のタイトル（大文字の A の "Age" ）を割り当てます。`aes(fill = COLUMN)` で凡例を作成した場合は、`labs()` で `fill =` と書き、その凡例のタイトルを調整します。\[ggplot tips\] ページのカラースケールのセクションでは、凡例の編集についての詳細と、`scales_()` 関数を使った別の方法が紹介されています。
 
-## Themes {#ggplot_basics_themes}
+## テーマ {#ggplot_basics_themes}
 
-One of the best parts of **ggplot2** is the amount of control you have over the plot - you can define anything! As mentioned above, the design of the plot that is *not* related to the data shapes/geometries are adjusted within the `theme()` function. For example, the plot background color, presence/absence of gridlines, and the font/size/color/alignment of text (titles, subtitles, captions, axis text...). These adjustments can be done in one of two ways:
+**ggplot2** の優れた点の1つは、プロットを自由にコントロールできることです-何でも定義できます！前述したように、データの形や幾何学的形状に関係のないプロットのデザインは、`theme()` 関数内で調整されます。例えば、プロットの背景色、グリッドラインの有無、テキスト（タイトル、サブタイトル、キャプション、軸テキスト...）のフォント／サイズ／色／配置などです。これらの調整は、次の2つの方法で行うことができます。
 
--   Add a [*complete theme*](https://ggplot2.tidyverse.org/reference/ggtheme.html) `theme_()` function to make sweeping adjustments - these include `theme_classic()`, `theme_minimal()`, `theme_dark()`, `theme_light()` `theme_grey()`, `theme_bw()` among others\
--   Adjust each tiny aspect of the plot individually within `theme()`
+-   全体的な調整を行うための[完全なテーマ](https://ggplot2.tidyverse.org/reference/ggtheme.html) `theme_()` 関数の追加 - `theme_classic()` 、`theme_minimal()` 、`theme_dark()` 、`theme_light()` 、`theme_grey()` 、`theme_bw()` などがあります。\
+-   `theme()` 内でプロットの小さな部分を個別に調整する
 
-### Complete themes {.unnumbered}
+### 完全なテーマ {.unnumbered}
 
-As they are quite straight-forward, we will demonstrate the complete theme functions below and will not describe them further here. Note that any micro-adjustments with `theme()` should be made *after* use of a complete theme.
+非常に簡単なので、以下では完全なテーマの機能を紹介し、ここでの説明は省略します。なお、`theme()` による微調整は、完全なテーマを使用した[後]{.ul}に行う必要があります。
 
-Write them with empty parentheses.
+空の括弧をつけて書いてください。
 
 ```{r, out.width=c('50%', '50%'), fig.show='hold', warning=F, message=F}
 
@@ -634,112 +634,107 @@ ggplot(data = linelist, mapping = aes(x = age, y = wt_kg))+
   geom_point(color = "darkgreen", size = 0.5, alpha = 0.2)+
   labs(title = "Theme gray")+
   theme_gray()
-  
-
-
 ```
 
 ### Modify theme {.unnumbered}
 
-The `theme()` function can take a large number of arguments, each of which edits a very specific aspect of the plot. There is no way we could cover all of the arguments, but we will describe the general pattern for them and show you how to find the argument name that you need. The basic syntax is this:
+`theme()` 関数は多数の引数を取ることができ、それぞれがプロットの非常に特定の側面を編集することができます。すべての引数を網羅することはできませんが、一般的なパターンを説明し、必要な引数名を見つける方法を示します。基本的な構文は以下の通りです。
 
-1.  Within `theme()` write the argument name for the plot element you want to edit, like `plot.title =`\
-2.  Provide an `element_()` function to the argument\
+1.  `theme()` 内で、編集したいプロット要素の引数名を `plot.title =` のように書きます。\
+2.  その引数に `element_()` 関数を与えます。\
+3.  よく使うのは `element_text()` ですが、キャンバスの背景色を指定する `element_rect()` や、プロット要素を削除する `element_blank()` などもあります。\
+4.  `element_()` 関数の中で、引数の代入を書いて微調整を行う
 
--   Most often, use `element_text()`, but others include `element_rect()` for canvas background colors, or `element_blank()` to remove plot elements\
+さて、ここまでの説明はかなり抽象的でしたので、いくつか例を挙げてみましょう。
 
-4.  Within the `element_()` function, write argument assignments to make the fine adjustments you desire
+下のプロットはとても愚かですが、プロットを調整するための様々な方法を示すことができます。
 
-So, that description was quite abstract, so here are some examples.
+-   まず上で定義した `age_by_wt` というプロットに `theme_classic()` を追加します。\
+-   より細かい調整のために、`theme()` を追加し、調整する各プロット要素に1つの引数を加えます。
 
-The below plot looks quite silly, but it serves to show you a variety of the ways you can adjust your plot.
+引数を logical sections で整理すると良いでしょう。以下に使用されている引数のいくつかを説明します。
 
--   We begin with the plot `age_by_wt` defined just above and add `theme_classic()`\
--   For finer adjustments we add `theme()` and include one argument for each plot element to adjust
-
-It can be nice to organize the arguments in logical sections. To describe just some of those used below:
-
--   `legend.position =` is unique in that it accepts simple values like "bottom", "top", "left", and "right". But generally, text-related arguments require that you place the details *within* `element_text()`.\
--   Title size with `element_text(size = 30)`\
--   The caption horizontal alignment with `element_text(hjust = 0)` (from right to left)\
--   The subtitle is italicized with `element_text(face = "italic")`
+-   `legend.position =` は、"bottom" 、"top" 、"left" 、"right" といった単純な値を受け付ける点で独特です。しかし、一般的にテキスト関連の引数は、 `element_text()` [内に]{.ul}詳細を記述する必要があります。\
+-   `element_text(size = 30)` によるタイトルの大きさ\
+-   `element_text(hjust = 0)` でキャプションの水平方向の配置（右から左へ）\
+-   サブタイトルのイタリック化を `element_text(face = "italic")`
 
 ```{r, , warning=F, message=F}
 age_by_wt + 
-  theme_classic()+                                 # pre-defined theme adjustments
+  theme_classic()+                                 # 事前に設定されたテーマの調整
   theme(
-    legend.position = "bottom",                    # move legend to bottom
+    legend.position = "bottom",                    # 凡例を下に移動
     
-    plot.title = element_text(size = 30),          # size of title to 30
-    plot.caption = element_text(hjust = 0),        # left-align caption
-    plot.subtitle = element_text(face = "italic"), # italicize subtitle
+    plot.title = element_text(size = 30),          # タイトルのサイズを30に
+    plot.caption = element_text(hjust = 0),        # 左揃えのキャプション
+    plot.subtitle = element_text(face = "italic"), # サブタイトルを斜体に
     
-    axis.text.x = element_text(color = "red", size = 15, angle = 90), # adjusts only x-axis text
-    axis.text.y = element_text(size = 15),         # adjusts only y-axis text
+    axis.text.x = element_text(color = "red", size = 15, angle = 90), # x 軸テキストのみの調整
+    axis.text.y = element_text(size = 15),         # y 軸テキストのみの調整
     
-    axis.title = element_text(size = 20)           # adjusts both axes titles
+    axis.title = element_text(size = 20)           # 両方の軸の調整
     )     
 ```
 
-Here are some especially common `theme()` arguments. You will recognize some patterns, such as appending `.x` or `.y` to apply the change only to one axis.
+ここでは、特によく使われる `theme()` の引数を紹介します。例えば、`.x` や `.y` を付加して1つの軸だけに変更を適用するなど、いくつかのパターンに気づくでしょう。
 
-+-------------------------------------+-----------------------------------------------------------------+
-| `theme()` argument                  | What it adjusts                                                 |
-+=====================================+=================================================================+
-| `plot.title = element_text()`       | The title                                                       |
-+-------------------------------------+-----------------------------------------------------------------+
-| `plot.subtitle = element_text()`    | The subtitle                                                    |
-+-------------------------------------+-----------------------------------------------------------------+
-| `plot.caption = element_text()`     | The caption (family, face, color, size, angle, vjust, hjust...) |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.title = element_text()`       | Axis titles (both x and y) (size, face, angle, color...)        |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.title.x = element_text()`     | Axis title x-axis only (use `.y` for y-axis only)               |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.text = element_text()`        | Axis text (both x and y)                                        |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.text.x = element_text()`      | Axis text x-axis only (use `.y` for y-axis only)                |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.ticks = element_blank()`      | Remove axis ticks                                               |
-+-------------------------------------+-----------------------------------------------------------------+
-| `axis.line = element_line()`        | Axis lines (colour, size, linetype: solid dashed dotted etc)    |
-+-------------------------------------+-----------------------------------------------------------------+
-| `strip.text = element_text()`       | Facet strip text (colour, face, size, angle...)                 |
-+-------------------------------------+-----------------------------------------------------------------+
-| `strip.background = element_rect()` | facet strip (fill, colour, size...)                             |
-+-------------------------------------+-----------------------------------------------------------------+
++-------------------------------------+--------------------------------------------------------------------------------+
+| `theme()` の引数                    | 調整する内容                                                                   |
++=====================================+================================================================================+
+| `plot.title = element_text()`       | タイトル                                                                       |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `plot.subtitle = element_text()`    | サブタイトル                                                                   |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `plot.caption = element_text()`     | キャプション（ファミリー、フェイス、カラー、サイズ、アングル、vjust、hjust...) |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.title = element_text()`       | 軸タイトル（ x と y の両方）（サイズ、面、角度、色...)                         |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.title.x = element_text()`     | 軸タイトル x 軸のみ（ y 軸のみの場合は `.y` を使用）                           |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.text = element_text()`        | 軸のテキスト（xとyの両方）                                                     |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.text.x = element_text()`      | 軸テキスト x 軸のみ ( y 軸のみの場合は `.y` を使用)                            |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.ticks = element_blank()`      | 軸の目盛りの削除                                                               |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `axis.line = element_line()`        | 軸線（色、サイズ、線の種類：実線、破線、点線など）                             |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `strip.text = element_text()`       | ファセットストリップテキスト（色、面、サイズ、角度など）                       |
++-------------------------------------+--------------------------------------------------------------------------------+
+| `strip.background = element_rect()` | ファセットストリップ（フィル、カラー、サイズなど）                             |
++-------------------------------------+--------------------------------------------------------------------------------+
 
-But there are so many theme arguments! How could I remember them all? Do not worry - it is impossible to remember them all. Luckily there are a few tools to help you:
+しかし、テーマ論争は非常に多いです。これら全てをどうやって覚えればいいのか？心配しないでください。すべてを覚えるのは不可能です。幸いなことに、あなたを助けるためのツールがいくつかあります。
 
-The **tidyverse** documentation on [modifying theme](https://ggplot2.tidyverse.org/reference/theme.html), which has a complete list.
+完全なリストである[テーマの変更](https://ggplot2.tidyverse.org/reference/theme.html)に関する **Tidyverse** ドキュメント。
 
-[***TIP:*** Run `theme_get()` from **ggplot2** to print a list of all 90+ `theme()` arguments to the console.]{style="color: darkgreen;"}
+***TIP*****:** **ggplot2** から `theme_get()` を実行すると、90 以上の `theme()` 引数のリストがコンソールに表示されます。
 
-[***TIP:*** If you ever want to remove an element of a plot, you can also do it through `theme()`. Just pass `element_blank()` to an argument to have it disappear completely. For legends, set `legend.position = "none".`]{style="color: darkgreen;"}
+***TIP:*** もしプロットの要素を削除したくなったら、`theme()` を通して行うこともできます。`element_blank()` を引数に渡せば、その要素は完全に消えてしまいます。凡例については、`legend.position = "none"` と設定します。
 
-## Colors
+## 色
 
-Please see this [section on color scales of the ggplot tips page](#ggplot_tips_colors).
+[ggplot tipsページのカラースケール](#ggplot_tips_colors)の項をご覧ください。
 
-## Piping into **ggplot2**
+## ggplot2へのパイピング
 
-When using pipes to clean and transform your data, it is easy to pass the transformed data into `ggplot()`.
+パイプを使ってデータをクリーニング・変換すると、変換したデータを `ggplot()` に簡単に渡すことができます。
 
-The pipes that pass the dataset from function-to-function will transition to `+` once the `ggplot()` function is called. Note that in this case, there is no need to specify the `data =` argument, as this is automatically defined as the piped-in dataset.
+関数から関数へデータセットを渡すパイプは、`ggplot()` 関数が呼ばれると `+` に移行します。なお、この場合、パイプでつながれたデータセットとして自動的に定義されるので、`data =` 引数を指定する必要はありません。
 
-This is how that might look:
+このようになります。
 
 ```{r, warning=F, message=F}
-linelist %>%                                                     # begin with linelist
-  select(c(case_id, fever, chills, cough, aches, vomit)) %>%     # select columns
-  pivot_longer(                                                  # pivot longer
+linelist %>%                                                     # linelist から始める
+  select(c(case_id, fever, chills, cough, aches, vomit)) %>%     # 列を選択する
+  pivot_longer(                                                  # 縦長のデータに転回する
     cols = -case_id,                                  
     names_to = "symptom_name",
     values_to = "symptom_is_present") %>%
-  mutate(                                                        # replace missing values
+  mutate(                                                        # 欠測値を置換する
     symptom_is_present = replace_na(symptom_is_present, "unknown")) %>% 
   
-  ggplot(                                                        # begin ggplot!
+  ggplot(                                                        # ggplotの開始！
     mapping = aes(x = symptom_name, fill = symptom_is_present))+
   geom_bar(position = "fill", col = "black") +                    
   theme_classic() +
@@ -749,249 +744,250 @@ linelist %>%                                                     # begin with li
   )
 ```
 
-## Plot continuous data
+## 連続データのプロット
 
-Throughout this page, you have already seen many examples of plotting continuous data. Here we briefly consolidate these and present a few variations.\
-Visualisations covered here include:
+このページでは、連続データをプロットする多くの例を見てきました。ここでは、これらを簡単に整理し、いくつかのバリエーションを紹介します。
 
--   Plots for one continuous variable:
+ここで扱う可視化は以下の通りです。
 
-    -   **Histogram**, a classic graph to present the distribution of a continuous variable.
-    -   **Box plot** (also called box and whisker), to show the 25th, 50th, and 75th percentiles, tail ends of the distribution, and outliers ([important limitations](https://www.data-to-viz.com/caveat/boxplot.html)).\
-    -   **Jitter plot**, to show all values as points that are 'jittered' so they can (mostly) all be seen, even where two have the same value.\
-    -   **Violin plot**, show the distribution of a continuous variable based on the symmetrical width of the 'violin'.
-    -   **Sina plot**, are a combination of jitter and violin plots, where individual points are shown but in the symmetrical shape of the distribution (via **ggforce** package).\
+-   1つの連続変数のプロット：
 
--   **Scatter plot** for two continuous variables.\
+    -   **ヒストグラム**、連続変数の分布を示す典型的なグラフ。
 
--   **Heat plots** for three continuous variables (linked to \[Heat plots\] page)
+    -   **箱ひげ図**（Box and Whiskerとも呼ばれる）、25、50、75パーセントタイル、分布の最後尾、外れ値（[重要な制限](https://www.data-to-viz.com/caveat/boxplot.html)）を示します。\
 
-### Histograms {.unnumbered}
+    -   **ジッタープロット**、すべての値を 'ジッター' された点として表示し、2つの値が同じであっても、（ほとんど）すべてを見ることができます。\
 
-Histograms may look like bar charts, but are distinct because they measure the distribution of a *continuous* variable. There are no spaces between the "bars", and only one column is provided to `geom_histogram()`.
+    -   **バイオリンプロット**、連続変数の分布を、'バイオリン' の対称的な幅に基づいて表示します。
 
-Below is code for generating **histograms**, which group continuous data into ranges and display in adjacent bars of varying height. This is done using `geom_histogram()`. See the ["Bar plot" section](#ggplot_basics_bars) of the ggplot basics page to understand difference between `geom_histogram()`, `geom_bar()`, and `geom_col()`.
+    -   **Sinaプロット**、ジッタープロットとバイオリンプロットを組み合わせたもので、個々の点が分布の対称的な形で表示されます（ **ggforce** パッケージを使用）。\
 
-We will show the distribution of ages of cases. Within `mapping = aes()` specify which column you want to see the distribution of. You can assign this column to either the x or the y axis.
+-   2つの連続変数の**散布図**\
 
-The rows will be assigned to "bins" based on their numeric age, and these bins will be graphically represented by bars. If you specify a number of bins with the `bins =` plot aesthetic, the break points are evenly spaced between the minimum and maximum values of the histogram. If `bins =` is unspecified, an appropriate number of bins will be guessed and this message displayed after the plot:
+-   3つの連続変数の**ヒートプロット**（ \[Heat plots\] ページへのリンク）
+
+### ヒストグラム {.unnumbered}
+
+ヒストグラムは棒グラフに似ていますが、[連続変数]{.ul}の分布を測定するという点で異なります。"棒" の間にはスペースがなく、`geom_histogram()` には1つの列しか与えられません。以下は、**ヒストグラム**を生成するためのコードです。ヒストグラムは、連続データを範囲に分け、高さの異なる隣り合った棒で表示します。これは `geom_histogram()` を使って行われます。`geom_histogram()` 、`geom_bar()` 、`geom_col()` の違いについては、ggplot の基本ページの ["棒グラフ" の項](#ggplot_basics_bars)を参照してください。
+
+ここでは、症例の年齢分布を表示します。`mapping = aes()` で、分布を見たい列を指定します。この列は、x 軸にも y 軸にも割り当てることができます。
+
+行は、数値化された年齢に基づいて "ビン" に割り当てられ、これらのビンは棒でグラフ化されます。`bins =` でビンの数を指定すると、ヒストグラムの最小値と最大値の間に等間隔でブレークポイントが置かれます。`bins =` が指定されていない場合は、適切なビンの数が推測され、プロットの後にこのメッセージが表示されます。
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-If you do not want to specify a number of bins to `bins =`, you could alternatively specify `binwidth =` in the units of the axis. We give a few examples showing different bins and bin widths:
+`bins =` にビンの数を指定したくない場合は、代わりに軸の単位で `binwidth =` を指定することができます。ここでは、さまざまなビンとビン幅を示す例をいくつか紹介します。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# A) Regular histogram
-ggplot(data = linelist, aes(x = age))+  # provide x variable
+# A) 一般的なヒストグラム
+ggplot(data = linelist, aes(x = age))+  # x 変数を与える
   geom_histogram()+
   labs(title = "A) Default histogram (30 bins)")
 
-# B) More bins
-ggplot(data = linelist, aes(x = age))+  # provide x variable
+# B) より多いビン
+ggplot(data = linelist, aes(x = age))+  # x 変数を与える
   geom_histogram(bins = 50)+
   labs(title = "B) Set to 50 bins")
 
-# C) Fewer bins
-ggplot(data = linelist, aes(x = age))+  # provide x variable
+# C) より少ないビン
+ggplot(data = linelist, aes(x = age))+  # x 変数を与える
   geom_histogram(bins = 5)+
   labs(title = "C) Set to 5 bins")
 
-
-# D) More bins
-ggplot(data = linelist, aes(x = age))+  # provide x variable
+# D) より多いビン
+ggplot(data = linelist, aes(x = age))+  # x 変数を与える
   geom_histogram(binwidth = 1)+
   labs(title = "D) binwidth of 1")
-
 ```
 
-To get smoothed proportions, you can use `geom_density()`:
+滑らかな部分を得るには、`geom_density()` を使用します。
 
 ```{r, fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# Frequency with proportion axis, smoothed
+# 割合の軸, 平滑化した
 ggplot(data = linelist, mapping = aes(x = age)) +
   geom_density(size = 2, alpha = 0.2)+
   labs(title = "Proportional density")
 
-# Stacked frequency with proportion axis, smoothed
+# 積み上げた割合の軸, 平滑化
 ggplot(data = linelist, mapping = aes(x = age, fill = gender)) +
   geom_density(size = 2, alpha = 0.2, position = "stack")+
   labs(title = "'Stacked' proportional densities")
 ```
 
-To get a "stacked" histogram (of a continuous column of data), you can do one of the following:
+（連続した列のデータの）"積み上げられた" ヒストグラムを得るには、以下のいずれかの方法があります。
 
-1)  Use `geom_histogram()` with the `fill =` argument within `aes()` and assigned to the grouping column, or\
-2)  Use `geom_freqpoly()`, which is likely easier to read (you can still set `binwidth =`)\
-3)  To see proportions of all values, set the `y = after_stat(density)` (use this syntax exactly - not changed for your data). Note: these proportions will show *per group*.
+1)  `geom_histogram()` の `fill =` 引数を `aes()` 内で使用し、グループ化された列に割り当てます。
 
-Each is shown below (\*note use of `color =` vs. `fill =` in each):
+2)  `geom_freqpoly()` を使用します。こちらの方が読みやすいでしょう（`binwidth =` を設定できます）。\
+
+3)  すべての値の比率を見るには、`y = after_stat(density)` を設定します（この構文を正確に使用してください-あなたのデータのために変更されていません）。注意：これらの比率はグループ[ごとに]{.ul}表示されます。
+
+それぞれを以下に示します（\*それぞれで `color =` vs `fill =` を使用していることに注意）。
 
 ```{r, fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# "Stacked" histogram
+# "積み上げられた" ヒストグラム
 ggplot(data = linelist, mapping = aes(x = age, fill = gender)) +
   geom_histogram(binwidth = 2)+
   labs(title = "'Stacked' histogram")
 
-# Frequency 
+# 頻度
 ggplot(data = linelist, mapping = aes(x = age, color = gender)) +
   geom_freqpoly(binwidth = 2, size = 2)+
   labs(title = "Freqpoly")
 
-# Frequency with proportion axis
+# 割合の軸
 ggplot(data = linelist, mapping = aes(x = age, y = after_stat(density), color = gender)) +
   geom_freqpoly(binwidth = 5, size = 2)+
   labs(title = "Proportional freqpoly")
 
-# Frequency with proportion axis, smoothed
+# 平滑化した割合の軸
 ggplot(data = linelist, mapping = aes(x = age, y = after_stat(density), fill = gender)) +
   geom_density(size = 2, alpha = 0.2)+
   labs(title = "Proportional, smoothed with geom_density()")
 ```
 
-If you want to have some fun, try `geom_density_ridges` from the **ggridges** package ([vignette here](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html).
+少し楽しみたい方は、**ggridges** パッケージの`geom_density_ridges` を試してみてください（[vignetteはこちら](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html)）。
 
-Read more in detail about histograms at the **tidyverse** [page on geom_histogram()](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
+ヒストグラムについての詳細は、`tidyverse` の [geom_histogram() のページ](https://ggplot2.tidyverse.org/reference/geom_histogram.html)を参照してください。
 
-### Box plots {.unnumbered}
+### 箱ひげ図 {.unnumbered}
 
-Box plots are common, but have important limitations. They can obscure the actual distribution - e.g. a bi-modal distribution. See this [R graph gallery](https://www.r-graph-gallery.com/boxplot.html) and this [data-to-viz article](https://www.data-to-viz.com/caveat/boxplot.html) for more details. However, they do nicely display the inter-quartile range and outliers - so they can be overlaid on top of other types of plots that show the distribution in more detail.
+箱ひげ図は一般的ですが、重要な制限があります。例えば、両峰性の分布など、実際の分布が不明瞭になることがあります。詳しくは、[R graph gallery](https://www.r-graph-gallery.com/boxplot.html) や [data-to-viz article](https://www.data-to-viz.com/caveat/boxplot.html) の記事を参照してください。しかし、四分位範囲と外れ値はきれいに表示されるので、分布をより詳細に表示する他の種類のグラフの上に重ねて表示することができます。
 
-Below we remind you of the various components of a boxplot:
+以下に、箱ひげ図の構成要素を示します。
 
 ```{r, out.width = "100%", fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "boxplot.png"))
 ```
 
-When using `geom_boxplot()` to create a box plot, you generally map only one axis (x or y) within `aes()`. The axis specified determines if the plots are horizontal or vertical.
+`geom_boxplot()` を使って箱ひげ図を作成する場合、通常は `aes()` 内で1つの軸（ x または y ）のみをマッピングします。指定された軸は、プロットが水平か垂直かを決定します。
 
-In most geoms, you create a plot per group by mapping an aesthetic like `color =` or `fill =` to a column within `aes()`. However, for box plots achieve this by assigning the grouping column to the un-assigned axis (x or y). Below is code for a boxplot of *all* age values in the dataset, and second is code to display one box plot for each (non-missing) gender in the dataset. Note that `NA` (missing) values will appear as a separate box plot unless removed. In this example we also set the `fill` to the column `outcome` so each plot is a different color - but this is not necessary.
+ほとんどの geom では、`aes()` 内で `color =` や `fill =` などの美的感覚を列にマッピングすることで、グループごとにプロットを作成します。しかし、箱ひげ図の場合は、グループ化された列を割り当てられていない軸（ x または y ）に割り当てることで実現します。下のコードは、データセット内の[すべての]{.ul}年齢値を箱ひげ図にしたもので、次のコードは、データセット内の（欠損していない）性別ごとに 1 つの箱ひげ図を表示するものです。`NA`（欠損）の値は、削除しない限り、別の箱ひげ図として表示されることに注意してください。この例では、各プロットが異なる色になるように、`outcome` の列を `fill` に設定していますが、これは必要ありません。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# A) Overall boxplot
+# A) 箱ひげ図
 ggplot(data = linelist)+  
-  geom_boxplot(mapping = aes(y = age))+   # only y axis mapped (not x)
+  geom_boxplot(mapping = aes(y = age))+   # y 軸だけマッピング ( x はなし)
   labs(title = "A) Overall boxplot")
 
-# B) Box plot by group
+# B) グループごとの箱ひげ図
 ggplot(data = linelist, mapping = aes(y = age, x = gender, fill = gender)) + 
   geom_boxplot()+                     
-  theme(legend.position = "none")+   # remove legend (redundant)
+  theme(legend.position = "none")+   # 凡例を除く
   labs(title = "B) Boxplot by gender")      
 ```
 
-For code to add a box plot to the edges of a scatter plot ("marginal" plots) see the page \[ggplot tips\].
+散布図の端に箱ひげ図を追加するコード（ "marginal" プロット）については、\[ggplot tips\] のページをご覧ください。
 
-### Violin, jitter, and sina plots {.unnumbered}
+### バイオリンプロット、ジッタープロット、sinaプロット {.unnumbered}
 
-Below is code for creating **violin plots** (`geom_violin`) and **jitter plots** (`geom_jitter`) to show distributions. You can specify that the fill or color is also determined by the data, by inserting these options within `aes()`.
+以下は、分布を示す**バイオリンプロット**（`geom_violin`）と**ジッタープロット**（`geom_jitter`）を作成するコードです。`aes()` 内にこれらのオプションを挿入することで、塗りつぶしや色もデータによって決定されるように指定できます。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
 
 
-# A) Jitter plot by group
-ggplot(data = linelist %>% drop_na(outcome),      # remove missing values
-       mapping = aes(y = age,                     # Continuous variable
-           x = outcome,                           # Grouping variable
-           color = outcome))+                     # Color variable
-  geom_jitter()+                                  # Create the violin plot
+# A) グループごとのジッタープロット
+ggplot(data = linelist %>% drop_na(outcome),      # 欠損値を除く
+       mapping = aes(y = age,                     # 連続値
+           x = outcome,                           # グループ化する変数
+           color = outcome))+                     # 色の変数
+  geom_jitter()+                                  # ジッタープロットを作成
   labs(title = "A) jitter plot by gender")     
 
 
 
-# B) Violin plot by group
-ggplot(data = linelist %>% drop_na(outcome),       # remove missing values
-       mapping = aes(y = age,                      # Continuous variable
-           x = outcome,                            # Grouping variable
-           fill = outcome))+                       # fill variable (color)
-  geom_violin()+                                   # create the violin plot
+# B) グループごとのバイオリンプロット
+ggplot(data = linelist %>% drop_na(outcome),       # 欠損値を除く
+       mapping = aes(y = age,                      # 連続値
+           x = outcome,                            # グループ化する変数
+           fill = outcome))+                       # 塗りつぶしの変数
+  geom_violin()+                                   # バイオリンプロットを作成
   labs(title = "B) violin plot by gender")    
 ```
 
-You can combine the two using the `geom_sina()` function from the **ggforce** package. The sina plots the jitter points in the shape of the violin plot. When overlaid on the violin plot (adjusting the transparencies) this can be easier to visually interpret.
+**ggforce** パッケージの `geom_sina()` 関数を使って、この2つを組み合わせることができます。sinaは、ジッターポイントをバイオリンプロットの形でプロットします。バイオリンプロットに重ねて表示すると（透明度を調整して）、視覚的に解釈しやすくなります。
 
 ```{r, warning=F, message=F}
 
-# A) Sina plot by group
+# A) グループごとの sina プロット
 ggplot(
   data = linelist %>% drop_na(outcome), 
-  aes(y = age,           # numeric variable
-      x = outcome)) +    # group variable
+  aes(y = age,           # 数値の変数
+      x = outcome)) +    # グループ化する変数
   geom_violin(
-    aes(fill = outcome), # fill (color of violin background)
-    color = "white",     # white outline
-    alpha = 0.2)+        # transparency
+    aes(fill = outcome), # バイオリンの背景の色
+    color = "white",     # 白の輪郭
+    alpha = 0.2)+        # 透過度
   geom_sina(
-    size=1,                # Change the size of the jitter
-    aes(color = outcome))+ # color (color of dots)
-  scale_fill_manual(       # Define fill for violin background by death/recover
+    size=1,                # ジッターのサイズの変更
+    aes(color = outcome))+ # 点の色
+  scale_fill_manual(       # death/recoverごとにバイオリンの背景の色
     values = c("Death" = "#bf5300", 
               "Recover" = "#11118c")) + 
-  scale_color_manual(      # Define colours for points by death/recover
+  scale_color_manual(      # death/recoverごとに点の色
     values = c("Death" = "#bf5300", 
               "Recover" = "#11118c")) + 
-  theme_minimal() +                                # Remove the gray background
-  theme(legend.position = "none") +                # Remove unnecessary legend
+  theme_minimal() +                                # グレイの背景の削除
+  theme(legend.position = "none") +                # 不要な凡例の削除
   labs(title = "B) violin and sina plot by gender, with extra formatting")      
-
-
 ```
 
-### Two continuous variables {.unnumbered}
+### ２つの連続変数 {.unnumbered}
 
-Following similar syntax, `geom_point()` will allow you to plot two continuous variables against each other in a **scatter plot**. This is useful for showing actual values rather than their distributions. A basic scatter plot of age vs weight is shown in (A). In (B) we again use `facet_grid()` to show the relationship between two continuous variables in the linelist.
+同様の構文で `geom_point()` を使用すると、2 つの連続変数を互いに**散布図**にプロットすることができます。これは、分布ではなく実際の値を示すのに便利です。年齢と体重の基本的な散布図を (A) に示します。(B) では、`facet_grid()` を使って、linelist の2つの連続変数の関係を示しています。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# Basic scatter plot of weight and age
+# weight と age の基本的な散布図 
 ggplot(data = linelist, 
        mapping = aes(y = wt_kg, x = age))+
   geom_point() +
   labs(title = "A) Scatter plot of weight and age")
 
-# Scatter plot of weight and age by gender and Ebola outcome
-ggplot(data = linelist %>% drop_na(gender, outcome), # filter retains non-missing gender/outcome
+# 性別とエボラのアウトカムごとの weight と age の基本的な散布図
+ggplot(data = linelist %>% drop_na(gender, outcome), # gender/outcome について欠損値がないものを保持
        mapping = aes(y = wt_kg, x = age))+
   geom_point() +
   labs(title = "B) Scatter plot of weight and age faceted by gender and outcome")+
   facet_grid(gender ~ outcome) 
-
 ```
 
-### Three continuous variables {.unnumbered}
+### ３つの連続変数 {.unnumbered}
 
-You can display three continuous variables by utilizing the `fill =` argument to create a *heat plot*. The color of each "cell" will reflect the value of the third continuous column of data. See the \[ggplot tips\] page and the page on on \[Heat plots\] for more details and several examples.
+3つの連続変数を表示するには、`fill =` 引数を利用して[ヒートプロット]{.ul}を作成します。各 "セル" の色は、3つ目の連続データの列の値を反映します。詳しくは \[ggplot tips\] のページと、\[Heat plots\] のページに例があります。
 
-There are ways to make 3D plots in R, but for applied epidemiology these are often difficult to interpret and therefore less useful for decision-making.
+R で 3D プロットを作成する方法はありますが、実践的な疫学では解釈が難しいことが多く、意思決定にはあまり役に立ちません。
 
-## Plot categorical data
+## カテゴリカルなデータのプロット
 
-Categorical data can be character values, could be logical (TRUE/FALSE), or factors (see the \[Factors\] page).
+カテゴリカルなデータには、文字値、論理値（ TRUE/FALSE ）、因子（ \[Factors\] のページを参照）などがあります。
 
-### Preparation {.unnumbered}
+### 準備 {.unnumbered}
 
-#### Data structure {.unnumbered}
+#### データの構造 {.unnumbered}
 
-The first thing to understand about your categorical data is whether it exists as raw observations like a linelist of cases, or as a summary or aggregate data frame that holds counts or proportions. The state of your data will impact which plotting function you use:
+カテゴリカルなデータについて最初に理解すべきことは、それが linelist の症例のような生の観測値として存在しているのか、それとも数や割合を保持するようやくまたは集約したデータフレームとして存在しているのかということです。データの状態によって、使用するプロット関数が変わります。
 
--   If your data are raw observations with one row per observation, you will likely use `geom_bar()`\
--   If your data are already aggregated into counts or proportions, you will likely use `geom_col()`
+-   データが生の観測値で、観測ごとに 1 行の場合は、 `geom_bar()` を使用します。
 
-#### Column class and value ordering {.unnumbered}
+-   データがすでにカウントや割合に集約されている場合は、`geom_col()` を使用するでしょう。
 
-Next, examine the class of the columns you want to plot. We look at `hospital`, first with `class()` from **base** R, and with `tabyl()` from **janitor**.
+#### 列のクラスと値の順序 {.unnumbered}
+
+次に、プロットしたい列のクラスを調べます。ここでは、まず **base R** の `class()` を使って `hospital` を、そして **janitor** の `tabyl()` を使って調べます。
 
 ```{r}
-# View class of hospital column - we can see it is a character
+# hospital 列のクラスを確認する - それは文字列である
 class(linelist$hospital)
 
-# Look at values and proportions within hospital column
+# 病院の列の中の値と割合を見る
 linelist %>% 
   tabyl(hospital)
 ```
 
-We can see the values within are characters, as they are hospital names, and by default they are ordered alphabetically. There are 'other' and 'missing' values, which we would prefer to be the last subcategories when presenting breakdowns. So we change this column into a factor and re-order it. This is covered in more detail in the \[Factors\] page.
+病院名のため、値が文字で表示されており、デフォルトではアルファベット順に並んでいます。'other' と 'missing' の値がありますが、これは内訳を表示する際に最後のサブカテゴリにしたいと考えています。そこで、この列を係数に変更し、並び替えを行います。これについては、\[Factors\] のページで詳しく説明しています。
 
 ```{r}
-# Convert to factor and define level order so "Other" and "Missing" are last
+# 因子に変換し、順序を定義することで、"Other" と "Missing" が最後になる。
 linelist <- linelist %>% 
   mutate(
     hospital = fct_relevel(hospital, 
@@ -1001,7 +997,6 @@ linelist <- linelist %>%
       "Military Hospital",
       "Other",
       "Missing"))
-
 ```
 
 ```{r}
@@ -1010,53 +1005,53 @@ levels(linelist$hospital)
 
 ### `geom_bar()` {#ggplot_basics_bars .unnumbered}
 
-Use `geom_bar()` if you want bar height (or the height of stacked bar components) to reflect *the number of relevant rows in the data*. These bars will have gaps between them, unless the `width =` plot aesthetic is adjusted.
+棒の高さ（または積み重ねられた棒の高さ）に[データの関連する行の数]{.ul}を反映させたい場合は、`geom_bar()` を使用します。これらの棒は、 `width =` が調整されない限り、棒の間に隙間ができます。
 
--   Provide only one axis column assignment (typically x-axis). If you provide x and y, you will get `Error: stat_count() can only have an x or y aesthetic.`\
--   You can create stacked bars by adding a `fill =` column assignment within `mapping = aes()`\
--   The opposite axis will be titled "count" by default, because it represents the number of rows
+-   軸列の割り当ては1つだけにしてください（通常は x 軸）。x と y を指定すると、`Error: stat_count() can only have an x or y aesthetic.` が表示されます。\
 
-Below, we have assigned outcome to the y-axis, but it could just as easily be on the x-axis. If you have longer character values, it can sometimes look better to flip the bars sideways and put the legend on the bottom. This may impact how your factor levels are ordered - in this case we reverse them with `fct_rev()` to put missing and other at the bottom.
+-   `mapping = aes()` 内で `fill =` の割り当てを追加することで、積み上げ棒を作成できます。
+
+-   反対側の軸は、行数を表すため、デフォルトでは "count" というタイトルになります。
+
+下の例では、y 軸に outcome を割り当てていますが、x 軸にしても問題ありません。文字の値が長い場合は、棒を横にして凡例を下に配置した方が見栄えが良い場合があります。この場合、`fct_rev()` で反転させ、missing と other を一番下にしています。
 
 ```{r, out.width=c('50%', '50%'), fig.show='hold'}
-# A) Outcomes in all cases
+# A) 全症例のアウトカム
 ggplot(linelist %>% drop_na(outcome)) + 
   geom_bar(aes(y = fct_rev(hospital)), width = 0.7) +
   theme_minimal()+
   labs(title = "A) Number of cases by hospital",
        y = "Hospital")
 
-
-# B) Outcomes in all cases by hosptial
+# B) 病院ごとの全症例のアウトカム
 ggplot(linelist %>% drop_na(outcome)) + 
   geom_bar(aes(y = fct_rev(hospital), fill = outcome), width = 0.7) +
   theme_minimal()+
   theme(legend.position = "bottom") +
   labs(title = "B) Number of recovered and dead Ebola cases, by hospital",
        y = "Hospital")
-
 ```
 
 ### `geom_col()` {.unnumbered}
 
-Use `geom_col()` if you want bar height (or height of stacked bar components) to reflect pre-calculated *values* that exists in the data. Often, these are summary or "aggregated" counts, or proportions.
+棒グラフの高さ（または積み重ねられた棒グラフの高さ）に、データに含まれる事前に計算された値を反映させたい場合は、`geom_col()` を使用します。多くの場合、これらは要約や "集約" された数や割合です。
 
-Provide column assignments for *both* axes to `geom_col()`. Typically your x-axis column is discrete and your y-axis column is numeric.
+`geom_col()` に[両軸]{.ul}の列を割り当てます。一般的に、x 軸の列は離散的で、y 軸の列は数値です。
 
-Let's say we have this dataset `outcomes`:
+例えば、次のようなデータセットの `outcome` があるとします。
 
 ```{r, echo = F}
 outcomes <- linelist %>% 
   drop_na() %>% 
   group_by(outcome) %>% 
   count %>% 
-  ungroup() %>% # Ungroup so proportion is out of total
-  mutate(proportion = n/sum(n)*100) # Caculate percentage
+  ungroup() %>% # 割合は全体に対するものなので、ungroupする
+  mutate(proportion = n/sum(n)*100) # パーセントを計算
   
-outcomes #View full table
+outcomes #表を見る
 ```
 
-Below is code using `geom_col` for creating simple bar charts to show the distribution of Ebola patient outcomes. With geom_col, both x and y need to be specified. Here x is the categorical variable along the x axis, and y is the generated proportions column `proportion`.
+以下は、エボラ出血熱患者の転帰の分布を示す簡単な棒グラフを作成するための `geom_col` を使用したコードです。geom_col では、x と y の両方を指定する必要があります。ここで、x は x 軸に沿ったカテゴリー変数、y は生成された `proportion` の列の割合です。
 
 ```{r, fig.height = 3, fig.width=4.5}
 # Outcomes in all cases
@@ -1066,63 +1061,63 @@ ggplot(outcomes) +
 
 ```
 
-To show breakdowns by hospital, we would need our table to contain more information, and to be in "long" format. We create this table with the frequencies of the combined categories `outcome` and `hospital` (see \[Grouping data\] page for grouping tips).
+病院別の内訳を表示するには、より多くの情報を含み、"縦に長い" 形式の表が必要です。この表は、`outcome` と `hospital` を組み合わせたカテゴリーの頻度で作成します（グループ化のtipsについては、\[Grouping data\] のページを参照）。
 
 ```{r, fig.height = 4, fig.width=6}
 outcomes2 <- linelist %>% 
   drop_na(outcome) %>% 
-  count(hospital, outcome) %>%  # get counts by hospital and outcome
-  group_by(hospital) %>%        # Group so proportions are out of hospital total
-  mutate(proportion = n/sum(n)*100) # calculate proportions of hospital total
+  count(hospital, outcome) %>%  # 病院別、アウトカム別の数を取得
+  group_by(hospital) %>%        # 割合は病院全体に対するものなのでグループ化する
+  mutate(proportion = n/sum(n)*100) # 病院全体の割合を計算する
 
-head(outcomes2) # Preview data
+head(outcomes2) # データのプレビュー
 ```
 
-We then create the ggplot with some added formatting:
+そして、フォーマットを追加した ggplot を作成します。
 
--   **Axis flip**: Swapped the axis around with `coord_flip()` so that we can read the hospital names.
--   **Columns side-by-side**: Added a `position = "dodge"` argument so that the bars for death and recover are presented side by side rather than stacked. Note stacked bars are the default.
--   **Column width**: Specified 'width', so the columns are half as thin as the full possible width.
--   **Column order**: Reversed the order of the categories on the y axis so that 'Other' and 'Missing' are at the bottom, with `scale_x_discrete(limits=rev)`. Note that we used that rather than `scale_y_discrete` because hospital is stated in the `x` argument of `aes()`, even if visually it is on the y axis. We do this because Ggplot seems to present categories backwards unless we tell it not to.\
--   **Other details**: Labels/titles and colours added within `labs` and `scale_fill_color` respectively.
+-   **軸の反転**：`coord_flip()` で軸を反転させて、病院名を読めるようにしました。
+-   **列を横に並べる**：`position = "dodge"` という引数を追加し、死亡と回復の棒を重ねるのではなく、並べて表示するようにしました。積み重ねられた棒はデフォルトです。
+-   **列の幅**：'width' を指定して、可能な限りの幅の半分の幅で列を表示します。
+-   **列の順序**：`scale_x_discrete(limit=rev)` を使用して、'Other' と 'Missing' が最下部になるように、y 軸のカテゴリの順序を反転させました。`scale_y_discrete` ではなくそれを使ったのは、視覚的には y 軸上にあっても、病院は `aes()` の `x` 引数で述べられているからであることに注意してください。ggplot は、私たちがそうしないように指示しない限り、カテゴリーを後ろ向きに表示するようですので、このようにしています。
+-   **その他の詳細**：`labs` と `scale_fill_color` にそれぞれラベル／タイトルと色が追加されました。
 
 ```{r, fig.height = 4, fig.width=8}
 
-# Outcomes in all cases by hospital
+# 病院別の全症例のアウトカム
 ggplot(outcomes2) +  
   geom_col(
     mapping = aes(
-      x = proportion,                 # show pre-calculated proportion values
-      y = fct_rev(hospital),          # reverse level order so missing/other at bottom
-      fill = outcome),                # stacked by outcome
-    width = 0.5)+                    # thinner bars (out of 1)
-  theme_minimal() +                  # Minimal theme 
+      x = proportion,                 # あらかじめ計算された割合の表示
+      y = fct_rev(hospital),          # レベル順を逆にして、一番下に Missing と other
+      fill = outcome),                # aアウトカムごとに積み上げ
+    width = 0.5)+                    # より細い棒
+  theme_minimal() +                  # 最小限のテーマ
   theme(legend.position = "bottom")+
   labs(subtitle = "Number of recovered and dead Ebola cases, by hospital",
-       fill = "Outcome",             # legend title
-       y = "Count",                  # y axis title
-       x = "Hospital of admission")+ # x axis title
-  scale_fill_manual(                 # adding colors manually
+       fill = "Outcome",             # 凡例のタイトル
+       y = "Count",                  # y 軸のタイトル
+       x = "Hospital of admission")+ # x 軸のタイトル
+  scale_fill_manual(                 # 色を手動で追加
     values = c("Death"= "#3B1c8C",
                "Recover" = "#21908D" )) 
 
 ```
 
-Note that the proportions are binary, so we may prefer to drop 'recover' and just show the proportion who died. This is just for illustration purposes.
+割合は二元的なものなので、'recover' をやめて死亡した割合だけを表示したほうがいいかもしれません。これは描画の目的だけです。
 
-If using `geom_col()` with dates data (e.g. an epicurve from aggregated data) - you will want to adjust the `width =` argument to remove the "gap" lines between the bars. If using daily data set `width = 1`. If weekly, `width = 7`. Months are not possible because each month has a different number of days.
+`geom_col()` を日付データ（例：集計データからのエピカーブ）で使用する場合は、棒の間の "ギャップ" ラインを取り除くために、`width =` 引数を調整する必要があります。日次データを使用する場合は `width = 1` とします。週単位の場合は、`width = 7` です。月ごとに日数が異なるため、月を指定することはできません。
 
 ### `geom_histogram()` {.unnumbered}
 
-Histograms may look like bar charts, but are distinct because they measure the distribution of a *continuous* variable. There are no spaces between the "bars", and only one column is provided to `geom_histogram()`. There are arguments specific to histograms such as `bin_width =` and `breaks =` to specify how the data should be binned. The section above on continuous data and the page on \[Epidemic curves\] provide additional detail.
+ヒストグラムは棒グラフのように見えるかもしれませんが、連続変数の分布を測定するという点で異なります。"棒" の間にはスペースがなく、`geom_histogram()` には 1 つの列しか与えられません。`bin_width =` や `breaks =` といったヒストグラム特有の引数があり、データのビン分け方法を指定します。上記の連続データのセクションと \[Epidemic curve\] のページに詳細が記載されています。
 
-## Resources
+## リソース
 
-There is a huge amount of help online, especially with ggplot. See:
+特に ggplot については、膨大な量のヘルプがオンラインで提供されています。ご覧ください。
 
 -   [ggplot2 cheat sheet](http://r-statistics.co/ggplot2-cheatsheet.html)
 -   [another cheat sheet](https://biostats.w.uib.no/the-ggplot2-cheat-sheet-by-rstudio/)
--   [tidyverse ggplot basics page](https://ggplot2.tidyverse.org/reference/)\
--   [plotting continuous variables](http://www.sthda.com/english/articles/32-r-graphics-essentials/131-plot-two-continuous-variables-scatter-graph-and-alternatives/)\
+-   [tidyverse ggplot basics page](https://ggplot2.tidyverse.org/reference/)
+-   [plotting continuous variables](http://www.sthda.com/english/articles/32-r-graphics-essentials/131-plot-two-continuous-variables-scatter-graph-and-alternatives/)
 -   R for Data Science pages on [data visualization](https://r4ds.had.co.nz/data-visualisation.html)
 -   [graphics for communicaton](https://r4ds.had.co.nz/graphics-for-communication.html)
