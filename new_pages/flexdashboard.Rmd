@@ -5,12 +5,20 @@
 knitr::include_graphics(here::here("images", "flexdashboard_output.png"))
 ```
 
-This page will cover the basic use of the **flexdashboard** package. This package allows you to easily format R Markdown output as a dashboard with panels and pages. The dashboard content can be text, static figures/tables or interactive graphics.  
+このページでは、**flexdashboard** パッケージの基本的な使い方を解説します。このパッケージは、R Markdon のアウトプットをパネルやページで構成されたダッシュボードに簡単にすることができます。ダッシュボードの内容は、文章、静的な図表、あるいはインタラクティブな図表とすることができます。
 
 Advantages of **flexdashboard**:  
 
+**flexdashboard** のメリット：
+
 * It requires minimal non-standard R coding - with very little practice you can quickly create a dashboard  
+
+* スタンダードではない R のコードが最小限で済みます ― 少し練習するだけで、ダッシュボードをすぐにつくることができます。
+
 * The dashboard can usually be emailed to colleagues as a self-contained HTML file - no server required  
+
+* 
+
 * You can combine **flexdashboard** with **shiny**, **ggplotly**, and other *"html widgets"* to add interactivity  
 
 Disadvantages of **flexdashboard**:  
