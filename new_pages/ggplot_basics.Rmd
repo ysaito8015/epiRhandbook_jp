@@ -4,9 +4,9 @@
 knitr::include_graphics(here::here("images", "ggplot_basics_top.png"))
 ```
 
-**ggplot2** は、最も人気のあるデータビジュアライゼーションの R パッケージです。`ggplot()` 関数はこのパッケージの中核であり、このアプローチ全体が "ggplot" として口語的に知られており、結果として得られる図は親しみを込めて "ggplots" と呼ばれることもあります。これらの名前の "gg" は、図を作成するために使用される "グラフィックスの文法" を反映しています。 ggplot2 は、その機能性をさらに向上させるさまざまな補助的な R パッケージの恩恵を受けています。
+**ggplot2** は、最も人気のあるデータビジュアライゼーションの R パッケージです。`ggplot()` 関数はこのパッケージの中核であり、このアプローチ全体が "ggplot" として口語的に知られており、結果として得られる図は親しみを込めて "ggplots" と呼ばれることもあります。これらの名前の "gg" は、図を作成するために使用される "グラフィックスの文法" を反映しています。 **ggplot2** は、その機能性をさらに向上させるさまざまな補助的な R パッケージの恩恵を受けています。
 
-構文は **base** `R` のプロッティングとは大きく異なり、それに伴って知識を獲得できるまで時間がかかります。**ggplot2** を使用するには、一般的にユーザーは **Tidyverse** との互換性が高い方法でデータをフォーマットする必要があり、結果的にこれらのパッケージを一緒に使用することは非常に効果的です。
+構文は **base** `R` のプロッティングとは大きく異なり、それに伴って知識を獲得できるまで時間がかかります。**ggplot2** を使用するには、一般的にユーザーは **tidyverse** との互換性が高い方法でデータをフォーマットする必要があり、結果的にこれらのパッケージを一緒に使用することは非常に効果的です。
 
 このページでは、**ggplot2** を使ったプロッティングの基礎を説明します。プロットをきれいに見せるための提案や高度なテクニックについては、\[ggplot tips\] のページを参照してください。
 
@@ -31,11 +31,10 @@ pacman::p_load(
 
 ### データのインポート {.unnumbered}
 
-エボラ出血熱のシミュレーションによる症例のデータセットをインポートします。分析をフォローしたい方は、\<a href='<https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds'> class='download-button'>クリックして "クリーンな" ラインリストをダウンロードしてください\</a>（.rdsファイルとして）。**rio** パッケージの `import()` 関数を使ってデータをインポートします（.xlsx, .rds, .csv などの多くのファイルタイプを受け付けます。詳細は \[Import and export\] ページをご覧ください）。
+エボラ出血熱のシミュレーションによる症例のデータセットをインポートします。分析をフォローしたい方は、[クリックして "クリーンな" linelist をダウンロードしてください](https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds')（.rdsファイルとして）。**rio** パッケージの `import()` 関数を使ってデータをインポートします（.xlsx, .rds, .csv などの多くのファイルタイプを受け付けます。詳細は \[Import and export\] ページをご覧ください）。
 
 ```{r, echo=F}
 linelist <- rio::import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
-
 ```
 
 ```{r, eval=F}
@@ -45,7 +44,7 @@ linelist <- rio::import("linelist_cleaned.rds")
 ラインリストの最初の 50 行を以下に表示します。ここでは、連続変数である `age`、`wt_kg`（キログラム単位の体重）、`ct_blood`（CT値）、`days_onset_hosp`（発症日と入院日の差）に注目します。
 
 ```{r, message=FALSE, echo=F}
-# display the linelist data as a table
+# linelist データを表として表示します
 DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
@@ -64,7 +63,7 @@ DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list
 以下に、この作業の例を示します。
 
 ```{r, }
-# 列の表示をより分かりやすい名前にする
+# 列の表示をより分かりやすい名前にします
 linelist <- linelist %>%
   mutate(
     gender_disp = case_when(gender == "m" ~ "Male",        # m を Male に
@@ -83,37 +82,35 @@ linelist <- linelist %>%
 knitr::include_graphics(here::here("images", "pivoting", "pivot_longer_new.png"))
 ```
 
-For example, say that we want to plot data that are in a "wide" format, such as for each case in the `linelist` and their symptoms. Below we create a mini-linelist called `symptoms_data` that contains only the `case_id` and symptoms columns.
-
-例えば、`linelist` に登録されている各症例とその症状のような、 "横に広い" フォーマットのデータについてプロットしたいとします。以下では、`symptoms_data` という mini-linelist を作成し、`case_id` とsymptomsのカラムのみを格納します。
+例えば、`linelist` に登録されている各症例とその症状のような、"横に広い" フォーマットのデータについてプロットしたいとします。以下では、`symptoms_data` という mini-linelist を作成し、`case_id` と症状の列のみを格納します。
 
 ```{r}
 symptoms_data <- linelist %>% 
   select(c(case_id, fever, chills, cough, aches, vomit))
 ```
 
-この mini-linelist の最初の 50 行は次のようになっています。それぞれの症状を列にして "横に広く" フォーマットされているのがわかります。
+この mini-linelist の最初の 50 行は次のようになっています。それぞれの症状を列にして "横に広く" フォーマットされているのが分かります。
 
 ```{r, message=FALSE, echo=F}
-# 表として linelist を表示する
+# 表として linelist を表示します
 DT::datatable(head(symptoms_data, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
 特定の症状を持つ症例の数をプロットしたい場合、各症状が特定の列であるという事実によって制限されます。しかし、症状の列を[転回]{.ul}して、次のように縦に長いフォーマットにすることができます。
 
 ```{r, }
-symptoms_data_long <- symptoms_data %>%    # symptoms_data と名付けた "mini" linelist から始める
+symptoms_data_long <- symptoms_data %>%    # symptoms_data と名付けた "mini" linelist から始めます
   
   pivot_longer(
-    cols = -case_id,                       # case_id を除いた全ての列（全ての症状に関する列）を転回する
-    names_to = "symptom_name",             # 症状に関する新しい列の名前を割り当てる
-    values_to = "symptom_is_present") %>%  #  「はい、もしくはいいえ」の値をもつ新しい列の名前を割り当てる
+    cols = -case_id,                       # case_id を除いた全ての列（全ての症状に関する列）を転回します
+    names_to = "symptom_name",             # 症状に関する新しい列の名前を割り当てます
+    values_to = "symptom_is_present") %>%  #  「はい、もしくはいいえ」の値をもつ新しい列の名前を割り当てます
   
-  mutate(symptom_is_present = replace_na(symptom_is_present, "unknown")) # NA を unknown に変換する
+  mutate(symptom_is_present = replace_na(symptom_is_present, "unknown")) # NA を unknown に変換します
 
 ```
 
-こちらが最初の 50 行です。case には 5 つの行があることに注意してください - それぞれの症状ごとに 1 つの列があります。新しい列である `symptom_name` と `symptom_is_present` は、転回した結果です。このフォーマットは、他の操作にはあまり役に立たないかもしれませんが、プロットには便利であることに注意してください。
+こちらが最初の 50 行です。case には５つの行があることに注意してください - それぞれの症状ごとに 1 つの列があります。新しい列である `symptom_name` と `symptom_is_present` は、転回した結果です。このフォーマットは、他の操作にはあまり役に立たないかもしれませんが、プロットには便利であることに注意してください。
 
 ```{r, message=FALSE, echo=F}
 DT::datatable(head(symptoms_data_long, 50), rownames = FALSE, filter="top", options = list(pageLength = 10, scrollX=T), class = 'white-space: nowrap' )
@@ -125,7 +122,7 @@ DT::datatable(head(symptoms_data_long, 50), rownames = FALSE, filter="top", opti
 
 **"グラフィックの文法" - ggplot2**
 
-**ggplot2** でのプロットは、作図レイヤーやデザイン要素を重ねて "追加" することが基本で、各コマンドはプラス記号（`+`）で前のコマンドに追加されます。結果として、保存、修正、印刷、エクスポートなどが可能なマルチレイヤーの作図オブジェクトができあがります。
+**ggplot2** でのプロットは、作図レイヤーやデザイン要素を重ねて "追加" することが基本で、各コマンドはプラス記号（ `+` ）で前のコマンドに追加されます。結果として、保存、修正、印刷、エクスポートなどが可能なマルチレイヤーの作図オブジェクトができあがります。
 
 ggplot オブジェクトは非常に複雑になることがありますが、基本的なレイヤーの順番は、通常次のようになります。
 
@@ -138,13 +135,13 @@ ggplot オブジェクトは非常に複雑になることがありますが、�
 骨格となるコードの簡単な例を以下に示します。それぞれの要素については，以下のセクションで説明します。
 
 ```{r, eval=F}
-# my_data の列を赤い点としてデータをプロットする
-ggplot(data = my_data)+                   # "my_data" というデータを使う
-  geom_point(                             # 点（ドット）のレイヤーを追加する
-    mapping = aes(x = col1, y = col2),    # "map" の列を軸にする
+# my_data の列を赤い点としてデータをプロットします
+ggplot(data = my_data)+                   # "my_data" というデータを使います
+  geom_point(                             # 点（ドット）のレイヤーを追加します
+    mapping = aes(x = col1, y = col2),    # "map" の列を軸にします
     color = "red")+                       # geom の他の設定
-  labs()+                                 # タイトル、軸ラベル、などを追加する
-  theme()                                 # 色、フォント、サイズなどデータではない要素（軸やタイトルなど）を編集する
+  labs()+                                 # タイトル、軸ラベル、などを追加します
+  theme()                                 # 色、フォント、サイズなどデータではない要素（軸やタイトルなど）を編集します
 ```
 
 ## `ggplot()`
@@ -195,7 +192,7 @@ ggplot(data = linelist, mapping = aes(x = age, y = wt_kg))+
   geom_point()
 ```
 
-別の例として、以下のコマンドでは、同じデータを使用して、わずかに異なるマッピングと異なる geom を使用しています。`geom_histogram()` 関数では、X軸にマッピングされた列が必要なだけで、Y軸のカウントは自動的に生成されます。
+別の例として、以下のコマンドでは、同じデータを使用して、わずかに異なるマッピングと異なる geom を使用しています。`geom_histogram()` 関数では、x 軸にマッピングされた列が必要なだけで、y 軸のカウントは自動的に生成されます。
 
 ```{r, warning=F, message=F}
 ggplot(data = linelist, mapping = aes(x = age))+
@@ -236,9 +233,9 @@ ggplotの用語では、プロットの "美学" には特定の意味があり�
 
 プロットオブジェクトの美的感覚を静的なものにしたい場合、つまり、データの中のすべての観測値に対して同じものにしたい場合は、geom の中にその割り当てを記述しますが、`mapping = aes()` の引数の外に記述します。これらの割り当ては、`size = 1` や `color = "blue"` のようになります。以下に2つの例を示します。
 
--   １つ目の例では、`mapping = aes()` は `ggplot()` コマンドの中にあり、軸にはデータの中の年齢と体重の列がマッピングされています。プロットの美学である `color =`, `size =`, `alpha =` （透明度）は静的な値に割り当てられています。わかりやすくするために、これは`geom_point()` 関数の中で行われていますが、後から他の geom を追加してプロットの美観に異なる値を設定することもできます。
+-   １つ目の例では、`mapping = aes()` は `ggplot()` コマンドの中にあり、軸にはデータの中の年齢と体重の列がマッピングされています。プロットの美学である `color =`, `size =`, `alpha =` （透明度）は静的な値に割り当てられています。わかりやすくするために、これは `geom_point()` 関数の中で行われていますが、後から他の geom を追加してプロットの美観に異なる値を設定することもできます。
 
--   ２つ目の例では、ヒストグラムでは X 軸のみを列にマッピングする必要があります。ヒストグラムの `binwidth =`, `color =`, `fill =`（内部色）, `alpha =` は、再び geom 内で静的な値に設定されます。
+-   ２つ目の例では、ヒストグラムでは x 軸のみを列にマッピングする必要があります。ヒストグラムの `binwidth =`, `color =`, `fill =`（内部色）, `alpha =` は、再び geom 内で静的な値に設定されます。
 
 ```{r, out.width=c('50%', '50%'), fig.show='hold', warning=F, message=F}
 # 散布図
@@ -264,7 +261,7 @@ ggplot(data = linelist, mapping = aes(x = age))+       # データと軸を設�
 
 -   １つ目の例では、（各ポイントの）`color =` が `age` の列にマッピングされ、凡例にスケールが表示されています。この例では、目盛りが存在していることを覚えておいてください。後ほどそれらを修正する方法を示します。
 
--   ２つ目の例では、2つの新しいプロットの美学が列にマッピングされています（`color =` と `size =`）。一方、プロットの美学である `shape =` と `alpha =` は、`mapping = aes()` 関数を使わずに、静的な値にマッピングされています。
+-   ２つ目の例では、２つの新しいプロットの美学が列にマッピングされています（`color =` と `size =`）。一方、プロットの美学である `shape =` と `alpha =` は、`mapping = aes()` 関数を使わずに、静的な値にマッピングされています。
 
 ```{r, out.width=c('50%', '50%'), fig.show='hold', warning=F, message=F}
 # 散布図
@@ -286,13 +283,11 @@ ggplot(data = linelist,   # データを設定
   geom_point(             # データを点として表示
     shape = "diamond",      # 点を菱形として表示
     alpha = 0.3)            # 点の透過度を30%として表示
-
-
 ```
 
 注：軸の割り当ては、常にデータの列に割り当てられます（静的な値ではありません）。これは常に `mapping = aes()` 内で行われます。
 
-複数の geom を持つプロットなど、より複雑なプロットを作成する場合には、プロットのレイヤーと美観を追跡することが重要になります。以下の例では、`size =` が `geom_point()` と `geom_smooth()` の2回割り当てられていますが、どちらも静的な値です。
+複数の geom を持つプロットなど、より複雑なプロットを作成する場合には、プロットのレイヤーと美観を追跡することが重要になります。以下の例では、`size =` が `geom_point()` と `geom_smooth()` の２回割り当てられていますが、どちらも静的な値です。
 
 ```{r, warning=F, message=F}
 ggplot(data = linelist,
@@ -313,7 +308,7 @@ ggplot(data = linelist,
 
 Aesthetic mapping within `mapping = aes()` can be written in several places in your plotting commands and can even be written more than once. This can be written in the top `ggplot()` command, and/or for each individual geom beneath. The nuances include:
 
-`mapping = aes()` 内のエステティックマッピングは、プロットコマンドの中のいくつかの場所に書くことができ、また複数回書くこともできます。これは、一番最初の `ggplot()` コマンドの中に書くこともできますし、その下の個々の geom ごとに書くこともできます。ニュアンスは以下の通りです。
+`mapping = aes()` 内のマッピングは、プロットコマンドの中のいくつかの場所に書くことができ、また複数回書くこともできます。これは、一番最初の `ggplot()` コマンドの中に書くこともできますし、その下の個々の geom ごとに書くこともできます。ニュアンスは以下の通りです。
 
 -   トップの `ggplot()` コマンドで作成されたマッピング割り当ては、 `x =` と `y =` が継承されるように、下にあるすべての geom でデフォルトとして継承されます。
 
@@ -324,7 +319,7 @@ Aesthetic mapping within `mapping = aes()` can be written in several places in y
 このように、以下の各コマンドは同じプロットを作成します。
 
 ```{r, eval=F, warning=F, message=F}
-# これらのコマンドは、同じプロットを作成します。
+# これらのコマンドは、同じプロットを作成します
 ggplot(data = linelist, mapping = aes(x = age))+
   geom_histogram()
 
@@ -350,13 +345,12 @@ ggplot(data = linelist,
 ```
 
 ```{r, eval=F}
-# この代替コードも、同じプロットを生成します。
+# この代替コードも、同じプロットを生成します
 ggplot(data = linelist,
        mapping = aes(x = age, y = wt_kg))+
   geom_point(
     mapping = aes(color = gender),
     alpha = 0.5)
-
 ```
 
 geom に応じて、データをグループ化するために異なる引数を使用する必要があることに注意してください。`geom_point()` の場合は、`color =`, `shape =`, `size =` のいずれかを使用することになるでしょう。 一方、`geom_bar()` の場合は、`fill =` を使用することになるでしょう。 これは、geom と、グループ化を反映させたいプロットの美しさに依存しています。
@@ -367,7 +361,7 @@ geom に応じて、データをグループ化するために異なる引数を
 
 ## Facets / Small-multiples {#ggplot_basics_facet}
 
-ファセット、もしくは、"small-multiples" とは、1つのプロットを複数のパネルに分割するためのもので、データグループごとに1つのパネル（ "ファセット" ）が用意されている。同じ種類のプロットが複数回作成され、それぞれが同じデータセットのサブグループを使用してものになります。
+ファセット、もしくは、"small-multiples" とは、１つのプロットを複数のパネルに分割するためのもので、データグループごとに１つのパネル（ "ファセット" ）が用意されている。同じ種類のプロットが複数回作成され、それぞれが同じデータセットのサブグループを使用してものになります。
 
 ファセット化は **ggplot2** に付属する機能で、ファセット化された "パネル" の凡例と軸は自動的に整列します。\[ggplot tips\] のページで説明されている他のパッケージもあり、全く異なるプロット（**cowplot** や **patchwork** ）を1つの図にまとめるのにも使われます。
 
@@ -377,28 +371,27 @@ geom に応じて、データをグループ化するために異なる引数を
 
 -   ファセットのレイアウトを決定するために、特定のオプションを呼び出すことができます。例えば、`nrow = 1` または `ncol = 1` で、ファセット化されたプロットが配置される行または列の数を制御することができます。
 
-2.  `facet_grid()` これは、第二の変数をファセットの配置に加えたいときに使用します。ここでは、グリッドの各パネルは、[2つの列]{.ul}の値の間の交点を示しています。例えば、病院と年齢グループの組み合わせごとに、病院が上（列）に、年齢グループが横（行）に沿った疫学曲線を示します。
+2.  `facet_grid()` これは、第二の変数をファセットの配置に加えたいときに使用します。ここでは、グリッドの各パネルは、[２つの列]{.ul}の値の間の交点を示しています。例えば、病院と年齢グループの組み合わせごとに、病院が上（列）に、年齢グループが横（行）に沿った疫学曲線を示します。
 
 -   サブグループがグリッドで表示されるため、`nrow` および `ncol` は関係ありません。
 
-これらの関数はそれぞれ、ファセット化する列を指定するための数式シンタックスを受け付けます。両方とも、チルダ `~` の両側に 1 つずつ、最大 2 つの列を受け入れます。
+これらの関数はそれぞれ、ファセット化する列を指定するための数式シンタックスを受け付けます。両方とも、チルダ `~` の両側に１つずつ、最大２つの列を受け入れます。
 
--   `facet_wrap()`では、多くの場合、`facet_wrap(~hospital)` のようにチルダ `~` を先行させて1つの列だけを記述します。しかし、`facet_wrap(outcome ~ hospital)` のように2つの列を書くこともできます。それぞれのユニークな組み合わせは、別のパネルに表示されますが、グリッドには配置されません。見出しには結合された用語が表示され、これらは列と行の間の特定のロジックではありません。ファセット変数を1つだけ指定する場合は、ピリオド `.` が数式の反対側のプレースホルダーとして使用されます（コード例を参照）。
+-   `facet_wrap()`では、多くの場合、`facet_wrap(~hospital)` のようにチルダ `~` を先行させて１つの列だけを記述します。しかし、`facet_wrap(outcome ~ hospital)` のように２つの列を書くこともできます。それぞれのユニークな組み合わせは、別のパネルに表示されますが、グリッドには配置されません。見出しには結合された用語が表示され、これらは列と行の間の特定のロジックではありません。ファセット変数を１つだけ指定する場合は、ピリオド `.` が数式の反対側のプレースホルダーとして使用されます（コード例を参照）。
 
--   `facet_grid()` では、数式に1つまたは2つの列を指定することもできます（グリッドの `row ~ columns` ）。1つだけ指定したい場合は、`facet_grid(. ~ hospital)` や `facet_grid(hospital ~ .)` のように、チルダの反対側にピリオド `.` を置くことができます。
+-   `facet_grid()` では、数式に１つまたは２つの列を指定することもできます（グリッドの `row ~ columns` ）。１つだけ指定したい場合は、`facet_grid(. ~ hospital)` や `facet_grid(hospital ~ .)` のように、チルダの反対側にピリオド `.` を置くことができます。
 
 ファセットはすぐに圧倒的な量の情報を含むことができるので、ファセットを選択する各変数のレベルが多すぎないようにするのが良いでしょう。ここでは、malaria データセット（ \[Download handbook and data\] 参照）を使った簡単な例を紹介します。malaria データセットは、施設におけるマラリアの毎日の症例数を年齢層別に集計したものです。
 
 以下では、インポートして、簡単な修正を行います。
 
 ```{r, , warning=F, message=F}
-# これらのデータは、マラリアの症例を施設ごとに日ごとにカウントしたものです。
+# これらのデータは、マラリアの症例を施設ごとに日ごとにカウントしたものです
 malaria_data <- import(here("data", "malaria_facility_count_data.rds")) %>%  # インポート
   select(-submitted_date, -Province, -newid)                                 # 不要な列の削除
-
 ```
 
-malaria データの最初の 50 行を以下に示します。`malaria_tot` という列がありますが、年齢グループ別のカウントの列もあります（これらは 2 番目の `facet_grid()` の例で使用されます）。
+malaria データの最初の 50 行を以下に示します。`malaria_tot` という列がありますが、年齢グループ別のカウントの列もあります（これらは２番目の `facet_grid()` の例で使用されます）。
 
 ```{r, message=FALSE, echo=F}
 DT::datatable(head(malaria_data, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
@@ -408,18 +401,18 @@ DT::datatable(head(malaria_data, 50), rownames = FALSE, filter="top", options = 
 
 とりあえず、`malaria_tot` と `District` の列に注目してみましょう。年齢別カウントの列は今回は無視します。`geom_col()` を使って流行曲線をプロットします。これは、`malaria_tot` 列で指定された y 軸の高さに、各日の列を生成します（データはすでに日ごとのカウントなので、`geom_col()` を使います - [棒グラフ](#ggplot_basics_bars)を参照）。
 
-`facet_wrap()` コマンドを追加する際には、チルダを指定し、次にファセットする列を指定します（ここでは `District` ）。チルダの左側に別の列を配置することもできますが、これは各組み合わせに対して 1 つのファセットを作成することになりますので、代わりに `facet_grid()` で行うことをお勧めします。この使用例では、`District` のユニークな値ごとに 1 つのファセットが作成されます。
+`facet_wrap()` コマンドを追加する際には、チルダを指定し、次にファセットする列を指定します（ここでは `District` ）。チルダの左側に別の列を配置することもできますが、これは各組み合わせに対して１つのファセットを作成することになりますので、代わりに `facet_grid()` で行うことをお勧めします。この使用例では、`District` のユニークな値ごとに１つのファセットが作成されます。
 
 ```{r, warning=F, message=F}
 # District によってファセットされたプロット
 ggplot(malaria_data, aes(x = data_date, y = malaria_tot)) +
-  geom_col(width = 1, fill = "darkred") +       # カウントデータを列としてプロットする
-  theme_minimal()+                              # 背景のパネルを簡素化する
-  labs(                                         # プロットのラベルやタイトルなどを追加する
+  geom_col(width = 1, fill = "darkred") +       # カウントデータを列としてプロットします
+  theme_minimal()+                              # 背景のパネルを簡素化します
+  labs(                                         # プロットのラベルやタイトルなどを追加します
     x = "Date of report",
     y = "Malaria cases",
     title = "Malaria cases by district") +
-  facet_wrap(~District)                       # ファセットが作られる
+  facet_wrap(~District)                       # ファセットが作られます
 ```
 
 ### `facet_grid()` {.unnumbered}
@@ -430,9 +423,9 @@ ggplot(malaria_data, aes(x = data_date, y = malaria_tot)) +
 malaria_age <- malaria_data %>%
   select(-malaria_tot) %>% 
   pivot_longer(
-    cols = c(starts_with("malaria_rdt_")),  # 縦長に転回する列を選ぶ
-    names_to = "age_group",      # 列名を age_group になる
-    values_to = "num_cases"      # 値を1つの列（num_cases）にまとめる
+    cols = c(starts_with("malaria_rdt_")),  # 縦長に転回する列を選びます
+    names_to = "age_group",      # 列名を age_group にします
+    values_to = "num_cases"      # 値を1つの列（num_cases）にまとめます
   ) %>%
   mutate(
     age_group = str_replace(age_group, "malaria_rdt_", ""),
@@ -444,8 +437,6 @@ malaria_age <- malaria_data %>%
 ```{r, message=FALSE, echo=F}
 DT::datatable(head(malaria_age, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
-
-When you pass the two variables to `facet_grid()`, easiest is to use formula notation (e.g. `x ~ y`) where x is rows and y is columns. Here is the plot, using `facet_grid()` to show the plots for each combination of the columns `age_group` and `District`.
 
 2 つの変数を `facet_grid()` に渡すとき、x が行、y が列である数式表記 (例: `x ~ y` ) を使用するのが最も簡単です。ここでは、`facet_grid()` を使って、 `age_group` と`District` の列の組み合わせごとにプロットを表示しています。
 
@@ -465,7 +456,7 @@ ggplot(malaria_age, aes(x = data_date, y = num_cases)) +
 
 ファセット化の際に表示される軸のスケールは、デフォルトではすべてのファセットで同じ（固定）になっています。これは、相互比較には便利ですが、必ずしも適切ではありません。
 
-`facet_wrap()` または `facet_grid()` を使用する場合、`scales = "free_y "` を追加して、"free" またはパネルの y 軸を解放して、そのデータサブセットに適切なスケールにすることができます。これは、サブカテゴリーの 1 つで実際のカウントが小さく、トレンドが見えにくい場合に特に有効です。また、"free_y" の代わりに "free_x" と書けば、x 軸（日付など）にも同じことができますし、両方の軸に "free" と書くこともできます。`facet_grid` では、同じ行のファセットでは y スケールが同じになり、同じ列のファセットでは x スケールが同じになることに注意してください。
+`facet_wrap()` または `facet_grid()` を使用する場合、`scales = "free_y "` を追加して、"free" またはパネルの y 軸を解放して、そのデータサブセットに適切なスケールにすることができます。これは、サブカテゴリーの１つで実際のカウントが小さく、トレンドが見えにくい場合に特に有効です。また、"free_y" の代わりに "free_x" と書けば、x 軸（日付など）にも同じことができますし、両方の軸に "free" と書くこともできます。`facet_grid` では、同じ行のファセットでは y スケールが同じになり、同じ列のファセットでは x スケールが同じになることに注意してください。
 
 `facet_grid` のみを使用する場合、`space = "free_y"` または `space = "free_x"` を追加することで、ファセットの実際の高さまたは幅が中の図の値に重み付けされます。これは、`scales = "free"`（ y または x ）がすでに適用されている場合にのみ機能します。
 
@@ -473,13 +464,13 @@ ggplot(malaria_age, aes(x = data_date, y = num_cases)) +
 
 # 自由な y 軸
 ggplot(malaria_data, aes(x = data_date, y = malaria_tot)) +
-  geom_col(width = 1, fill = "darkred") +       # カウントデータを列としてプロットする
-  theme_minimal()+                              # 背景のパネルを簡素化する
-  labs(                                         # プロットのラベルやタイトルなどを追加する
+  geom_col(width = 1, fill = "darkred") +       # カウントデータを列としてプロットします
+  theme_minimal()+                              # 背景のパネルを簡素化します
+  labs(                                         # プロットのラベルやタイトルなどを追加します
     x = "Date of report",
     y = "Malaria cases",
     title = "Malaria cases by district - 'free' x and y axes") +
-  facet_wrap(~District, scales = "free")        # ファセットが作られる
+  facet_wrap(~District, scales = "free")        # ファセットが作られます
 ```
 
 <!-- ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')} -->
@@ -518,20 +509,20 @@ ggplot(malaria_data, aes(x = data_date, y = malaria_tot)) +
 
 ### ファセット内の因子レベルの順序 {.unnumbered}
 
-[ファセット内]{.ul}の因子レベルの順序を変更する方法については、こちらの[記事](https://juliasilge.com/blog/reorder-within/)を参照してください
+[ファセット内]{.ul}の因子レベルの順序を変更する方法については、こちらの[記事](https://juliasilge.com/blog/reorder-within/)を参照してください。
 
 ## プロットの保存
 
 ### プロットの保存 {.unnumbered}
 
-デフォルトでは `ggplot()` コマンドを実行すると、プロットは RStudio の Plots ペインに表示されます。しかし、代入演算子 `<-` を使い、名前を付けてプロットをオブジェクトとして保存することもできます。そうすれば、オブジェクト名自体が実行されない限り、印刷されません。プロット名を `print()` で囲んで印刷することもできますが、これは、複数のプロットを一度に印刷するための [for ループ]{.ul}の中でプロットを作成する場合など、特定の状況でのみ必要となります（ \[Iteration, loops, and lists\] ページを参照）。
+デフォルトでは `ggplot()` コマンドを実行すると、プロットは RStudio の Plots ペインに表示されます。しかし、代入演算子 `<-` を使い、名前を付けてプロットをオブジェクトとして保存することもできます。そうすれば、オブジェクト名自体が実行されない限り、表示されません。プロット名を `print()` で囲んで表示することもできますが、これは、複数のプロットを一度に表示するための [for ループ]{.ul}の中でプロットを作成する場合など、特定の状況でのみ必要となります（ \[Iteration, loops, and lists\] ページを参照）。
 
 ```{r, warning=F, message=F}
-# プロットを定義する
+# プロットを定義します
 age_by_wt <- ggplot(data = linelist, mapping = aes(x = age_years, y = wt_kg, color = age_years))+
   geom_point(alpha = 0.1)
 
-# 印刷する
+# 表示する
 age_by_wt    
 ```
 
@@ -598,11 +589,11 @@ age_by_wt
 
 キャプションの割り当てでは、**stringr** パッケージの `str_glue()` を使って、文字列テキストの中にダイナミックな R コードを埋め込んだことに注目してください。キャプションには、"Data as of:" キャプションには、linelist の最大入院日を反映した "Data as of: "の日付が表示されます。詳しくは、\[Characters and strings\] のページをご覧ください。
 
-[凡例]{.ul}のタイトルを指定する際の注意点。凡例には複数の尺度を設定できるため、"凡例タイトル" の引数は1つではありません。`labs()` の中で、凡例の作成に使われるプロットの美学の引数を書き、この方法でタイトルを指定することができます。たとえば、上記では、`color = age` を割り当てて凡例を作成しました。したがって、`color =` を `labs()` に指定し、希望する凡例のタイトル（大文字の A の "Age" ）を割り当てます。`aes(fill = COLUMN)` で凡例を作成した場合は、`labs()` で `fill =` と書き、その凡例のタイトルを調整します。\[ggplot tips\] ページのカラースケールのセクションでは、凡例の編集についての詳細と、`scales_()` 関数を使った別の方法が紹介されています。
+[凡例]{.ul}のタイトルを指定する際の注意点。凡例には複数の尺度を設定できるため、"凡例タイトル" の引数は１つではありません。`labs()` の中で、凡例の作成に使われるプロットの美学の引数を書き、この方法でタイトルを指定することができます。たとえば、上記では、`color = age` を割り当てて凡例を作成しました。したがって、`color =` を `labs()` に指定し、希望する凡例のタイトル（大文字の A の "Age" ）を割り当てます。`aes(fill = COLUMN)` で凡例を作成した場合は、`labs()` で `fill =` と書き、その凡例のタイトルを調整します。\[ggplot tips\] ページのカラースケールのセクションでは、凡例の編集についての詳細と、`scales_()` 関数を使った別の方法が紹介されています。
 
 ## テーマ {#ggplot_basics_themes}
 
-**ggplot2** の優れた点の1つは、プロットを自由にコントロールできることです-何でも定義できます！前述したように、データの形や幾何学的形状に関係のないプロットのデザインは、`theme()` 関数内で調整されます。例えば、プロットの背景色、グリッドラインの有無、テキスト（タイトル、サブタイトル、キャプション、軸テキスト...）のフォント／サイズ／色／配置などです。これらの調整は、次の2つの方法で行うことができます。
+**ggplot2** の優れた点の１つは、プロットを自由にコントロールできることです-何でも定義できます！前述したように、データの形や幾何学的形状に関係のないプロットのデザインは、`theme()` 関数内で調整されます。例えば、プロットの背景色、グリッドラインの有無、テキスト（タイトル、サブタイトル、キャプション、軸テキスト...）のフォント／サイズ／色／配置などです。これらの調整は、次の２つの方法で行うことができます。
 
 -   全体的な調整を行うための[完全なテーマ](https://ggplot2.tidyverse.org/reference/ggtheme.html) `theme_()` 関数の追加 - `theme_classic()` 、`theme_minimal()` 、`theme_dark()` 、`theme_light()` 、`theme_grey()` 、`theme_bw()` などがあります。\
 -   `theme()` 内でプロットの小さな部分を個別に調整する
@@ -706,7 +697,7 @@ age_by_wt +
 
 しかし、テーマ論争は非常に多いです。これら全てをどうやって覚えればいいのか？心配しないでください。すべてを覚えるのは不可能です。幸いなことに、あなたを助けるためのツールがいくつかあります。
 
-完全なリストである[テーマの変更](https://ggplot2.tidyverse.org/reference/theme.html)に関する **Tidyverse** ドキュメント。
+完全なリストである[テーマの変更](https://ggplot2.tidyverse.org/reference/theme.html)に関する **tidyverse** ドキュメント。
 
 ***TIP*****:** **ggplot2** から `theme_get()` を実行すると、90 以上の `theme()` 引数のリストがコンソールに表示されます。
 
@@ -725,13 +716,13 @@ age_by_wt +
 このようになります。
 
 ```{r, warning=F, message=F}
-linelist %>%                                                     # linelist から始める
-  select(c(case_id, fever, chills, cough, aches, vomit)) %>%     # 列を選択する
-  pivot_longer(                                                  # 縦長のデータに転回する
+linelist %>%                                                     # linelist から始めます
+  select(c(case_id, fever, chills, cough, aches, vomit)) %>%     # 列を選択します
+  pivot_longer(                                                  # 縦長のデータに転回します
     cols = -case_id,                                  
     names_to = "symptom_name",
     values_to = "symptom_is_present") %>%
-  mutate(                                                        # 欠測値を置換する
+  mutate(                                                        # 欠測値を置換します
     symptom_is_present = replace_na(symptom_is_present, "unknown")) %>% 
   
   ggplot(                                                        # ggplotの開始！
@@ -780,22 +771,22 @@ linelist %>%                                                     # linelist か�
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
 # A) 一般的なヒストグラム
-ggplot(data = linelist, aes(x = age))+  # x 変数を与える
+ggplot(data = linelist, aes(x = age))+  # x 変数を与えます
   geom_histogram()+
   labs(title = "A) Default histogram (30 bins)")
 
 # B) より多いビン
-ggplot(data = linelist, aes(x = age))+  # x 変数を与える
+ggplot(data = linelist, aes(x = age))+  # x 変数を与えます
   geom_histogram(bins = 50)+
   labs(title = "B) Set to 50 bins")
 
 # C) より少ないビン
-ggplot(data = linelist, aes(x = age))+  # x 変数を与える
+ggplot(data = linelist, aes(x = age))+  # x 変数を与えます
   geom_histogram(bins = 5)+
   labs(title = "C) Set to 5 bins")
 
 # D) より多いビン
-ggplot(data = linelist, aes(x = age))+  # x 変数を与える
+ggplot(data = linelist, aes(x = age))+  # x 変数を与えます
   geom_histogram(binwidth = 1)+
   labs(title = "D) binwidth of 1")
 ```
@@ -803,12 +794,12 @@ ggplot(data = linelist, aes(x = age))+  # x 変数を与える
 滑らかな部分を得るには、`geom_density()` を使用します。
 
 ```{r, fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
-# 割合の軸, 平滑化した
+# 割合の軸、平滑化した
 ggplot(data = linelist, mapping = aes(x = age)) +
   geom_density(size = 2, alpha = 0.2)+
   labs(title = "Proportional density")
 
-# 積み上げた割合の軸, 平滑化
+# 積み上げた割合の軸、平滑化
 ggplot(data = linelist, mapping = aes(x = age, fill = gender)) +
   geom_density(size = 2, alpha = 0.2, position = "stack")+
   labs(title = "'Stacked' proportional densities")
@@ -846,7 +837,7 @@ ggplot(data = linelist, mapping = aes(x = age, y = after_stat(density), fill = g
   labs(title = "Proportional, smoothed with geom_density()")
 ```
 
-少し楽しみたい方は、**ggridges** パッケージの`geom_density_ridges` を試してみてください（[vignetteはこちら](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html)）。
+少し楽しみたい方は、**ggridges** パッケージの `geom_density_ridges` を試してみてください（[vignetteはこちら](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html)）。
 
 ヒストグラムについての詳細は、`tidyverse` の [geom_histogram() のページ](https://ggplot2.tidyverse.org/reference/geom_histogram.html)を参照してください。
 
@@ -860,9 +851,9 @@ ggplot(data = linelist, mapping = aes(x = age, y = after_stat(density), fill = g
 knitr::include_graphics(here::here("images", "boxplot.png"))
 ```
 
-`geom_boxplot()` を使って箱ひげ図を作成する場合、通常は `aes()` 内で1つの軸（ x または y ）のみをマッピングします。指定された軸は、プロットが水平か垂直かを決定します。
+`geom_boxplot()` を使って箱ひげ図を作成する場合、通常は `aes()` 内で１つの軸（ x または y ）のみをマッピングします。指定された軸は、プロットが水平か垂直かを決定します。
 
-ほとんどの geom では、`aes()` 内で `color =` や `fill =` などの美的感覚を列にマッピングすることで、グループごとにプロットを作成します。しかし、箱ひげ図の場合は、グループ化された列を割り当てられていない軸（ x または y ）に割り当てることで実現します。下のコードは、データセット内の[すべての]{.ul}年齢値を箱ひげ図にしたもので、次のコードは、データセット内の（欠損していない）性別ごとに 1 つの箱ひげ図を表示するものです。`NA`（欠損）の値は、削除しない限り、別の箱ひげ図として表示されることに注意してください。この例では、各プロットが異なる色になるように、`outcome` の列を `fill` に設定していますが、これは必要ありません。
+ほとんどの geom では、`aes()` 内で `color =` や `fill =` などの美的感覚を列にマッピングすることで、グループごとにプロットを作成します。しかし、箱ひげ図の場合は、グループ化された列を割り当てられていない軸（ x または y ）に割り当てることで実現します。下のコードは、データセット内の[すべての]{.ul}年齢値を箱ひげ図にしたもので、次のコードは、データセット内の（欠損していない）性別ごとに１つの箱ひげ図を表示するものです。`NA`（欠損）の値は、削除しない限り、別の箱ひげ図として表示されることに注意してください。この例では、各プロットが異なる色になるように、`outcome` の列を `fill` に設定していますが、これは必要ありません。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
 # A) 箱ひげ図
@@ -934,7 +925,7 @@ ggplot(
 
 ### ２つの連続変数 {.unnumbered}
 
-同様の構文で `geom_point()` を使用すると、2 つの連続変数を互いに**散布図**にプロットすることができます。これは、分布ではなく実際の値を示すのに便利です。年齢と体重の基本的な散布図を (A) に示します。(B) では、`facet_grid()` を使って、linelist の2つの連続変数の関係を示しています。
+同様の構文で `geom_point()` を使用すると、２つの連続変数を互いに**散布図**にプロットすることができます。これは、分布ではなく実際の値を示すのに便利です。年齢と体重の基本的な散布図を (A) に示します。(B) では、`facet_grid()` を使って、linelist の２つの連続変数の関係を示しています。
 
 ```{r fig.show='hold', message=FALSE, warning=FALSE, out.width=c('50%', '50%')}
 # weight と age の基本的な散布図 
@@ -953,13 +944,13 @@ ggplot(data = linelist %>% drop_na(gender, outcome), # gender/outcome につい�
 
 ### ３つの連続変数 {.unnumbered}
 
-3つの連続変数を表示するには、`fill =` 引数を利用して[ヒートプロット]{.ul}を作成します。各 "セル" の色は、3つ目の連続データの列の値を反映します。詳しくは \[ggplot tips\] のページと、\[Heat plots\] のページに例があります。
+３つの連続変数を表示するには、`fill =` 引数を利用して[ヒートプロット]{.ul}を作成します。各 "セル" の色は、３つ目の連続データの列の値を反映します。詳しくは \[ggplot tips\] のページと、\[Heat plots\] のページに例があります。
 
 R で 3D プロットを作成する方法はありますが、実践的な疫学では解釈が難しいことが多く、意思決定にはあまり役に立ちません。
 
 ## カテゴリカルなデータのプロット
 
-カテゴリカルなデータには、文字値、論理値（ TRUE/FALSE ）、因子（ \[Factors\] のページを参照）などがあります。
+カテゴリカルなデータには、文字値、論理値（ TRUE ／ FALSE ）、因子（ \[Factors\] のページを参照）などがあります。
 
 ### 準備 {.unnumbered}
 
@@ -967,7 +958,7 @@ R で 3D プロットを作成する方法はありますが、実践的な疫�
 
 カテゴリカルなデータについて最初に理解すべきことは、それが linelist の症例のような生の観測値として存在しているのか、それとも数や割合を保持するようやくまたは集約したデータフレームとして存在しているのかということです。データの状態によって、使用するプロット関数が変わります。
 
--   データが生の観測値で、観測ごとに 1 行の場合は、 `geom_bar()` を使用します。
+-   データが生の観測値で、観測ごとに１行の場合は、 `geom_bar()` を使用します。
 
 -   データがすでにカウントや割合に集約されている場合は、`geom_col()` を使用するでしょう。
 
@@ -987,7 +978,7 @@ linelist %>%
 病院名のため、値が文字で表示されており、デフォルトではアルファベット順に並んでいます。'other' と 'missing' の値がありますが、これは内訳を表示する際に最後のサブカテゴリにしたいと考えています。そこで、この列を係数に変更し、並び替えを行います。これについては、\[Factors\] のページで詳しく説明しています。
 
 ```{r}
-# 因子に変換し、順序を定義することで、"Other" と "Missing" が最後になる。
+# 因子に変換し、順序を定義することで、"Other" と "Missing" が最後になります
 linelist <- linelist %>% 
   mutate(
     hospital = fct_relevel(hospital, 
@@ -1007,7 +998,7 @@ levels(linelist$hospital)
 
 棒の高さ（または積み重ねられた棒の高さ）に[データの関連する行の数]{.ul}を反映させたい場合は、`geom_bar()` を使用します。これらの棒は、 `width =` が調整されない限り、棒の間に隙間ができます。
 
--   軸列の割り当ては1つだけにしてください（通常は x 軸）。x と y を指定すると、`Error: stat_count() can only have an x or y aesthetic.` が表示されます。\
+-   軸列の割り当ては１つだけにしてください（通常は x 軸）。x と y を指定すると、`Error: stat_count() can only have an x or y aesthetic.` が表示されます。\
 
 -   `mapping = aes()` 内で `fill =` の割り当てを追加することで、積み上げ棒を作成できます。
 
@@ -1045,16 +1036,16 @@ outcomes <- linelist %>%
   drop_na() %>% 
   group_by(outcome) %>% 
   count %>% 
-  ungroup() %>% # 割合は全体に対するものなので、ungroupする
+  ungroup() %>% # 割合は全体に対するものなので、ungroup します
   mutate(proportion = n/sum(n)*100) # パーセントを計算
   
-outcomes #表を見る
+outcomes #表を見ます
 ```
 
 以下は、エボラ出血熱患者の転帰の分布を示す簡単な棒グラフを作成するための `geom_col` を使用したコードです。geom_col では、x と y の両方を指定する必要があります。ここで、x は x 軸に沿ったカテゴリー変数、y は生成された `proportion` の列の割合です。
 
 ```{r, fig.height = 3, fig.width=4.5}
-# Outcomes in all cases
+# 全ての症例のアウトカム
 ggplot(outcomes) + 
   geom_col(aes(x=outcome, y = proportion)) +
   labs(subtitle = "Number of recovered and dead Ebola cases")
