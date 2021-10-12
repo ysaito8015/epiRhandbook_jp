@@ -23,7 +23,6 @@ knitr::include_graphics(here::here("images", "flexdashboard_output.png"))
 
 ### パッケージの読み込み {.unnumbered}
 
-In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with  `library()` from **base** R. See the page on [R basics] for more information on R packages.  
 このハンドブックでは、**pacman** の `p_load()` の利用を推奨しています。`p_load()`は、必要に応じてパッケージをインストールして <u>かつ</u> 利用するために読み込んでくれます。あるいは、 **base** パッケージの `library()` を用いてインストールされたパッケージを読み込むことが可能です。R のパッケージの詳細については、[R Basics] のページを参照してください。  
 
 ```{r}
@@ -78,8 +77,6 @@ knitr::include_graphics(here::here("images", "flexdashboard_new2.png"))
 
 ### YAML {.unnumbered}  
 
-At the top of the script is the "YAML" header.
-
 スクリプトの一番上には、"YAML" ヘッダがあります。これは、`---`のように3本のダッシュで始まる必要があり、`---`のように3本のダッシュで終わる必要があります。YAML のパラメーターは `key:values` の組み合わせで記載されます。**YAMLでは、インデントとコロンの記載が大切です** - `key:value` の組み合わせはイコール記号ではなく、コロンで分けられることに注意が必要です。
 
 YAMLは文書のメタデータで始まる必要があります。YAMLに記載される（インデントされていない）パラメーターの順番は重要ではありません。例えば次のような形です。
@@ -89,12 +86,9 @@ title: "My document"
 author: "Me"
 date: "`r Sys.Date()`"
 ```
+インラインコードを書く（`r`に続いてバックティックの中に記載する）ように、YAML の中で R のコードを使うことができます。また、上のYAML内の date にあるように、クオーテーションの中に入れて書くこともできます。  
 
-You can use R code in YAML values by putting it like in-line code (preceeded by `r` within backticks) but also within quotes (see above for Date).  
-
-
-
-A required YAML parameter is `output: `, which specifies the type of file to be produced (e.g. `html_document`, `pdf_document`, `word_document`, or `powerpoint_presentation`). For **flexdashboard** this parameter value is a bit confusing - it must be set as `output:flexdashboard::flex_dashboard`. Note the single and double colons, and the underscore. This YAML output parameter is often followed by *an additional colon* and indented sub-parameters (see `orientation: ` and `vertical_layout: ` parameters below).  
+必須とされる YAML パラメーターは `output: `です。これは、どのような種類のファイルが生成されるかを指定します。（例： `html_document`、`pdf_document`、`word_document` や `powerpoint_presentation` など。）**flexdashboard** では、このパラメーターの指定は少し混乱するかもしれません。必ず `output:flexdashboard::flex_dashboard` と指定する必要があります。コロンの個数とアンダースコアに注意してください。YAMLの出力のためのパラメーターは、<u>追加のコロン</u>が入力されて、インデントされた追加の設定が続くことが多いです。（具体的には、以下のチャンクにある `orientation: ` と `vertical_layout: ` のパラメーターを参照してください。）
 
 ```{r, eval=F}
 title: "My dashboard"
@@ -106,46 +100,41 @@ output:
     vertical_layout: scroll
 ```
 
-As shown above, indentations (2 spaces) are used for sub-parameters. In this case, do not forget to put an additional colon after the primary, like `key:value:`.  
+上に示したように、 二つのスペースで作られたインデントがサブパラメーターに利用されています。このケースでは、`key:values:`のように、親となるパラメーターの後にコロンを追加で入力するのを忘れないようにしましょう。 
 
-If appropriate, logical values should be given in YAML in lowercase (`true`, `false`, `null`). If a colon is part of your value (e.g. in the title) put the value in quotes. See the examples in sections below.  
+ロジカル値をパラメーターに与える必要がある場合は、YAML内では小文字で記載される必要があります（ `true`、`false`、`null` ）。もしコロンが（タイトルなどで）値の一部である場合はクオーテーションの中に値を入れてください。詳しくは次のセクションの中の例を参照してください。
 
+### コードチャンク {.unnumbered}  
 
+R Markdown は複数の「チャンク」を含むことができます。複数行の R のコードをチャンク内に書くことができて、これらは R のスクリプトとして動作します。
 
-### Code chunks {.unnumbered}  
+コードチャンクは、三つのバックティックと、小文字の「r」が入った中括弧で作成され、三つのバックティックで閉じられます。 キーボードショートカット、「Ctrl + Alt + i」（Mac では Cmd + Shift + r）、を入力するか、スクリプトエディタの上にある 「insert a new code chunk」と表示されている緑のボタンをクリックすることで新しいチャンクを自身で作成してみてください。コードチャンクの例は多数、以下に例示してあります。
 
-An R Markdown script can contain multiple code "chunks" - these are areas of the script where you can write multiple-line R code and they function just like mini R scripts.  
+### ナラティブテキスト {.unnumbered}  
 
-Code chunks are created with three back-ticks and curly brackets with a lowercase "r" within. The chunk is closed with three backticks. You can create a new chunk by typing it out yourself, by using the keyboard shortcut "Ctrl + Alt + i" (or Cmd + Shift + r in Mac), or by clicking the green 'insert a new code chunk' icon at the top of your script editor. Many examples are given below.  
+R コード「チャンク」の外には、ナラティブテキストを書くことができます。[Reports with R Markdown]ページで解説されているように、アスタリスク（ \* ）一つでテキストを囲むことでイタリックにすることができます。あるいは、アスタリスク二つ（\*\*）でテキストを囲むことで太字にすることもできます。箇条書きや数値による箇条書きは新しい列、インデント、行の最後にスペースの入力が二つ必要となることに注意してください。
 
-
-### Narrative text {.unnumbered}  
-
-Outside of an R code "chunk", you can write narrative text. As described in the page on [Reports with R Markdown], you can italicize text by surrounding it with one asterisk (*), or bold by surrounding it with two asterisks (**). Recall that bullets and numbering schemes are sensitive to newlines, indentation, and finishing a line with two spaces.  
-
+<!--nn この部分の例が説明と一致していないのであとで確認する。-->
 You can also insert in-line R code into text as described in the [Reports with R Markdown] page, by surrounding the code with backticks and starting the command with "r": `` ` 1+1` ``(see example with date above).  
 
+[Reports with R Markdown]ページに記載されているように、インライン R コードはバックティックで「r」ではじまるコードを囲むことで入力することができます。例：`` `r 1+1 ` ``（上の date にある例を参照してください。）
 
 
-### Headings {.unnumbered}  
+### 見出し {.unnumbered}  
 
-Different heading levels are established with different numbers of hash symbols, as described in the [Reports with R Markdown] page.  
+[Reports with R Markdown]のページで説明されたように、見出しのレベルはハッシュ記号の入力の個数で表現されます。
 
-In **flexdashboard**, a primary heading (#) creates a "page" of the dashboard. Second-level headings (##) create a column or a row depending on your `orientation:` parameter (see details below). Third-level headings (###) create panels for plots, charts, tables, text, etc.   
+**flexdashboard** では、見出し１（#）はダッシュボードの「ページ」を作成します。見出し２（##）は `orientation:`パラメーターに応じて列や行を作ります（詳細は下記を参照ください）。見出し３（###）は図、表、テキストなどのためのパネルを作成します。
 
 ```md
-# First-level heading (page)
+# 見出し１ （ページ）
 
-## Second level heading (row or column)  
+## 見出し２ （行か列）
 
-### Third-level heading (pane for plot, chart, etc.)
+### 見出し３ （図、表などのペーン）
 ```
 
-
-
-
-
-## Section attributes  
+## セクションの属性
 
 As in a normal R markdown, you can specify attributes to apply to parts of your dashboard by including `key=value` options after a heading, within curly brackets `{ }`. For example, in a typical HTML R Markdown report you might organize sub-headings into tabs with `## My heading {.tabset}`.  
 
