@@ -9,7 +9,7 @@ knitr::include_graphics(here::here("images", "flexdashboard_output.png"))
 
 **flexdashboard** のメリット：
 
-* 標準的でない R のコードは最小限の記載で済みます。わずかな練習ですぐにダッシュボードを作成することができます。
+* 標準的でない R のコードは最小限の記載で済ませることができます。わずかな練習ですぐにダッシュボードを作成することができます。
 * ダッシュボードは、自己完結型のHTMLファイルとして同僚に電子メールで送信することができます。サーバーは不要です。
 * **flexdashboard** は、**shiny** や **ggplotly** などの <u>"html widgets"</u> と組み合わせて、インタラクティブなダッシュボードとすることができます。
 
@@ -39,7 +39,7 @@ pacman::p_load(
 
 ### データのインポート {.unnumbered}  
 
-コードを追いたい人は、 <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>ここをクリックして「キレイな」 linelist データを取得</a>してください（`.rds` ファイルとして取得できます）。データを **rio** パッケージの `import()`を利用して読み込んでください。（これは、 .xlsx、.csv、.rds などのたくさんの種類のファイルを扱うことがｄけいます。詳しくは、[Imprort and export] のページをみてください。）
+コードを追いたい人は、 <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>ここをクリックして「キレイな」 linelist データを取得</a>してください（`.rds` ファイルとして取得できます）。データを **rio** パッケージの `import()`を利用して読み込んでください。（これは、 .xlsx、.csv、.rds などのたくさんの種類のファイルを扱うことができます。詳しくは、[Imprort and export] のページをみてください。）
 
 ```{r, echo=F}
 # linelist を R に取り込む
@@ -66,25 +66,23 @@ DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list
 knitr::include_graphics(here::here("images", "flexdashboard_new1.png"))
 ```
 
-In the window that opens, select "From Template" and select the "Flex Dashboard" template. You will then be prompted to name the document. In this page's example, we will name our R Markdown as "outbreak_dashboard.Rmd".  
-  
+開いたウィンドウから "From Template" を選択して、次に、 "Flex Dashboard" テンプレートを選んでください。その後、ドキュメントの名前をつけるように促されます。このページの例では、R Markdown に "outbreak_dashboard.Rmd" と命名しましょう。
 
 ```{r out.width = "100%", out.height="75%", fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "flexdashboard_new2.png"))
 ```
 
+## スクリプト  
 
-
-
-## The script  
-
-The script is an R Markdown script, and so has the same components and organization as described in the page on [Reports with R Markdown]. We briefly re-visit these and highlight differences from other R Markdown output formats.  
+記載するスクリプトは、R Markdown そのものです。そのため、[Reports with R Markdown] のページで解説されたものと同じように記載されています。ここで、簡単に再度これらの記載を紹介して、他のR Markdownの出力結果との違いを示しておきます。
 
 ### YAML {.unnumbered}  
 
-At the top of the script is the "YAML" header. This must begin with three dashes `---` and must close with three dashes `---`. YAML parameters comes in `key:value` pairs. **The indentation and placement of colons in YAML is important** - the `key:value` pairs are separated by colons (not equals signs!). 
+At the top of the script is the "YAML" header.
 
-The YAML should begin with metadata for the document. The order of these primary YAML parameters (not indented) does not matter. For example:  
+スクリプトの一番上には、"YAML" ヘッダがあります。これは、`---`のように3本のダッシュで始まる必要があり、`---`のように3本のダッシュで終わる必要があります。YAML のパラメーターは `key:values` の組み合わせで記載されます。**YAMLでは、インデントとコロンの記載が大切です** - `key:value` の組み合わせはイコール記号ではなく、コロンで分けられることに注意が必要です。
+
+YAMLは文書のメタデータで始まる必要があります。YAMLに記載される（インデントされていない）パラメーターの順番は重要ではありません。例えば次のような形です。
 
 ```{r, eval=F}
 title: "My document"
@@ -93,6 +91,8 @@ date: "`r Sys.Date()`"
 ```
 
 You can use R code in YAML values by putting it like in-line code (preceeded by `r` within backticks) but also within quotes (see above for Date).  
+
+
 
 A required YAML parameter is `output: `, which specifies the type of file to be produced (e.g. `html_document`, `pdf_document`, `word_document`, or `powerpoint_presentation`). For **flexdashboard** this parameter value is a bit confusing - it must be set as `output:flexdashboard::flex_dashboard`. Note the single and double colons, and the underscore. This YAML output parameter is often followed by *an additional colon* and indented sub-parameters (see `orientation: ` and `vertical_layout: ` parameters below).  
 
