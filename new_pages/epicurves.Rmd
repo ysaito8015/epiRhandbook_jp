@@ -15,11 +15,11 @@ knitr::include_graphics(here::here("images", "epicurve_top.png"))
 
 また以下のような具体的な使用例にも対応しています。
 
--   集計データのプロット\
+-   集計データのプロット
 
--   ファセット化（複数グラフの作成）\
+-   ファセット化（複数グラフの作成）
 
--   移動平均の適用\
+-   移動平均の適用
 
 -   報告が遅れている「暫定」データの表示
 
@@ -58,10 +58,10 @@ pacman::p_load(
 データセットは、**rio** パッケージの `import()` 関数を使ってインポートします。データをインポートする様々な方法については、\[Import and export\]のページを参照してください。
 
 ```{r, echo=F, message=F}
-# import the linelist into R
+# linelist をインポート
 linelist <- rio::import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
 
-# import the counts data into R
+# 集計データをインポート
 count_data <- linelist %>% 
   group_by(hospital, date_hospitalisation) %>% 
   summarize(n_cases = dplyr::n()) %>% 
@@ -69,24 +69,24 @@ count_data <- linelist %>%
   ungroup()
 ```
 
-**Case linelist**
+**ラインリスト（linelist）**
 
-We import the dataset of cases from a simulated Ebola epidemic. If you want to download the data to follow step-by-step, see instruction in the \[Download handbook and data\] page. We assume the file is in the working directory so no sub-folders are specified in this file path.
+エボラ出血熱のシミュレーションで得られた症例のデータセットを取り込みます。\[Download handbook and data\]のページで説明しています。ファイルが作業ディレクトリにある場合、ファイルパスにはファイル名のみ指定します。
 
 ```{r, eval=F}
-linelist <- import("linelist_cleaned.xlsx")
+linelist <- import("linelist_cleaned.xlsx") 
 ```
 
-The first 50 rows are displayed below.
+最初の50行を表示します：
 
 ```{r, message=FALSE, echo=F}
-# display the linelist data as a table
+# ラインリストを表形式で表示
 DT::datatable(head(linelist, 50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-**Case counts aggregated by hospital**
+病院ごとの症例数
 
-For the purposes of the handbook, the dataset of weekly aggregated counts by hospital is created from the `linelist` with the following code.
+以下のコードで、病院ごとの週別の集計数を含んだデータセットを`linelist` から作成します。
 
 ```{r, eval=F}
 # import the counts data into R
@@ -97,7 +97,7 @@ count_data <- linelist %>%
   ungroup()
 ```
 
-The first 50 rows are displayed below:
+最初の50行を表示します：
 
 ```{r message=FALSE, echo=F}
 # display the linelist data as a table
@@ -126,9 +126,9 @@ ggplot(data = linelist)+
 
 <!-- ======================================================= -->
 
-## Epicurves with **incidence2** package
+## **incidence2** package による流行曲線
 
-Below we demonstrate how to make epicurves using the **incidence2** package. The authors of this package have tried to allow the user to create and modify epicurves without needing to know **ggplot2** syntax. Much of this page is adapted from the package vignettes, which can be found at the **incidence2** [github page](https://github.com/reconhub/incidence2).
+以下では、**incidence2** パッケージを使用して流行曲線を作成する方法を示します。このパッケージの作者は、ユーザーが **ggplot2** の構文を知らなくても流行曲線を作成できるようにしています。このページの多くは **incidence2**の [github page](https://github.com/reconhub/incidence2) から引用しています。
 
 <!-- ======================================================= -->
 
@@ -441,17 +441,17 @@ Note that the `date_breaks =` argument only works if `centre_dates = FALSE`. Pro
 
 **Here are `plot()` arguments that modify plot labels:**
 
-+--------------+-------------------------------------------------------------------------+
-| Argument(s)  | Description                                                             |
-+==============+=========================================================================+
-| `title =`    | Title of plot                                                           |
-+--------------+-------------------------------------------------------------------------+
-| `xlab =`     | Title of x-axis                                                         |
-+--------------+-------------------------------------------------------------------------+
-| `ylab =`     | Title of y-axis                                                         |
-+--------------+-------------------------------------------------------------------------+
-| `size =`     | Size of x-axis text in pts (use ggplot's theme() to adjust other sizes) |
-+--------------+-------------------------------------------------------------------------+
++-------------+-------------------------------------------------------------------------+
+| Argument(s) | Description                                                             |
++=============+=========================================================================+
+| `title =`   | Title of plot                                                           |
++-------------+-------------------------------------------------------------------------+
+| `xlab =`    | Title of x-axis                                                         |
++-------------+-------------------------------------------------------------------------+
+| `ylab =`    | Title of y-axis                                                         |
++-------------+-------------------------------------------------------------------------+
+| `size =`    | Size of x-axis text in pts (use ggplot's theme() to adjust other sizes) |
++-------------+-------------------------------------------------------------------------+
 
 An example using many of the above arguments:
 
