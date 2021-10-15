@@ -1,172 +1,162 @@
 # 推奨パッケージ
 
-以下は、Rでの一般的な疫学作業に推奨されるパッケージの長いリストです。このコードをコピーして実行すると、これらのパッケージはすべてCRANからインストールされ、現在のRセッションで使用するためにロードされます。 パッケージがすでにインストールされている場合は、使用目的でのみロードされます。
+以下は、Rでの一般的な疫学作業に推奨されるパッケージの一覧です。以下のコードをコピーし実行すると、これらのパッケージをすべてCRANからインストールし、現在のRセッションで使用するために呼び出すことができます。 パッケージがすでにインストールされている場合は、使用目的でのみ呼び出されます。
 
 `#`記号を使用してコードを変更し、不要なパッケージを除外することができます。
 
 注意点:
 
--   以下のコードを実行する前に、まず **pacman** パッケージをインストールしてください。これは `install.packages("pacman")`によって行うことができます。このハンドブックでは **pacman** の `p_load()` を強調しています。`p_load()` は必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。必要に応じてパッケージをインストールし、現在の R セッションで使用するためにロードします。また、すでにインストールされているパッケージを**base** R の `library()` でロードすることもできます。
+-   以下のコードを実行する前に、まず **pacman** パッケージをインストールしてください。これは`install.packages("pacman")`によって行うことができます。このハンドブックでは **pacman** の `p_load()` を強調しています。`p_load()` は必要に応じてパッケージをインストールし、現在の R セッションで使用するために呼び出します。必要に応じてパッケージをインストールし、現在の R セッションで使用するために呼び出しします。また、すでにインストールされているパッケージを**base** R の `library()` で呼び出すこともできます。
+-   以下のコードでは、他のパッケージをインストール/呼び出す際に含まれるパッケージは、インデントとハッシュで表示されています。例えば、**ggplot2**は**tidyverse**の下に記載されています。
+-   同じ名前の関数が複数のパッケージに存在している場合、直前に呼び出されたパッケージの関数が優先されることで[マスキング]{.ul}が発生することがあります。詳しくは\[R basics\]のページをご覧ください。このようなパッケージの対立を管理するためには、**conflicted**パッケージの使用をご検討ください。
+-   **pacman** や masking についての詳しい情報は ［R basics］のパッケージの項をご覧ください。
 
-```{=html}
-<!-- -->
-```
--   以下のコードでは、他のパッケージをインストール/ロードする際に含まれるパッケージは、インデントとハッシュで示されています。例えば、**ggplot2**は**tidyverse**の下に記載されています。
+このハンドブックの制作に使用された R、RStudio、R パッケージのバージョンは、［Editorial and technical notes］のページに記載されています。\
 
--   複数のパッケージが同じ名前の関数を持っている場合、より最近ロードされたパッケージの関数が優先されることでマスキングが発生することがあります。詳しくは\[R basics\]のページをご覧ください。このようなコンフリクトを管理するために、**conflicted**パッケージの使用を検討してください。
-
-**pacman** や masking についての詳しい情報は \[R basics\] のパッケージの項を見て下さい。
-
-このハンドブックの制作に使用された R、RStudio、R パッケージのバージョンを見るには、\[Editorial and technical notes\]のページをご覧ください。\
-
--   If multiple packages have functions with the same name, *masking* can occur when the function from the more recently-loaded package takes precedent. Read more in the \[R basics\] page. Consider using the package **conflicted** to manage such conflicts.\
--   See the \[R basics\] section on packages for more information on **pacman** and masking.
-
-To see the versions of R, RStudio, and R packages used during the production of this handbook, see the page on \[Editorial and technical notes\].
-
-## Packages from CRAN
+## CRANのパッケージ
 
 ```{r, eval=F}
 
 ##########################################
-# List of useful epidemiology R packages #
+# 疫学に有用なRパッケージの一覧 #
 ##########################################
 
-# This script uses the p_load() function from pacman R package, 
-# which installs if package is absent, and loads for use if already installed
+# 本スクリプトはpacman Rパッケージのp_load()関数を使用する。
+# このp_load()関数により、まだインストールされていないパッケージはインストールされ、すでにインストールされているパッケージは使用するために呼び出される。
 
 
-# Ensures the package "pacman" is installed
+# "pacman "パッケージがインストールされていることを確認する
 if (!require("pacman")) install.packages("pacman")
 
 
-# Packages available from CRAN
+# CRANから入手可能なパッケージ
 ##############################
 pacman::p_load(
      
-     # learning R
+     # Rを学ぶ
      ############
-     learnr,   # interactive tutorials in RStudio Tutorial pane
-     swirl,    # interactive tutorials in R console
+     learnr,   # Rチュートリアル画面でのインタラクティブ学習
+     swirl,    # Rコンソールでのインタラクティブ学習
         
-     # project and file management
+     # プロジェクトとファイルの管理
      #############################
-     here,     # file paths relative to R project root folder
-     rio,      # import/export of many types of data
-     openxlsx, # import/export of multi-sheet Excel workbooks 
+     here,     # Rのプロジェクトフォルダを基準とするファイルパス
+     rio,      # 様々なタイプのデータのインポート／エクスポート
+     openxlsx, # 複数のシートを有するExcelファイルのインポート／エクスポート 
      
-     # package install and management
+     # パッケージのインストールと管理
      ################################
-     pacman,   # package install/load
-     renv,     # managing versions of packages when working in collaborative groups
-     remotes,  # install from github
+     pacman,   # パッケージのインストール／呼び出し
+     renv,     # 共同グループで作業する際のパッケージのバージョン管理
+     remotes,  # githubからのインストール
      
-     # General data management
+     # 一般的なデータ管理
      #########################
-     tidyverse,    # includes many packages for tidy data wrangling and presentation
-          #dplyr,      # data management
-          #tidyr,      # data management
-          #ggplot2,    # data visualization
-          #stringr,    # work with strings and characters
-          #forcats,    # work with factors 
-          #lubridate,  # work with dates
-          #purrr       # iteration and working with lists
-     linelist,     # cleaning linelists
-     naniar,       # assessing missing data
+     tidyverse,    # データを整理して表示するための多くのパッケージが含まれる
+          #dplyr,      # データ管理
+          #tidyr,      # データ管理
+          #ggplot2,    # データのグラフ化
+          #stringr,    # 文字列や文字の操作
+          #forcats,    # 因子を扱う 
+          #lubridate,  # 日付を扱う
+          #purrr       # 反復処理とリストの操作
+     linelist,     # ラインリストの整理
+     naniar,       # 欠損値の評価
      
-     # statistics  
+     # 統計  
      ############
-     janitor,      # tables and data cleaning
-     gtsummary,    # making descriptive and statistical tables
-     rstatix,      # quickly run statistical tests and summaries
-     broom,        # tidy up results from regressions
-     lmtest,       # likelihood-ratio tests
+     janitor,      # 表とデータの整理
+     gtsummary,    # 記述的および統計的表の作成
+     rstatix,      # 統計的検定と要約の実行
+     broom,        # 回帰結果の整理
+     lmtest,       # 尤度比検定
      easystats,
-          # parameters, # alternative to tidy up results from regressions
-          # see,        # alternative to visualise forest plots 
+          # parameters, # 回帰結果整理のための代替パッケージ
+          # see,        # フォレストプロット作成のための代替パッケージ
      
-     # epidemic modeling
+     # 疫学モデリング
      ###################
-     epicontacts,  # Analysing transmission networks
-     EpiNow2,      # Rt estimation
-     EpiEstim,     # Rt estimation
-     projections,  # Incidence projections
-     incidence2,   # Make epicurves and handle incidence data
-     i2extras,     # Extra functions for the incidence2 package
-     epitrix,      # Useful epi functions
-     distcrete,    # Discrete delay distributions
+     epicontacts,  # 伝番ネットワークの分析
+     EpiNow2,      # Rtの推定
+     EpiEstim,     # Rtの推定
+     projections,  # 発生率の予測
+     incidence2,   # 流行曲線の作成と発生データの処理
+     i2extras,     # incident2パッケージの追加関数
+     epitrix,      # 有用な疫学関数
+     distcrete,    # 離散遅延分布
      
      
-     # plots - general
+     # 図 - 一般
      #################
-     #ggplot2,         # included in tidyverse
-     cowplot,          # combining plots  
-     # patchwork,      # combining plots (alternative)     
-     RColorBrewer,     # color scales
-     ggnewscale,       # to add additional layers of color schemes
+     #ggplot2,         # パッケージに含まれる
+     cowplot,          # 図を組み合わせる  
+     # patchwork,      # 図を組み合わせる (代替)     
+     RColorBrewer,     # カラースケール
+     ggnewscale,       # 配色レイヤーの追加
 
      
-     # plots - specific types
+     # 図 - 特定のタイプ
      ########################
-     DiagrammeR,       # diagrams using DOT language
-     incidence2,       # epidemic curves
-     gghighlight,      # highlight a subset
-     ggrepel,          # smart labels
-     plotly,           # interactive graphics
-     gganimate,        # animated graphics 
+     DiagrammeR,       # DOT言語を使用した図
+     incidence2,       # 流行曲線
+     gghighlight,      # データの一部をハイライトする
+     ggrepel,          # ラベルの重なりを防ぐ
+     plotly,           # インタラクティブ画像
+     gganimate,        # アニメーション画像 
 
      
-     # gis
+     # 地理情報システム(GIS)
      ######
-     sf,               # to manage spatial data using a Simple Feature format
-     tmap,             # to produce simple maps, works for both interactive and static maps
-     OpenStreetMap,    # to add OSM basemap in ggplot map
-     spdep,            # spatial statistics 
+     sf,               # SimpleFeature形式を使用して空間データを管理する
+     tmap,             # シンプルな地図の作成 - インタラクティブと静的地図の両方で機能
+     OpenStreetMap,    # ggplotマップにOSMベースマップを追加する
+     spdep,            # 空間統計 
      
-     # routine reports
+     # 文書の作成
      #################
-     rmarkdown,        # produce PDFs, Word Documents, Powerpoints, and HTML files
-     reportfactory,    # auto-organization of R Markdown outputs
-     officer,          # powerpoints
+     rmarkdown,        # PDF、Word文書、パワーポイント、およびHTMLファイルの作成
+     reportfactory,    # Rマークダウンアウトプットの自動整理
+     officer,          # パワーポイント
      
-     # dashboards
+     # ダッシュボード
      ############
-     flexdashboard,    # convert an R Markdown script into a dashboard
-     shiny,            # interactive web apps
+     flexdashboard,    # Rマークダウンスクリプトをダッシュボードに変換する
+     shiny,            # インタラクティブなウェブアプリ
      
-     # tables for presentation
+     # プレゼンテーション用の表の作成
      #########################
-     knitr,            # R Markdown report generation and html tables
-     flextable,        # HTML tables
-     #DT,              # HTML tables (alternative)
-     #gt,              # HTML tables (alternative)
-     #huxtable,        # HTML tables (alternative) 
+     knitr,            # RマークダウンレポートとHTML表の作成
+     flextable,        # HTML 表
+     #DT,              # HTML 表 (代替)
+     #gt,              # HTML 表 (代替)
+     #huxtable,        # HTML 表 (代替) 
      
-     # phylogenetics
+     # 系統学
      ###############
-     ggtree,           # visualization and annotation of trees
-     ape,              # analysis of phylogenetics and evolution
-     treeio            # to visualize phylogenetic files
+     ggtree,           # 系統樹描画とアノテーション
+     ape,              # 系統発生と進化の分析
+     treeio            # 系統発生ファイルの描画
  
 )
 
 ```
 
-## Packages from Github
+## Githubのパッケージ
 
-Below are commmands to install two packages directly from Github repositories.
+以下は、Githubリポジトリから直接2つのパッケージをインストールするためのコマンドです。
 
--   The development version of **epicontacts** contains the ability to make transmission trees with an temporal x-axis\
--   The **epirhandbook** package contains all the example data for this handbook and can be used to download the offline version of the handbook.
+-   **epicontacts** の開発バージョンには、時間軸xを持つ伝番ツリーを作成する機能が含まれています。
+
+-   **epirhandbook** パッケージには、このハンドブックのすべてのサンプルデータが含まれており、ハンドブックのオフラインバージョンをダウンロードするために使用できます。
 
 ```{r, eval=F}
-# Packages to download from Github (not available on CRAN)
+# Githubからダウンロードするパッケージ（CRANからはダウンロード不可）
 ##########################################################
 
-# Development version of epicontacts (for transmission chains with a time x-axis)
+# epicontacts の開発バージョン（時間軸xの伝播鎖用）
 pacman::p_install_gh("reconhub/epicontacts@timeline")
 
-# The package for this handbook, which includes all the example data  
+# このハンドブックのパッケージには、すべてのサンプルデータが含まれる 
 pacman::p_install_gh("appliedepi/epirhandbook")
 
 
