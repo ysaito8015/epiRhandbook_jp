@@ -599,20 +599,20 @@ names(linelist_split) %>%
 knitr::include_graphics(here::here("images", "purrr_export_csv.png"))
 ```
 
-### Custom functions {.unnumbered}
+### カスタム機能 {.unnumbered}
 
-You may want to create your own function to provide to `map()`.
+`map()` に与える関数を自分で作成したい場合はどうするのでしょうか。
 
-Let's say we want to create epidemic curves for each hospital's cases. To do this using **purrr**, our `.f` function can be `ggplot()` and extensions with `+` as usual. As the output of `map()` is always a list, the plots are stored in a list. Because they are plots, they can be extracted and plotted with the `ggarrange()` function from the **ggpubr** package ([documentation](https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html)).
+例えば、それぞれの病院のケースごとに流行曲線を作成したいとします。これを **purrr** を用いて行うには、`.f`関数を `ggplot()` と `+` を用いた通常通りの `ggplot()` の拡張にすることで出来ます。`map()` は常にリストを出力するので、プロットもリストに保存されます。プロットの場合は **ggpubr** パッケージの `ggarrange()` 関数を用いて抽出しプロットすることが出来ます。([documentation](https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html))
 
 ```{r, message = F, warning=F}
 
-# load package for plotting elements from list
+# リストから要素をプロットするためのパッケージのローディング
 pacman::p_load(ggpubr)
 
-# map across the vector of 6 hospital "names" (created earlier)
-# use the ggplot function specified
-# output is a list with 6 ggplots
+# 6つの病院の"名前"のベクターに対してマッピングする (前に作成済み)
+# ggplot 関数を用いる
+# 出力は6つの ggplots からなるリストである
 
 hospital_names <- unique(linelist$hospital)
 
@@ -623,14 +623,14 @@ my_plots <- map(
                 labs(title = .x)
 )
 
-# print the ggplots (they are stored in a list)
+# ggplots を表示する(リストとして保存されている)
 ggarrange(plotlist = my_plots, ncol = 2, nrow = 3)
 ```
 
-If this `map()` code looks too messy, you can achieve the same result by saving your specific `ggplot()` command as a custom user-defined function, for example we can name it `make_epicurve())`. This function is then used within the `map()`. `.x` will be iteratively replaced by the hospital name, and used as `hosp_name` in the `make_epicurve()` function. See the page on [Writing functions].
+この `map()` コードが複雑すぎる場合、作成した `ggplot()` コマンドをユーザーの定義したカスタム関数として用いても、同様の結果を得ることが出来ます。例えば、その関数を `make_epicurve())` と名づけるとします。この関数は `map()` 内で用いることが出来ます。`.x` は繰り返しごとにそれぞれの病院名として機能し、`make_epicurve()` 関数内で `hosp_name` として用いられます。[Writing functions]のページを参照してください。
 
 ```{r, eval=F}
-# Create function
+# 関数を作成する
 make_epicurve <- function(hosp_name){
   
   ggplot(data = linelist %>% filter(hospital == hosp_name)) +
@@ -642,61 +642,61 @@ make_epicurve <- function(hosp_name){
 ```
 
 ```{r, eval=F}
-# mapping
+# マッピング
 my_plots <- map(hospital_names, ~make_epicurve(hosp_name = .x))
 
-# print the ggplots (they are stored in a list)
+# ggplots を表示する(リストとして保存されている)
 ggarrange(plotlist = my_plots, ncol = 2, nrow = 3)
 ```
 
-### Mapping a function across columns {.unnumbered}
+### 列全体に対して関数をマッピングする {.unnumbered}
 
-Another common use-case is to map a function across many columns. Below, we `map()` the function `t.test()` across numeric columns in the data frame `linelist`, comparing the numeric values by gender.
+その他に良く用いられる例としては、列全体に対して関数をマッピングする、というケースがあります。以下では、 `linelist` というデータフレーム内の数字列に対して `t.test()` 関数を `map()` し、性別で数値を比較しています。
 
-Recall from the page on [Simple statistical tests] that `t.test()` can take inputs in a formula format, such as `t.test(numeric column ~ binary column)`. In this example, we do the following:
+[Simple statistical tests]のページで学んだことを思い出してください。`t.test()` は `t.test(numeric column ~ binary column)` のような数式形式の入力を受けることが出来るのでした。この例では、以下のことを行います:
 
--   The numeric columns of interest are selected from `linelist` - these become the `.x` inputs to `map()`\
+-   比較したい数字列は、`linelist` から選ばれます。これらは、`map()` に対しての入力 `.x` になります。\
 
--   The function `t.test()` is supplied as the `.f` function, which is applied to each numeric column\
+-   `t.test()` 関数は、 `.f` 関数として適用され、それぞれの数字列に対して適用されます。\
 
--   Within the parentheses of `t.test()`:
+-   `t.test()` のカッコ内は:
 
-    -   the first `~` precedes the `.f` that `map()` will iterate over `.x`\
-    -   the `.x` represents the current column being supplied to the function `t.test()`\
-    -   the second `~` is part of the t-test equation described above\
-    -   the `t.test()` function expects a binary column on the right-hand side of the equation. We supply the vector `linelist$gender` independently and statically (note that it is not included in `select()`).
+    -   最初の `~` は `.f` に先行し、`.x` に対して `map()` が反復処理を行うことを意味します。\
+    -   `.x` は現在 `t.test()` 関数に適用されている列を表します。\
+    -   2つ目の `~` は、上で説明した通り、t 検定の数式の一部です。\
+    -   `t.test()` 関数は、右辺に2値変数からなる列を受けることが出来ます。ここでは `linelist$gender` というベクターを受けています。 (`select()` には含まれていないことに注意してください).
 
-`map()` returns a list, so the output is a list of t-test results - one list element for each numeric column analysed.
+`map()` はリストを返すので、出力は t 検定の結果を示すリストになります。一つのリスト要素がそれぞれの数字列の結果を表しています。
 
 ```{r}
-# Results are saved as a list
+# 結果はリストとして保存される
 t.test_results <- linelist %>% 
-  select(age, wt_kg, ht_cm, ct_blood, temp) %>%  # keep only some numeric columns to map across
-  map(.f = ~t.test(.x ~ linelist$gender))        # t.test function, with equation NUMERIC ~ CATEGORICAL
+  select(age, wt_kg, ht_cm, ct_blood, temp) %>%  # マッピングしたい数字列だけを選択する
+  map(.f = ~t.test(.x ~ linelist$gender))        # t.test 関数は、数字値 ~ カテゴリ値で表される数式と用いる
 ```
 
-Here is what the list `t.test_results` looks like when opened (Viewed) in RStudio. We have highlighted parts that are important for the examples in this page.
+RStudio では、`t.test_results` はこのように表示されます。本ページの例において重要なポイントが強調されています。 
 
--   You can see at the top that the whole list is named `t.test_results` and has five elements. Those five elements are named `age`, `wt_km`, `ht_cm`, `ct_blood`, `temp` after each variable that was used in a t-test with `gender` from the `linelist`.\
--   Each of those five elements are themselves lists, with elements within them such as `p.value` and `conf.int`. Some of these elements like `p.value` are single numbers, whereas some such as `estimate` consist of two or more elements (`mean in group f` and `mean in group m`).
+-   一番上に全てのリストが `t.test_results` と名づけられ、5つの要素を持っているのが分かると思います。これら5つの要素は`linelist` から選択され `gender` での t 検定に用いられたそれぞれの変数名から `age`, `wt_km`, `ht_cm`, `ct_blood`, `temp` と名づけられています。\
+-   5つの要素それぞれはリストであり、`p.value` や `conf.int` といった要素からなっています。これらの要素のうち、`p.value` などは単一の値であり、一方 `estimate` などは2つ以上の要素(`mean in group f` と `mean in group m`)からなっています。
 
 ```{r, out.height="150%", echo=F}
 knitr::include_graphics(here::here("images", "purrr_ttest.png"))
 ```
 
-Note: Remember that if you want to apply a function to only certain columns in a data frame, you can also simply use `mutate()` and `across()`, as explained in the [Cleaning data and core functions] page. Below is an example of applying `as.character()` to only the "age" columns. Note the placement of the parentheses and commas.
+注意事項: データフレーム内の特定の列にのみ関数を適用させたい場合、[Cleaning data and core functions] ページで説明したように、もっとシンプルに `mutate()` と `across()` を用いることも出来ます。下に、"age" の列にだけ `as.character()` を適用させる例を示しています。カッコとコンマの位置に注意してください。
 
 ```{r, eval=F}
-# convert columns with column name containing "age" to class Character
+# 列名に "age" を含む列を文字変数に変換する
 linelist <- linelist %>% 
   mutate(across(.cols = contains("age"), .fns = as.character))  
 ```
 
-### Extract from lists {.unnumbered}
+### リストから抽出する {.unnumbered}
 
-As `map()` produces an output of class List, we will spend some time discussing how to extract data from lists using accompanying **purrr** functions. To demonstrate this, we will use the list `t.test_results` from the previous section. This is a list of 5 lists - each of the 5 lists contains the results of a t-test between a column from `linelist` data frame and its binary column `gender`. See the image in the section above for a visual of the list structure.
+`map()` からリスト変数が出力されるので、**purrr** 関数を用いてリストからデータを抽出する方法について少し説明したいと思います。説明のために、前のセクションで出てきた `t.test_results` というリストを使用したいと思います。これは、5つのリストからなるリストで、5つのリストにはそれぞれ `linelist` というデータフレームの列と2値変数である `gender` との間の t 検定の結果が保存されています。リスト構造の視覚的イメージを上に示しています。
 
-#### Names of elements {.unnumbered}
+#### 要素の名前 {.unnumbered}
 
 To extract the names of the elements themselves, simply use `names()` from **base** R. In this case, we use `names()` on `t.test_results` to return the names of each sub-list, which are the names of the 5 variables that had t-tests performed.
 
@@ -704,62 +704,62 @@ To extract the names of the elements themselves, simply use `names()` from **bas
 names(t.test_results)
 ```
 
-#### Elements by name or position {.unnumbered}
+#### 名前または位置による要素の特定 {.unnumbered}
 
-To extract list elements by name or by position you can use brackets `[[ ]]` as described in the [R basics] page. Below we use double brackets to index the list `t.tests_results` and display the first element which is the results of the t-test on `age`.
+リストの要素を名前、または位置で抽出するには、[R basics] ページで説明したように `[[ ]]` を持ちることで出来ます。以下では、二重カッコを `t.tests_results` というリストに用いて `age` に対する t 検定の結果である最初の要素を表示しています。
 
 ```{r}
-t.test_results[[1]] # first element by position
-t.test_results[[1]]["p.value"] # return element named "p.value" from first element  
+t.test_results[[1]] # 位置で最初の要素を特定
+t.test_results[[1]]["p.value"] # 最初の要素内の "p.value" という名前の要素を返す  
 ```
 
-However, below we will demonstrate use of the simple and flexible **purrr** functions `map()` and `pluck()` to achieve the same outcomes.
+しかし、以下では、よりシンプルで柔軟性の高い **purrr** 関数の `map()` と `pluck()` を用いる方法を説明します。
 
 #### `pluck()` {.unnumbered}
 
-`pluck()` pulls out elements by name or by position. For example - to extract the t-test results for age, you can use `pluck()` like this:
+`pluck()` は要素を名前もしくは位置で抽出することが出来ます。例えば、年齢に対する t 検定の結果を抽出するには `pluck()` を以下のように用いることが出来ます:
 
 ```{r}
 t.test_results %>% 
-  pluck("age")        # alternatively, use pluck(1)
+  pluck("age")        # 代わりに pluck(1) を用いることもできる
 ```
 
-Index deeper levels by specifying the further levels with commas. The below extracts the element named "p.value" from the list `age` within the list `t.test_results`. You can also use numbers instead of character names.
+さらに下の階層を指定するには、コンマを用いることで出来ます。以下の例では、`t.test_results` というリスト内の `age` というリストの要素である "p.value" を抽出しています。文字名ではなく、数字を代わりに用いることもできます。
 
 ```{r}
 t.test_results %>% 
   pluck("age", "p.value")
 ```
 
-You can extract such inner elements from *all* first-level elements by using `map()` to run the `pluck()` function across each first-level element. For example, the below code extracts the "p.value" elements from all lists within `t.test_results`. The list of t-test results is the `.x` iterated across, `pluck()` is the `.f` function being iterated, and the value "p-value" is provided to the function.
+*全ての*最上階層から、より深い階層にある要素を抽出するには `map()` を用いて、`pluck()` 関数をそれぞれの最上階層の要素に適用させればよいです。例えば、以下のコードでは `t.test_results` 内の全てのリストから "p.value" という要素を抽出しています。t 検定の結果は全ての `.x` に対して反復処理されており、`pluck()` ば反復処理を行われる `.f` 関数であり、"p-value" は関数に対して適用されています。
 
 ```{r}
 t.test_results %>%
-  map(pluck, "p.value")   # return every p-value
+  map(pluck, "p.value")   # 全ての p 値を返す
 ```
 
-As another alternative, `map()` offers a shorthand where you can write the element name in quotes, and it will pluck it out. If you use `map()` the output will be a list, whereas if you use `map_chr()` it will be a named character vector and if you use `map_dbl()` it will be a named numeric vector.
+他の方法として、`map()` では要素の名前を引用符をつけて示すことが出来るので、それを抽出してくるやり方があります。`map()` を利用すると出力はリストなのですが、`map_chr()` を用いると名前付きの文字ベクターを出力でき、`map_dbl()`を用いると名前付きの数字ベクターを出食することが出来ます。
 
 ```{r}
 t.test_results %>% 
-  map_dbl("p.value")   # return p-values as a named numeric vector
+  map_dbl("p.value")   # p 値を名前付きの数字ベクターとして返す
 ```
 
-You can read more about `pluck()` in it's **purrr** [documentation](https://purrr.tidyverse.org/reference/pluck.html). It has a sibling function `chuck()` that will return an error instead of NULL if an element does not exist.
+`pluck()` については、**purrr** [documentation](https://purrr.tidyverse.org/reference/pluck.html)に詳しく書いてあります。`chuck()` という関数もあり、こちらは要素が存在しなければ NULL ではなくエラーを返してくれます。
 
-### Convert list to data frame {.unnumbered}
+### リストをデータフレームに変換する {.unnumbered}
 
-This is a complex topic - see the Resources section for more complete tutorials. Nevertheless, we will demonstrate converting the list of t-test results into a data frame. We will create a data frame with columns for the variable, its p-value, and the means from the two groups (male and female).
+これは少し複雑な内容です。より網羅的なチュートリアルが必要な場合は Resources セクションを参考にしてください。ここではリストで得られた t 検定の結果をデータフレームに変換する方法を示します。p 値と2つのグループ（男性と女性）の平均値の変数を示している列からなるデータフレームを作成します。
 
-Here are some of the new approaches and functions that will be used:
+少し、新しい方法と関数を示します:
 
--   The function `tibble()` will be used to create a tibble (like a data frame)
+-   tibble (データフレームのようなもの)を作成するために `tibble()` を使います。
 
-    -   We surround the `tibble()` function with curly brackets `{ }` to prevent the entire `t.test_results` from being stored as the first tibble column\
+    -   全ての `t.test_results` がtibbleの最初の列として保存されるのを防ぐために `tibble()` 関数をひげカッコで括ります。\
 
--   Within `tibble()`, each column is created explicitly, similar to the syntax of `mutate()`:
+-   `tibble()` 内は、それぞれの列が明示的に作成され、`mutate()` での列の作成に似ています。:
 
-    -   The `.` represents `t.test_results`
+    -   `.` は `t.test_results` を表しています。
     -   To create a column with the t-test variable names (the names of each list element) we use `names()` as described above\
     -   To create a column with the p-values we use `map_dbl()` as described above to pull the `p.value` elements and convert them to a numeric vector
 
