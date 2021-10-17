@@ -527,73 +527,73 @@ names(linelist_split)
 例えば、病院と性別の組み合わせで linelist のサブセットを作成するなど、*複数の列により条件づけて* linelist を分割したい場合は、リストの要素に名前を付ける際に異なる方法が必要になります。まず、**dplyr** の `group_keys()` を使って、病院・性別の全ての組み合わせに対する"グループキー"を作成します（これは、データフレームとして作成されます）。次に、以下のように、`unite()`を使ってグループキーを値に結合し、変数の組み合わせ名を`linelist_split`に割り当てます。
 
 ```{r}
-# split linelist by unique hospital-gender combinations
+# linelistを固有の病院と性別の組み合わせによって分割する
 linelist_split <- linelist %>% 
      group_split(hospital, gender)
 
-# extract group_keys() as a dataframe
+# グループキーをデータフレームとして抽出する
 groupings <- linelist %>% 
      group_by(hospital, gender) %>%       
      group_keys()
 
-groupings      # show unique groupings 
+groupings      # 固有のグループを表示する 
 ```
 
-Now we combine the groupings together, separated by dashes, and assign them as the names of list elements in `linelist_split`. This takes some extra lines as we replace `NA` with "Missing", use `unite()` from **dplyr** to combine the column values together (separated by dashes), and then convert into an un-named vector so it can be used as names of `linelist_split`.
+次に、グループ化されたものをダッシュで区切って結合し、それを `linelist_split` のリスト要素の名前として割り当てます。これには、`NA` を "Missing" に置き換え、**dplyr**の `unite()` を使って列の値をダッシュで区切って結合し、無名のベクトルに変換して、`linelist_split`の名前として使えるようにするという、追加の処理が必要になります。
 
 ```{r, eval=F}
-# Combine into one name value 
+# 一つの名前の値に結合する 
 names(linelist_split) <- groupings %>% 
-     mutate(across(everything(), replace_na, "Missing")) %>%  # replace NA with "Missing" in all columns
-     unite("combined", sep = "-") %>%                         # Unite all column values into one
+     mutate(across(everything(), replace_na, "Missing")) %>%  # 全ての列においてNAを "Missing" に置き換える
+     unite("combined", sep = "-") %>%                         # 全ての列の値を一つに結合する
      setNames(NULL) %>% 
      as_vector() %>% 
      as.list()
 ```
 
-#### Export as Excel sheets {.unnumbered}
+#### エクセルシートとして出力する {.unnumbered}
 
-To export the hospital linelists as *an Excel workbook with one linelist per sheet*, we can just provide the named list `linelist_split` to the `write_xlsx()` function from the **writexl** package. This has the ability to save one Excel workbook with multiple sheets. The list element names are automatically applied as the sheet names.
+**writexl** パッケージの `write_xlsx()` 関数に名前付きリストである `linelist_split` を 与えることで、病院のラインリストを、*シートごとに1つのラインリストを持つエクセルワークブック*として出力することが出来ます。この関数は、複数のシートからなるエクセルワークブックを保存する機能があります。リストの要素名がシート名として自動的に適用されます。
 
 ```{r, eval=F}
 linelist_split %>% 
      writexl::write_xlsx(path = here("data", "hospital_linelists.xlsx"))
 ```
 
-You can now open the Excel file and see that each hospital has its own sheet.
+エクセルファイルを開くと、それぞれの病院が一つのシートに保存されているのが分かると思います。
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "purrr_export_sheets.png"))
 ```
 
-#### Export as CSV files {.unnumbered}
+#### CSVファイルとして出力する {.unnumbered}
 
-It is a bit more complex command, but you can also export each hospital-specific linelist as a separate CSV file, with a file name specific to the hospital.
+少し複雑になりますが、それぞれの病院固有のラインリストを、別々のCSVファイルとして出力することもできます。ファイルの名前は病院ごとに異なる名前として出力されます。
 
-Again we use `map()`: we take the vector of list element names (shown above) and use `map()` to iterate through them, applying `export()` (from the **rio** package, see [Import and export] page) on the data frame in the list `linelist_split` that has that name. We also use the name to create a unique file name. Here is how it works:
+再度、 `map()` を使用します: 上に示したように、リストの要素名のベクトルを受け取り、`map()`を使って、リスト `linelist_split` 内の同じ名前を持つデータフレームに **rio** パッケージの `export()`（[Import and export] ページを参照）を繰り返し適用します。また、この名前は、固有のファイル名を作るのに使用します。以下にその方法を示します:
 
--   We begin with the vector of character names, passed to `map()` as `.x`\
+-   文字名ベクターを `.x` として `map()` に与えることから始めます\
 
--   The `.f` function is `export()` , which requires a data frame and a file path to write to\
+-   `.f` 関数は `export()` になります。書き込むデータフレームとファイルパスを指定する必要があります。\
 
--   The input `.x` (the hospital name) is used *within* `.f` to extract/index that specific element of `linelist_split` list. This results in only one data frame at a time being provided to `export()`.\
+-   入力された`.x` (病院名)は `.f`  *の中において* リスト`linelist_split` の固有の値を抽出し指標とするために使用されます。こうすることで、一つのデータフレームとして `export()` に適用することが出来ます。\
 
--   For example, when `map()` iterates for "Military Hospital", then `linelist_split[[.x]]` is actually `linelist_split[["Military Hospital"]]`, thus returning the second element of `linelist_split` - which is all the cases from Military Hospital.\
+-   例えば、 "Military Hospital" に対して `map()` が適用される場合は、`linelist_split[[.x]]` は実際には `linelist_split[["Military Hospital"]]` のことであり、 `linelist_split` の二つ目の要素が返されます。これは、Military Hospitalの全てのケースにおいて適用されます。\
 
--   The file path provided to `export()` is dynamic via use of `str_glue()` (see [Characters and strings] page):
+-   `export()` に適用されるファイルパスは、 `str_glue()` を使用し、流動的に設定されます([Characters and strings] ページを参照):
 
-    -   `here()` is used to get the base of the file path and specify the "data" folder (note single quotes to not interrupt the `str_glue()` double quotes)\
+    -   ファイルパスの起点を得、"データ"のフォルダを特定するために `here()` が用いられます。(`str_glue()` 内で使用されている二重引用符を邪魔しないように、一重引用符を使用していることに注意してください。\
 
--   Then a slash `/`, and then again the `.x` which prints the current hospital name to make the file identifiable\
+-   それから、 `/` と再び `.x` を記載し、ファイルが特定できるように現在使用中の病院名をファイル名にあてがいます。\
 
--   Finally the extension ".csv" which `export()` uses to create a CSV file
+-   最後に、 `export()` によってCSVファイルが作成されるように拡張子 ".csv" を記します。
 
 ```{r, eval=F, message = F, warning=F}
 names(linelist_split) %>%
      map(.f = ~export(linelist_split[[.x]], file = str_glue("{here('data')}/{.x}.csv")))
 ```
 
-Now you can see that each file is saved in the "data" folder of the R Project "Epi_R\_handbook"!
+これで、それぞれのファイルがRプロジェクト "Epi_R\_handbook" の "data" フォルダ内に保存されました！
 
 ```{r, fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "purrr_export_csv.png"))
