@@ -19,11 +19,11 @@ knitr::include_graphics(here::here("images", "sankey_diagram.png"))
 <!-- ======================================================= -->
 ## 準備 { }
 
-### パッケージをロード {.unnumbered}  
+### パッケージを読み込む {.unnumbered}  
 
-このコードチャンクは、分析に必要なパッケージのロードを示しています。
+このコードチャンクは、分析に必要なパッケージの読み込みを示しています。
 このハンドブックでは、**pacman** の `p_load()` を使うことを強調しています。
-`p_load()` は、必要に応じてパッケージをインストールし、<ul>そして</ul>使用するためにパッケージをロードします。
+`p_load()` は、必要に応じてパッケージをインストールし、<u>そして</u>使用するためにパッケージをロードします。
 base R から `library()` を使用してインストール済みパッケージをロードすることもできます。
 R のパッケージについての詳細は [**base** R] のページを参照してください。 
 
@@ -66,7 +66,7 @@ R パッケージの **DiagrammeR** を使って、チャートやフローチ�
 
 **Tools**  
 
-"Graphviz" のダイアグラムを作成するには、関数 `grViz()` を用います。この関数は、図を作成するための指示<ul>を含む</ul>文字列の入力を受け付けます。この文字列の中には、[DOT](https://graphviz.org/doc/info/lang.html) と呼ばれる別の言語で書かれた命令が含まれていますが、基本を学ぶのはとても簡単です。 
+"Graphviz" のダイアグラムを作成するには、関数 `grViz()` を用います。この関数は、図を作成するための指示<u>を含む</u>文字列の入力を受け付けます。この文字列の中には、[DOT](https://graphviz.org/doc/info/lang.html) と呼ばれる別の言語で書かれた命令が含まれていますが、基本を学ぶのはとても簡単です。 
 
 **基本的な構造**
 
@@ -114,9 +114,9 @@ digraph surveillance_diagram {    # digraph は directional graph という意�
   #######
   node [shape = circle,           # shape = circle
        fixedsize = true
-       width = 1.3]               # width of circles
+       width = 1.3]               # circle の大きさ
   
-  １番目                          # names of nodes
+  １番目                          # node の名称
   ２番目
   ３番目
 
@@ -167,7 +167,7 @@ graph 文の `rankdir` 引数を調整することで、プロットを左から
 * `height`  
 * `width`  
 * `distortion`  
-* `penwidth` (境界線の太さ)  
+* `penwidth` （境界線の太さ）
 * `x` (displacement left/right)  
 * `y` (displacement up/down)  
 * `fontname`  
@@ -183,19 +183,19 @@ graph 文の `rankdir` 引数を調整することで、プロットを左から
 * `style` (dashed, ...)  
 * `color`  
 * `alpha`  
-* `headport` (矢印の前のテキスト)  
-* `tailport` (矢印の後のテキスト)  
+* `headport` （矢印の前のテキスト）
+* `tailport` （矢印の後のテキスト）
 * `fontname`  
 * `fontsize`  
 * `fontcolor`  
-* `penwidth` (矢の太さ)  
-* `minlen` (長さの最長値)
+* `penwidth` （矢の太さ）
+* `minlen` （長さの最長値）
 
 **色名**: 16進数の値または 'X11' の色名、[X11の詳細はこちら](http://rich-iannone.github.io/DiagrammeR/graphviz_and_mermaid.html)を参照してください。
 
 ### 複雑な例 {.unnumbered}
 
-以下の例はsurveillance_diagramを発展させたもので、複雑なノード名、グループ化されたエッジ、色、スタイルを追加しています。
+以下の例は surveillance_diagram を発展させたもので、複雑なノード名、グループ化されたエッジ、色、スタイルを追加しています。
 
 ```
 DiagrammeR::grViz("               # すべての指示は大きな文字列の中にあります。
@@ -422,7 +422,7 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
 
 **ノードの形状**
 
-以下の例は、[this tutorial](http://rich-iannone.github.io/DiagrammeR/) から借用したもので、適用されたノード形状と、連続するエッジ接続の略記法を示しています。 
+以下の例は、[このチュートリアル](http://rich-iannone.github.io/DiagrammeR/) から借用したもので、適用されたノード形状と、連続するエッジ接続の略記法を示しています。 
 
 ```{r out.width='75%'}
 DiagrammeR::grViz("digraph {
@@ -448,7 +448,7 @@ results [label= '結果']
 出力の取り扱いと保存方法  
 
 * 出力結果は RStudio のビューアに表示されます。デフォルトでは右下に Files, Plots, Packages, Help と並んで表示されます。 
-* エクスポートするには、Veiwer から Save as image” または “Copy to clipboard” します。画像は指定したサイズに調整されます。 
+* エクスポートするには、Veiwer から "Save as image” または “Copy to clipboard” します。画像は指定したサイズに調整されます。 
 
 ### パラメータ化された図形 {.unnumbered}
 
@@ -503,7 +503,7 @@ results [label= '結果']
 
 
 <!-- ======================================================= -->
-## 沖積図（Alluvial）/サンキーダイアグラム（Sankey Diagrams） { }
+## 沖積図/サンキー・ダイアグラム { }
 
 ### パッケージをロード {.unnumbered}
 
@@ -511,7 +511,7 @@ results [label= '結果']
 このハンドブックでは、**pacman** の `p_load()` を使うことを強調しています。
 `p_load()` は、必要に応じてパッケージをインストールし、<ul>そして</ul>使用するためにパッケージをロードします。
 base R から `library()` を使用してインストール済みパッケージをロードすることもできます。
-Rパッケージの詳細については[R basics]のページを参照してください。 
+Rパッケージの詳細については [R basics] のページを参照してください。 
 
 ここでは、図を作成するために **networkD3** パッケージをロードし、データ準備の手順として **tidyverse** もロードしています。 
 
@@ -691,30 +691,30 @@ DT::datatable(data, rownames = FALSE, filter="top", options = list(pageLength = 
 
 
 ```{r}
-p <- vistime(data)    # vistime を適用
+p <- vistime(data)    # vistime を適用  
 
 library(plotly)
 
-# step 1: リストに変換
+# step 1: リストに変換  
 pp <- plotly_build(p)
 
-# step 2: マーカーの大きさ
+# step 2: マーカーの大きさ  
 for(i in 1:length(pp$x$data)){
   if(pp$x$data[[i]]$mode == "markers") pp$x$data[[i]]$marker$size <- 10
 }
 
-# step 3: テキストの大きさ
+# step 3: テキストの大きさ  
 for(i in 1:length(pp$x$data)){
   if(pp$x$data[[i]]$mode == "text") pp$x$data[[i]]$textfont$size <- 10
 }
 
 
-# step 4: テキストの位置
+# step 4: テキストの位置  
 for(i in 1:length(pp$x$data)){
   if(pp$x$data[[i]]$mode == "text") pp$x$data[[i]]$textposition <- "right"
 }
 
-# 表示
+# 表示  
 pp
 
 ```
@@ -726,7 +726,7 @@ pp
 
 前述のように **DiagammeR** パッケージとDOT言語を使って手動でDAGを構築することができます。 
 
-また、**ggdag**  や**daggity** などのパッケージもあります。
+また、**ggdag** や **daggity** などのパッケージもあります。
 
 [DAGの紹介 ggdag vignette](https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-dags.html)
 
