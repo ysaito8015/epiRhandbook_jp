@@ -36,7 +36,7 @@ pacman::p_load(
 
 ### データをインポート {.unnumbered}  
 
-このページではほとんどデータセットを必要としません。しかし、サンキーダイアグラム（Sankey diagram） のセクションでは、シミュレーションによるエボラ出血熱のケースの linelist を使用します。この部分を試してみたい方は、<a href='https://github.com/appliedepi/epirhandbook_eng/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして「きれいな」 linelist をダウンロードしてください</a>（.rdsファイルとして）。データを **rio** パッケージの `import()` 関数を使ってインポートします（.xlsx, .csv, .rds など多くのファイルタイプを扱うことができます。詳細は [Import and export] ページをご覧ください）。 
+このページではほとんどデータセットを必要としません。しかし、サンキー・ダイアグラム（Sankey diagram） のセクションでは、シミュレーションによるエボラ出血熱のケースの linelist を使用します。この部分を試してみたい方は、<a href='https://github.com/appliedepi/epirhandbook_eng/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして「きれいな」 linelist をダウンロードしてください</a>（.rdsファイルとして）。データを **rio** パッケージの `import()` 関数を使ってインポートします（.xlsx, .csv, .rds など多くのファイルタイプを扱うことができます。詳細は [Import and export] ページをご覧ください）。 
 
 
 ```{r, echo=F}
@@ -116,7 +116,7 @@ digraph surveillance_diagram {    # digraph は directional graph という意�
        fixedsize = true
        width = 1.3]               # circle の大きさ
   
-  １番目                          # node の名称
+  １番目                          # ノードの名称
   ２番目
   ３番目
 
@@ -301,7 +301,7 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
   #################
   node [shape = circle,                  # shape = circle
        fixedsize = true
-       width = 1.3]                      # width of circles
+       width = 1.3]                      # circle の大きさ
   
   subgraph cluster_passive {
     Primary   [label = '第一\n施設] 
@@ -313,8 +313,8 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
   
   # ノード (ボックス)
   ###############
-  node [shape = box,                     # node shape
-        fontname = Helvetica]            # text font in node
+  node [shape = box,                     # ノードの形状
+        fontname = Helvetica]            # ノード中のフォント
   
   subgraph cluster_active {
     Active [label = 'Active\nサーベイランス'] 
@@ -369,7 +369,7 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
   #################
   node [shape = circle,                  # shape = circle
        fixedsize = true
-       width = 1.3]                      # width of circles
+       width = 1.3]                      # circle の大きさ
   
   subgraph cluster_passive {
     Primary   [label = '第一\n施設'] 
@@ -381,12 +381,12 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
   
   # ノード (ボックス)
   ###############
-  node [shape = box,                     # node shape
-        fontname = Helvetica]            # text font in node
+  node [shape = box,                     # ノードの形状
+        fontname = Helvetica]            # ノード内のフォント
   
   subgraph cluster_active {
-    Active [label = 'Active\nサーベイランス'] 
-    HCF_active [label = 'HCF\nActive Search']
+    Active [label = 'アクティブ\nサーベイランス'] 
+    HCF_active [label = 'HCF\nアクティブ検索']
   }
   
   subgraph cluster_EBD {
@@ -403,7 +403,7 @@ digraph surveillance_diagram {  # digraph は directional graph という意味�
   
   # エッジ
   #######
-  {Primary Secondary Tertiary} -> SC [label = 'case reporting']
+  {Primary Secondary Tertiary} -> SC [label = '症例報告']
 
   Primary   -> Secondary [label = 'ケース移送',
                           fontcolor = red]
@@ -429,7 +429,7 @@ DiagrammeR::grViz("digraph {
 
 graph [layout = dot, rankdir = LR]
 
-# ノードのグローバルなスタイルを定義します。必要に応じてボックス内でこれらを上書きすることができます。
+# ノードのグローバル・スタイルを定義します。必要に応じてボックス内でこれらを上書きすることができます。
 node [shape = rectangle, style = filled, fillcolor = Linen]
 
 data1 [label = 'データ 1', shape = folder, fillcolor = Beige]
@@ -454,9 +454,9 @@ results [label= '結果']
 
 以下は、このチュートリアルからの引用です。https://mikeyharper.uk/flowcharts-in-r-using-diagrammer/  
 
-「パラメータ化された図形: Rで図形を設計することの大きな利点は、Rの値をフローチャートに直接読み込んで、図形を分析に直結させることができることです。例えば、プロセスの各段階の後に値を削除するフィルタリングプロセスを作成したとすると、プロセスの各段階の後にデータセットに残っている値の数を図に表示することができます。これを実現するには、図の中で @@X 記号を直接使用し、プロットのフッターで [X]: を使用して参照します（Xは一意の数値インデックス）。"  
+「パラメータ化された図形: Rで図形を設計することの大きな利点は、Rの値をフローチャートに直接読み込んで、図形を分析に直結させることができることです。例えば、プロセスの各段階の後に値を削除するフィルタリングプロセスを作成したとすると、プロセスの各段階の後にデータセットに残っている値の数を図に表示することができます。これを実現するには、図の中で @@X 記号を直接使用し、プロットのフッターで [X]: を使用して参照します（Xは一意の数値インデックス）。」
 
-パラメタライズに興味をお持ちの方は、このチュートリアルをご覧ください。 
+パラメータ化された図形に興味をお持ちの方は、このチュートリアルをご覧ください。 
 
 <!-- And below is some example code from this tutorial. -->
 
@@ -574,7 +574,7 @@ links$IDtarget <- match(links$target, nodes$name)-1
 DT::datatable(links, rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap')
 ```
 
-では、`sankeyNetwork()` でサンキーダイアグラムをプロットしてみましょう。
+では、`sankeyNetwork()` でサンキー・ダイアグラムをプロットしてみましょう。
 コンソールで `?sankeyNetwork` を実行すると、各引数についての詳細を見ることができます。
 なお、`iterations = 0` を設定しないと、ノードの順番が期待通りにならないことがあります。
 
