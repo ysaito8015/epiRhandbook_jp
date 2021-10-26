@@ -35,37 +35,37 @@ Rに"データセット"をインポートする場合、一般的には、R環�
 
 Rには独自のデータフォーマットもあります。
 
--   An RDS file (.rds) stores a single R object such as a data frame. These are useful to store cleaned data, as they maintain R column classes. RDSファイル（.rds）は、データフレームなどの単一のRオブジェクトを格納します。これらはR列クラスを維持するため、クリーンアップされたデータを格納するのに役立ちます。Read more in [tこちらのセクションhis section](#import_rds).\
--   An RData file (.Rdata) can be used to store multiple objects, or even a complete R workspace. Read more in [this section](#import_rdata).
+-   RDSファイル（.rds）は、データフレームなどの単一のRオブジェクトを保存します。これらはR列クラスを維持するため、クリーンデータを保存するのに役立ちます。詳しくは[こちら](#import_rds)をご覧ください。\
+-   RDataファイル（.Rdata）は、複数のオブジェクトや、Rのワークスペース全体を保存するのに使用できます。詳しくは[こちら](#import_rdata)をご覧ください。
 
 <!-- ======================================================= -->
 
 ## rioパッケージ
 
-The R package we recommend is: **rio**. The name "rio" is an abbreviation of "R I/O" (input/output).
+パッケージ**rio**を推奨しています。"rio" は"R I/O"（Input/Output）の略語です。
 
-Its functions `import()` and `export()` can handle many different file types (e.g. .xlsx, .csv, .rds, .tsv). When you provide a file path to either of these functions (including the file extension like ".csv"), **rio** will read the extension and use the correct tool to import or export the file.
+関数`import()`および`export()`は、様々な種類のファイルを扱うことができます（例：.xlsx、.csv、.rds、.tsv）。これらの関数にファイルパス（".csv"のような拡張子を含む）を指定すると、rioは拡張子を読み取り、正しいツールを使用してファイルをインポートまたはエクスポートします。
 
-The alternative to using **rio** is to use functions from many other packages, each of which is specific to a type of file. For example, `read.csv()` (**base** R), `read.xlsx()` (**openxlsx** package), and `write_csv()` (**readr** pacakge), etc. These alternatives can be difficult to remember, whereas using `import()` and `export()` from **rio** is easy.
+**rio**を使う代わりに、他の多くのパッケージの関数を使うことができます。それぞれのパッケージは、ファイルの種類に特化しています。例えば、read.csv() (**base** R)、read.xlsx() (**openxlsx**パッケージ)、write_csv() (**readr** pacakge)などです。これらの選択肢を覚えるのは大変ですが、**rio**のimport()やexport()を使うのは簡単です。
 
-**rio**'s functions `import()` and `export()` use the appropriate package and function for a given file, based on its file extension. See the end of this page for a complete table of which packages/functions **rio** uses in the background. It can also be used to import STATA, SAS, and SPSS files, among dozens of other file types.
+**rio**の関数`import()`と`export()`は、ファイルの拡張子に基づいて、与えられたファイルに適切なパッケージと関数を使用します。**rio**がバックグラウンドで使用するパッケージや関数の完全な表は、このページの最後をご覧ください。**rio**は、STATA、SAS、SPSSのファイルをはじめ、さまざまな種類のファイルのインポートにも使用することができます。
 
-Import/export of shapefiles requires other packages, as detailed in the page on \[GIS basics\].
+シェープファイルのインポート／エクスポートには、\[GIS basics\]のページで紹介した他のパッケージが必要です。
 
 ## hereパッケージ {#here}
 
-The package **here** and its function `here()` make it easy to tell R where to find and to save your files - in essence, it builds file paths.
+**here**パッケージとその関数`here()`を用いて、ファイルの場所と保存場所をRに簡単に指示することができます。つまり、ファイルパスを作成します。
 
-Used in conjunction with an R project, **here** allows you to describe the location of files in your R project in relation to the R project's *root directory* (the top-level folder). This is useful when the R project may be shared or accessed by multiple people/computers. It prevents complications due to the unique file paths on different computers (e.g. `"C:/Users/Laura/Documents..."` by "starting" the file path in a place common to all users (the R project root).
+**here**パッケージは、Rプロジェクトと組み合わせて使用することで、Rプロジェクトのルートディレクトリ（トップレベルのフォルダ）に対するRプロジェクト内のファイルの場所を記述することができます。これは、Rプロジェクトを複数の人やコンピュータで共有したり、アクセスしたりする場合に便利です。これは、すべてのユーザーに共通の場所（Rプロジェクトのルート）からファイルパスを「開始」することで、異なるコンピュータ上のユニークなファイルパス（例："C:/Users/Laura/Documents..."）による煩雑さを防ぎます。This is useful when the R project may be shared or accessed by multiple people/computers. It prevents complications due to the unique file paths on different computers (e.g. `"C:/Users/Laura/Documents..."` by "starting" the file path in a place common to all users (the R project root).
 
-This is how `here()` works within an R project:
+Rプロジェクトでの`here()`はこのように機能します。
 
--   When the **here** package is first loaded within the R project, it places a small file called ".here" in the root folder of your R project as a "benchmark" or "anchor"\
--   In your scripts, to reference a file in the R project's sub-folders, you use the function `here()` to build the file path *in relation to that anchor*
--   To build the file path, write the names of folders beyond the root, within quotes, separated by commas, finally ending with the file name and file extension as shown below\
--   `here()` file paths can be used for both importing and exporting
+-   **here**パッケージがRプロジェクト内で最初に読み込まれると、"ベンチマーク "または "アンカー "として、Rプロジェクトのルートフォルダに".here "という小さなファイルが置かれます。\
+-   In your scripts, to reference a file in the R project's sub-folders, you use the function `here()` to build the file path *in relation to that anchor　スクリプトでは、Rプロジェクトのサブフォルダ内のファイルを参照するために、関数here()を使用して、そのアンカーに基づいたファイルパスを作成します。[check which sentences are italic]{.ul}*
+-   ファイルパスを作成するには、以下のように、ルート以降のフォルダ名を引用符で囲み、カンマで区切り、最後にファイル名とファイル拡張子を記述します。\
+-   `here()`のファイルパスは、インポートとエクスポートの両方に使用できます。
 
-For example, below, the function `import()` is being provided a file path constructed with `here()`.
+たとえば、以下では、関数`import()`に、`here()`で構築されたファイルパスが提供されています。
 
 ```{r, eval=F}
 linelist <- import(here("data", "linelists", "ebola_linelist.xlsx"))
