@@ -426,11 +426,12 @@ ggplot_na_imputations(counts$case_miss, counts$case_int) +
 
 <!-- ======================================================= -->
 ## Descriptive analysis {  }
-
+## 記述統計{  }
 
 
 <!-- ======================================================= -->
 ### Moving averages {#timeseries_moving .unnumbered}
+### 移動平均{#timeseries_moving .unnumbered}
 
 If data is very noisy (counts jumping up and down) then it can be helpful to 
 calculate a moving average. In the example below, for each week we calculate the 
@@ -438,6 +439,13 @@ average number of cases from the four previous weeks. This smooths the data, to
 make it more interpretable. In our case this does not really add much, so we will
 stick to the interpolated data for further analysis. 
 See the [Moving averages](https://epirhandbook.com/moving-averages.html) page for more detail. 
+
+データが非常にノイジーな場合（カウントが跳ね上がったり下がったりする）は、移動平均を計算するのが有効です。
+移動平均を計算することができます。以下の例では、各週ごとに、前の4週間の平均件数を計算します。
+前の4週間の平均件数を計算します。これにより、データがスムーズになり 
+より解釈しやすくなります。私たちの場合、これはあまり意味がありません。
+さらなる分析のためには、補間されたデータにこだわります。
+詳細は、[移動平均](https://epirhandbook.com/moving-averages.html)のページを参照してください。
 
 ```{r moving_averages}
 
