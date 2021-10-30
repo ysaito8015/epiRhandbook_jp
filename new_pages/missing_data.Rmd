@@ -1,4 +1,4 @@
-# データの欠損 {\#Missing-data}
+# データの欠損 {#Missing-data}
 
 ```{r, out.width=c("50%"), echo=F}
 knitr::include_graphics(here::here("images", "missingness.png"))
@@ -19,7 +19,7 @@ knitr::include_graphics(here::here("images", "missingness_overview.png"))
 
 ### パッケージの読み込み {.unnumbered}
 
-以下のコードは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を特に使用していますが、パッケージのインストールを必要に応じて行い、[かつ]{.ul}読み込みまで行ってくれます。他にも、**base** R の `library()` を用いてインストールされているパッケージを読み込む方法があります。R のパッケージについてより知りたい場合は、[R の基礎 {#basics}] を参考にしてください。
+以下のコードは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を特に使用していますが、パッケージのインストールを必要に応じて行い、[かつ]{.ul}読み込みまで行ってくれます。他にも、**base** R の `library()` を用いてインストールされているパッケージを読み込む方法があります。R のパッケージについてより知りたい場合は、[R の基礎 {\#basics}] を参考にしてください。
 
 ```{r}
 pacman::p_load(
@@ -32,7 +32,7 @@ pacman::p_load(
 
 ### データのインポート {.unnumbered}
 
-エボラ流行熱のシミュレーションケースのデータセットをインポートします。同じように行いたい場合、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして"クリーニングされた（clean）" ラインリストをダウンロードしてください</a> （.rds 形式のファイルです）。**rio** パッケージの関数 `import()` を用いてデータをインポートしてください（.xlsx, .rds, .csv など、様々な形式のファイルをダウンロードすることが出来ますー詳しくは[インポートとエクスポート {#Importing}] のページを参照にしてください。）
+エボラ流行熱のシミュレーションケースのデータセットをインポートします。同じように行いたい場合、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして"クリーニングされた（clean）" ラインリストをダウンロードしてください</a> （.rds 形式のファイルです）。**rio** パッケージの関数 `import()` を用いてデータをインポートしてください（.xlsx, .rds, .csv など、様々な形式のファイルをダウンロードすることが出来ますー詳しくは[インポートとエクスポート {\#Importing}] のページを参照にしてください。）
 
 ```{r, echo=F}
 # ラインリストを R にインポートする
@@ -51,104 +51,104 @@ linelist <- import("linelist_cleaned.rds")
 DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-### Convert missing on import {.unnumbered}
+### インポート時における欠損の変換 {.unnumbered}
 
-When importing your data, be aware of values that should be classified as missing. For example, 99, 999, "Missing", blank cells (""), or cells with an empty space (" "). You can convert these to `NA` (R's version of missing data) during the data import command.\
-See the page on importing page section on [Missing data](#import_missing) for details, as the exact syntax varies by file type.
+データをインポートする際に、欠損、と分類されるべき値については少し注意が必要です。例えば、99、999、"Missing"、空欄（""）、または 空のスペースを含むセル（" "） などです。インポートのコマンドと一緒にこれらの値を `NA` （R における欠損値の意味）に変換することが出来ます。\
+使用するコマンドがファイルのタイプによって異なるので、詳細については [データの欠損](#import_missing) のインポートのセクションを参考にしてください。
 
 <!-- ======================================================= -->
 
-## Missing values in R
+## R における欠損値
 
-Below we explore ways that missingness is presented and assessed in R, along with some adjacent values and functions.
+以下では、R における欠損の表示や評価の仕方、また、それに関連するいくつかの値や関数について見ていきたいと思います。
 
 ### `NA` {.unnumbered}
 
-In R, missing values are represented by a reserved (special) value - `NA`. Note that this is typed *without* quotes. "NA" is different and is just a normal character value (also a Beatles lyric from the song Hey Jude).
+R においては、欠損値は特に `NA` という値で表示されます。これは引用符[なし]{.ul}で用いります。"NA" は特殊で、普通の文字値と同じです。
 
-Your data may have other ways of representing missingness, such as "99", or "Missing", or "Unknown" - you may even have empty character value "" which looks "blank", or a single space " ". Be aware of these and consider whether to [convert them to `NA` during import](#import_missing) or during data cleaning with `na_if()`.
+データ内では"99"、"Missing"、または "Unknown" というように欠損が表されていることもあります。また、空の文字値 ""（空欄のように見える）や、スペース " " で表されていることもあります。これらについては、[インポート時に `NA` に変換する](#import_missing) もしくはデータを `na_if()` を用いてクリーニングする必要があります。
 
-In your data cleaning, you may also want to convert the other way - changing all `NA` to "Missing" or similar with `replace_na()` or with `fct_explicit_na()` for factors.
+データクリーニングにおいて、逆に全ての `NA` を "Missing" に変換したり、`replace_na()` やカテゴリ変数の場合は `fct_explicit_na()` を用いて処理したい場合もあると思います。
 
-### Versions of `NA` {.unnumbered}
+### いろいろな `NA` {.unnumbered}
 
-Most of the time, `NA` represents a missing value and everything works fine. However, in some circumstances you may encounter the need for *variations* of `NA` specific to an object class (character, numeric, etc). This will be rare, but you should be aware.\
-The typical scenario for this is when creating a new column with the **dplyr** function `case_when()`. As described in the [Cleaning data and core functions](#clean_case_when) page, this function evaluates every row in the data frame, assess whether the rows meets specified logical criteria (right side of the code), and assigns the correct new value (left side of the code). *Importantly: all values on the right side must be the same class*.
+多くの場合は、`NA` が欠損値を示し、それで全てがうまくいきます。しかし、オブジェクトのクラス（文字値、数値、など）によって[異なる]{.ul} `NA` を用いる必要が出てくる場合があります。あまり頻繁に起こることではないですが、注意が必要です。\
+多いのは、**dplyr** 関数の `case_when()` を用いて新しい列を作成する場合などです。 [Cleaning data and core functions](#clean_case_when) のページで述べたように、この関数はデータフレーム内の全ての行に対して、ある基準（コードの右辺に書かれている条件）に合致するかどうかを評価し、新しい値（コードの左辺に書かれている値）を作成します。[右辺に書かれている値は、全ておなじクラスでないといけません。]{.ul}
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   
-  # Create new "age_years" column from "age" column
+  # "age" 列から新しく "age_years" 列を作成する
   mutate(age_years = case_when(
-    age_unit == "years"  ~ age,       # if age is given in years, assign original value
-    age_unit == "months" ~ age/12,    # if age is given in months, divide by 12
-    is.na(age_unit)      ~ age,       # if age UNIT is missing, assume years
-    TRUE                 ~ NA_real_)) # any other circumstance, assign missing
+    age_unit == "years"  ~ age,       # もし age が年で与えられていたら、そのままの値を返す
+    age_unit == "months" ~ age/12,    # もし age が月で与えられていたら、12 で割る
+    is.na(age_unit)      ~ age,       # もし age の UNIT が欠損であれば、years だと仮定する
+    TRUE                 ~ NA_real_)) # 他のすべての場合には欠損とする
 ```
 
-If you want `NA` on the right side, you may need to specify one of the special `NA` options listed below. If the other right side values are character, consider using "Missing" instead or otherwise use `NA_character_`. If they are all numeric, use `NA_real_`. If they are all dates or logical, you can use `NA`.
+右辺に `NA` を持ってきたい場合は、以下に示している特殊な `NA` のうちのどれかを用いる必要があります。他の右辺の値が文字値の場合は "Missing" か、`NA_character_` を使用する必要があります。他の右辺が数値の場合は `NA_real_` を用いります。他の値がすべて日付や条件式であった場合 `NA` を用いることが出来ます。
 
--   `NA` - use for dates or logical TRUE/FALSE
--   `NA_character_` - use for characters\
--   `NA_real_` - use for numeric
+-   `NA` ー日付や条件式 TRUE/FALSE において用いる
+-   `NA_character_` ー文字値に用いる\
+-   `NA_real_` ー数字値に用いる
 
-Again, it is not likely you will encounter these variations *unless* you are using `case_when()` to create a new column. See the [R documentation on NA](https://stat.ethz.ch/R-manual/R-devel/library/base/html/NA.html) for more information.
+繰り返しになりますが、新しい行を `case_when()` を用いて作成しようと[しない限り]{.ul}は、こうした例に出会うことはありません。より詳細について知りたい方は、[R documentation on NA](https://stat.ethz.ch/R-manual/R-devel/library/base/html/NA.html) を参考にしてください。
 
 ### `NULL` {.unnumbered}
 
-`NULL` is another reserved value in R. It is the logical representation of a statement that is neither true nor false. It is returned by expressions or functions whose values are undefined. Generally do not assign NULL as a value, unless writing functions or perhaps writing a [**shiny** app][Dashboards with Shiny] to return `NULL` in specific scenarios.
+他に R で用いられる値に、`NULL` があります。これは、条件が正でも誤でもないことを示しています。すなわち、値が定義されていない関数等によって返されます。一般的には、関数を書いたり、ある特定の条件において `NULL` を返すことを指示する [**shiny** app][Dashboards with Shiny] を書いたりする場合を除いて、NULL を値として指定することはありません。
 
-Null-ness can be assessed using `is.null()` and conversion can made with `as.null()`.
+Nullは `is.null()` を用いて評価され、`as.null()` を用いて変換されます。
 
-See this [blog post](https://www.r-bloggers.com/2010/04/r-na-vs-null/) on the difference between `NULL` and `NA`.
+`NULL` と `NA` の違いについては、[ブログのポスト](https://www.r-bloggers.com/2010/04/r-na-vs-null/) を見てください。
 
 ### `NaN` {.unnumbered}
 
-Impossible values are represented by the special value `NaN`. An example of this is when you force R to divide 0 by 0. You can assess this with `is.nan()`. You may also encounter complementary functions including `is.infinite()` and `is.finite()`.
+取ることのできない値は、`NaN` で表されます。例えば、0 を 0 で割れ、と R に指示したような場合です。`is.nan()` を用いて評価することが出来、また、補足関数として`is.infinite()` や `is.finite()` が存在します。
 
 ### `Inf` {.unnumbered}
 
-`Inf` represents an infinite value, such as when you divide a number by 0.
+`Inf` は、例えばある値を 0 で割った場合など、無限大を表します。
 
-As an example of how this might impact your work: let's say you have a vector/column `z` that contains these values: `z <- c(1, 22, NA, Inf, NaN, 5)`
+これらの欠損値がどのように影響するかを簡単な例で示しましょう。例えば、`z <- c(1, 22, NA, Inf, NaN, 5)` で作成される `z` というベクターまたはコラムがあるとします。
 
-If you want to use `max()` on the column to find the highest value, you can use the `na.rm = TRUE` to remove the `NA` from the calculation, but the `Inf` and `NaN` remain and `Inf` will be returned. To resolve this, you can use brackets `[ ]` and `is.finite()` to subset such that only finite values are used for the calculation: `max(z[is.finite(z)])`.
+一番大きな値を見つけるために `max()` という関数をこのコラムに適用することを考えます。`na.rm = TRUE` を用いることで、計算から `NA` を除くことが出来ます。しかし、`Inf` や `NaN` は残り、結果として `Inf` が返されます。これを解決するには、`[ ]` と `is.finite()` を用いて、すなわち `max(z[is.finite(z)])` とすることで、有限な値のみを含むサブセットを作成することが出来ます。
 
 ```{r, eval=F}
 z <- c(1, 22, NA, Inf, NaN, 5)
-max(z)                           # returns NA
-max(z, na.rm=T)                  # returns Inf
-max(z[is.finite(z)])             # returns 22
+max(z)                           # NA が返される
+max(z, na.rm=T)                  # Inf が返される
+max(z[is.finite(z)])             # 22 が返される
 ```
 
-### Examples {.unnumbered}
+### 例 {.unnumbered}
 
-+-----------------------------------------------------------------------------------------------------------------------+-----------------------------------------+
-| R command                                                                                                             | Outcome                                 |
-+=======================================================================================================================+=========================================+
-| `5 / 0`                                                                                                               | `Inf`                                   |
-+-----------------------------------------------------------------------------------------------------------------------+-----------------------------------------+
-| `0 / 0`                                                                                                               | `NaN`                                   |
-+-----------------------------------------------------------------------------------------------------------------------+-----------------------------------------+
-| `5 / NA`                                                                                                              | `NA`                                    |
-+-----------------------------------------------------------------------------------------------------------------------+-----------------------------------------+
-| `5 / Inf |`0NA - 5`|`NAInf / 5`|`Infclass(NA)`| "logical"`class(NaN)`| "numeric"`class(Inf)`| "numeric"`class(NULL)\` | "NULL"                                  |
-+-----------------------------------------------------------------------------------------------------------------------+-----------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------+-----------------+
+| R コマンド                                                                                                            | 出力            |
++=======================================================================================================================+=================+
+| `5 / 0`                                                                                                               | `Inf`           |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+
+| `0 / 0`                                                                                                               | `NaN`           |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+
+| `5 / NA`                                                                                                              | `NA`            |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+
+| `5 / Inf |`0NA - 5`|`NAInf / 5`|`Infclass(NA)`| "logical"`class(NaN)`| "numeric"`class(Inf)`| "numeric"`class(NULL)\` | "NULL"          |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+
 
-"NAs introduced by coercion" is a common warning message. This can happen if you attempt to make an illegal conversion like inserting a character value into a vector that is otherwise numeric.
+"NAs introduced by coercion" はよくある警告メッセージです。数値のベクターに文字値を挿入しようとするなどの不正な操作を行った場合に起こります。
 
 ```{r}
 as.numeric(c("10", "20", "thirty", "40"))
 ```
 
-`NULL` is ignored in a vector.
+`NULL` はベクターにおいては無視されます。
 
 ```{r}
 my_vector <- c(25, NA, 10, NULL)  # define
 my_vector                         # print
 ```
 
-Variance of one number results in `NA`.
+ある一つの値のバリアンスを求めようとすると `NA` が返されます。
 
 ```{r}
 var(22)
@@ -156,13 +156,13 @@ var(22)
 
 <!-- ======================================================= -->
 
-## Useful functions
+## 便利な関数
 
-The following are useful **base** R functions when assessing or handling missing values:
+以下では、R の **base** 関数で、欠損値を評価したり扱ったりする際に便利なものを示します。
 
-### `is.na()` and `!is.na()` {.unnumbered}
+### `is.na()` と `!is.na()` {.unnumbered}
 
-Use `is.na()`to identify missing values, or use its opposite (with `!` in front) to identify non-missing values. These both return a logical value (`TRUE` or `FALSE`). Remember that you can `sum()` the resulting vector to count the number `TRUE`, e.g. `sum(is.na(linelist$date_outcome))`.
+`is.na()` は欠損値を特定する場合、または欠損でない値を特定する場合（`!` を一緒に用いります）に使います。どちらも理論値（`TRUE` or `FALSE`）が返されます。 返されたベクターに `sum()` を適用、例えば `sum(is.na(linelist$date_outcome))` とすることで、`TRUE` の数を計算することが出来ます。
 
 ```{r}
 my_vector <- c(1, 4, 56, NA, 5, NA, 22)
@@ -173,8 +173,8 @@ sum(is.na(my_vector))
 
 ### `na.omit()` {.unnumbered}
 
-This function, if applied to a data frame, will remove rows with *any* missing values. It is also from **base** R.\
-If applied to a vector, it will remove `NA` values from the vector it is applied to. For example:
+この関数をデータフレームに対して適用し、[全ての]{.ul}欠損値を含む行を除くことが出来ます。これもまた、R の **base** 関数です。\
+ベクターに対して適用すると、`NA` を除くことが出来ます。例えば：
 
 ```{r}
 na.omit(my_vector)
@@ -182,18 +182,18 @@ na.omit(my_vector)
 
 ### `drop_na()` {.unnumbered}
 
-This is a **tidyr** function that is useful in a [data cleaning pipeline][Cleaning data and core functions]. If run with the parentheses empty, it removes rows with *any* missing values. If column names are specified in the parentheses, rows with missing values in those columns will be dropped. You can also use "tidyselect" syntax to specify the columns.
+[data cleaning pipeline][Cleaning data and core functions] の際に便利な **tidyr** の関数です。括弧内を空にして走らせると、欠損値を含む[全て]{.ul}の行を除くことが出来ます。括弧内で列の名前を指定することで、その列内の値を欠損している行を除くことが出来ます。列の指定には "tidyselect" を用いることもできます。
 
 ```{r, eval=F}
 linelist %>% 
-  drop_na(case_id, date_onset, age) # drops rows missing values for any of these columns
+  drop_na(case_id, date_onset, age) # これらの列の値を欠損している行を除く
 ```
 
 ### `na.rm = TRUE` {.unnumbered}
 
-When you run a mathematical function such as `max()`, `min()`, `sum()` or `mean()`, if there are any `NA` values present the returned value will be `NA`. This default behavior is intentional, so that you are alerted if any of your data are missing.
+`max()`、`min()`、`sum()` または、`mean()` などの数学関数を用いるときに `NA` が存在すると、`NA` が返されます。これは、欠損値があるという警告を知らせるためのデフォルトの挙動です。
 
-You can avoid this by removing missing values from the calculation. To do this, include the argument `na.rm = TRUE` ("na.rm" stands for "remove `NA`").
+計算から欠損値を除くことで、この警告を回避することが出来ます。そのためには、`na.rm = TRUE` （"na.rm" は "remove `NA`" の意）を一緒に用いります。
 
 ```{r}
 my_vector <- c(1, 4, 56, NA, 5, NA, 22)
@@ -205,59 +205,59 @@ mean(my_vector, na.rm = TRUE)
 
 <!-- ======================================================= -->
 
-## Assess missingness in a data frame
+## データフレーム内の欠損を評価する
 
-You can use the package **naniar** to assess and visualize missingness in the data frame `linelist`.
+データフレーム `linelist` 内の欠損を評価し、視覚化するのに **naniar** というパッケージが使えます。
 
 ```{r}
-# install and/or load package
+# パッケージをインストールするもしくは読み込む
 pacman::p_load(naniar)
 ```
 
-### Quantifying missingness {.unnumbered}
+### 欠損の数を数える {.unnumbered}
 
-To find the percent of all values that are missing use `pct_miss()`. Use `n_miss()` to get the number of missing values.
+全ての欠損の値の割合を示すには `pct_miss()` を、数を示すには `n_miss()` を用いります。
 
 ```{r}
-# percent of ALL data frame values that are missing
+# すべてのデータフレーム内の欠損値の割合
 pct_miss(linelist)
 ```
 
-The two functions below return the percent of rows with any missing value, or that are entirely complete, respectively. Remember that `NA` means missing, and that \``""` or `" "` will not be counted as missing.
+以下の 2 つの関数は、それぞれ、欠損値を含む行の割合、またはコンプリートケースの割合を返してくれます。`NA` は欠損を意味しますが、`""` や `" "` は欠損としてはカウントされないことに注意してください。
 
 ```{r}
-# Percent of rows with any value missing
-pct_miss_case(linelist)   # use n_complete() for counts
+# 欠損値を含む行の割合を示す
+pct_miss_case(linelist)   # 数を示すには n_complete() を用いる
 ```
 
 ```{r}
-# Percent of rows that are complete (no values missing)  
-pct_complete_case(linelist) # use n_complete() for counts
+# コンプリートケース（欠損のない行）の割合を示す  
+pct_complete_case(linelist) # 数を示すには n_complete() を用いる
 ```
 
-### Visualizing missingness {.unnumbered}
+### 欠損値を視覚的に捉える {.unnumbered}
 
-The `gg_miss_var()` function will show you the number (or %) of missing values in each column. A few nuances:
+`gg_miss_var()` 関数を用いることで、それぞれの列における欠損値の数（もしくは割合）を示すことが出来ます。
 
--   You can add a column name (not in quote) to the argument `facet =` to see the plot by groups\
--   By default, counts are shown instead of percents, change this with `show_pct = TRUE`\
--   You can add axis and title labels as for a normal `ggplot()` with `+ labs(...)`
+-   プロットをグループごとに見たい場合は、`facet =` で列の名前（引用符にいれない）を指定することが出来ます\
+-   デフォルトでは、割合ではなく数が表示されます。割合にしたい場合は `show_pct = TRUE` で指定します\
+-   通常の `ggplot()` 通り、軸やタイトルのラベルを追加したい場合は `+ labs(...)` を用いて行うことが出来ます
 
 ```{r}
 gg_miss_var(linelist, show_pct = TRUE)
 ```
 
-Here the data are piped `%>%` into the function. The `facet =` argument is also used to split the data.
+以下では、データが `%>%` を用いて関数に渡されています。`facet =` を用いても、データを分けることが出来ます。
 
 ```{r}
 linelist %>% 
   gg_miss_var(show_pct = TRUE, facet = outcome)
 ```
 
-You can use `vis_miss()` to visualize the data frame as a heatmap, showing whether each value is missing or not. You can also `select()` certain columns from the data frame and provide only those columns to the function.
+どの値が欠損しているかを示すために、`vis_miss()` を用いてデータフレームをヒートマップで表すことが出来ます。また `select()` を用いてある特定の列を指定することで、その列だけを示すこともできます。
 
 ```{r}
-# Heatplot of missingness across the entire data frame  
+# データフレーム全体に対して欠損のヒートプロットを示す  
 vis_miss(linelist)
 ```
 
