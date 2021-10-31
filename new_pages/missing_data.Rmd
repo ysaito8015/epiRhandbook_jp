@@ -371,46 +371,46 @@ ggplot(data = outcome_missing)+
 
 <!-- ======================================================= -->
 
-## Using data with missing values
+## 欠損値を含むデータを使う
 
-### Filter out rows with missing values {.unnumbered}
+### 欠損値を含む行を取り除く {.unnumbered}
 
-To quickly remove rows with missing values, use the **dplyr** function `drop_na()`.
+欠損値を含む行を除く簡単な方法は、**dplyr** パッケージの関数 `drop_na()` を用いる方法です。
 
-The original `linelist` has `nrow(linelist)` rows. The adjusted number of rows is shown below:
+元の `linelist` には `nrow(linelist)` 行含まれています。欠損値を含む行を除いた後の行数は以下になります。
 
 ```{r}
 linelist %>% 
-  drop_na() %>%     # remove rows with ANY missing values
+  drop_na() %>%     # あらゆる欠損値を含む列を除く
   nrow()
 ```
 
-You can specify to drop rows with missingness in certain columns:
+また、ある特定の列内の欠損値を含む行を除くこともできます。
 
 ```{r}
 linelist %>% 
-  drop_na(date_onset) %>% # remove rows missing date_onset 
+  drop_na(date_onset) %>% # date_onset 行における欠損値を含む列を除く
   nrow()
 ```
 
-You can list columns one after the other, or use ["tidyselect" helper functions](#clean_tidyselect):
+順番に行を表示することも出来ますし、 ["tidyselect" helper functions](#clean_tidyselect) を使うこともできます。
 
 ```{r}
 linelist %>% 
-  drop_na(contains("date")) %>% # remove rows missing values in any "date" column 
+  drop_na(contains("date")) %>% # "date" 行におけるあらゆる欠損値を含む列を除く 
   nrow()
 ```
 
 <!-- ======================================================= -->
 
-### Handling `NA` in `ggplot()` {.unnumbered}
+### `ggplot()` での `NA` の扱い方  {.unnumbered}
 
-It is often wise to report the number of values excluded from a plot in a caption. Below is an example:
+たいていの場合、プロットから除かれた値の数はキャプションとして報告するのが賢明です。以下に例を示します。
 
-In `ggplot()`, you can add `labs()` and within it a `caption =`. In the caption, you can use `str_glue()` from **stringr** package to paste values together into a sentence dynamically so they will adjust to the data. An example is below:
+`ggplot()` においては、`labs()` を追加し、その中で `caption =` としてキャプションを追加することが出来ます。キャプションの中で **stringr** パッケージの `str_glue()` を使うことで、文中に直接値を張り付けることが出来るので、データそれぞれの値を用いることが出来ます。
 
--   Note the use of `\n` for a new line.\
--   Note that if multiple column would contribute to values not being plotted (e.g. age or sex if those are reflected in the plot), then you must filter on those columns as well to correctly calculate the number not shown.
+-   `\n` は、行替えに用いることが出来ます。\
+-   もし複数の列によって欠損値が定義され、プロットされていない値が決定されている場合（例えば、年齢と性別がプロットに反映されている場合）は、それら複数の列によってフィルタリングを行い、表示されていない値の数を正確に報告しなければなりません。
 
 ```{r, eval=F}
 labs(
@@ -422,16 +422,16 @@ labs(
   {nrow(central_data %>% filter(is.na(date_onset)))} cases missing date of onset and not shown."))  
 ```
 
-Sometimes, it can be easier to save the string as an object in commands prior to the `ggplot()` command, and simply reference the named string object within the `str_glue()`.
+`ggplot()` コマンドを使用する前に、文章をオブジェクトとして保存し、`str_glue()` 内ではそのオブジェクト名を指定するだけの方が簡単な場合もあります。
 
 <!-- ======================================================= -->
 
-### `NA` in factors {.unnumbered}
+### カテゴリ変数における`NA` {.unnumbered}
 
-If your column of interest is a factor, use `fct_explicit_na()` from the **forcats** package to convert `NA` values to a character value. See more detail in the [Factors] page. By default, the new value is "(Missing)" but this can be adjusted via the `na_level =` argument.
+興味のある列がカテゴリ変数である場合、`NA` を文字値にするには **forcats** パッケージの `fct_explicit_na()` 関数を用いる必要があります。詳細については [Factors] ページを参考にしてください。デフォルトでは、新しい値は "(Missing)" として扱われますが、`na_level =` のコマンドによって変更することが出来ます。
 
 ```{r}
-pacman::p_load(forcats)   # load package
+pacman::p_load(forcats)   # パッケージの読み込み
 
 linelist <- linelist %>% 
   mutate(gender = fct_explicit_na(gender, na_level = "Missing"))
@@ -441,67 +441,67 @@ levels(linelist$gender)
 
 <!-- ======================================================= -->
 
-## Imputation
+## 欠損値の補完
 
-Sometimes, when analyzing your data, it will be important to "fill in the gaps" and impute missing data While you can always simply analyze a dataset after removing all missing values, this can cause problems in many ways. Here are two examples:
+単純に全ての欠損値を除いたデータセットを解析するのではなく、"ギャップを埋めて"、欠損値を補完してからデータを解析する方が良い場合もあります。単純にすべての欠損値を除くと、いろいろ問題があることがあります。例えば：
 
-1)  By removing all observations with missing values or variables with a large amount of missing data, you might reduce your power or ability to do some types of analysis. For example, as we discovered earlier, only a small fraction of the observations in our linelist dataset have no missing data across all of our variables. If we removed the majority of our dataset we'd be losing a lot of information! And, most of our variables have some amount of missing data--for most analysis it's probably not reasonable to drop every variable that has a lot of missing data either.
+1)  欠損値を含む観測値や大量の欠損値を含む変数を全て除くと、ある種の解析を行うパワーが減る可能性があります。例えば、先に示したように、全ての変数のうち、欠損値を含まない観測値が非常に少ない場合があります。データセットの大部分を取り除いてしまうと、大量の情報を失ってしまうことになります！さらに、たいていの変数は欠損値を含んでいます。なので、大量の欠損値を除くすべての変数を除くのはあまり合理的ではありません。
 
-2)  Depending on why your data is missing, analysis of only non-missing data might lead to biased or misleading results. For example, as we learned earlier we are missing data for some patients about whether they've had some important symptoms like fever or cough. But, as one possibility, maybe that information wasn't recorded for people that just obviously weren't very sick. In that case, if we just removed these observations we'd be excluding some of the healthiest people in our dataset and that might really bias any results.
+2)  欠損がなぜ生じているのかによっては、単に欠損を含まないデータのみで解析することは、解析結果にバイアスを生じたり、ミスリーディングな結果となることがあります。例えば、ある患者さんに対して熱や咳などの重要な症状の有無に関するデータを欠損しているとします。たとえば、明らかにそこまで重症でない患者さんについては記録されていない可能性もあります。その場合は、単に欠損を含む観測値を除くと、データセット内の最も健康な人々を除くことになり、非常に結果にバイアスを生じることになります。
 
-It's important to think about why your data might be missing in addition to seeing how much is missing. Doing this can help you decide how important it might be to impute missing data, and also which method of imputing missing data might be best in your situation.
+どのくらい欠損しているか、ということに加えて、なぜ欠損が生じてるのかを考えることが重要です。そうすることで、欠損データを補完することがどうして重要なのか、そしてどの方法で補完することが一番良いのかについて判断を下しやすくなるでしょう。
 
-### Types of missing data {.unnumbered}
+### 欠損データの種類 {.unnumbered}
 
-Here are three general types of missing data:
+欠損データには主に、以下に挙げる 3 つの種類があります；
 
-1)  **Missing Completely at Random** (MCAR). This means that there is no relationship between the probability of data being missing and any of the other variables in your data. The probability of being missing is the same for all cases This is a rare situation. But, if you have strong reason to believe your data is MCAR analyzing only non-missing data without imputing won't bias your results (although you may lose some power). [TODO: consider discussing statistical tests for MCAR]
+1)  **Missing Completely at Random** (MCAR) これは、欠損しているデータの割合と、その他の変数の間には何の関係もないタイプの欠損データです。すなわち、欠損しているデータの割合は全てのケースにおいて同じということですが、これはレアな状況です。しかし、自分の解析しようとしているデータが MCAR であるという強い理由がある場合には、欠損値を補完せず欠損値を含まないデータのみで解析を行っても、（パワーはいくらか失われるが）結果にバイアスは生じません。[TODO: consider discussing statistical tests for MCAR]
 
-2)  **Missing at Random** (MAR). This name is actually a bit misleading as MAR means that your data is missing in a systematic, predictable way based on the other information you have. For example, maybe every observation in our dataset with a missing value for fever was actually not recorded because every patient with chills and and aches was just assumed to have a fever so their temperature was never taken. If true, we could easily predict that every missing observation with chills and aches has a fever as well and use this information to impute our missing data. In practice, this is more of a spectrum. Maybe if a patient had both chills and aches they were more likely to have a fever as well if they didn't have their temperature taken, but not always. This is still predictable even if it isn't perfectly predictable. This is a common type of missing data
+2)  **Missing at Random** (MAR) この名前は少しミスリーディングで、というのも、MAR は、生じている欠損のパターンを他の変数の情報から規則的に予測できるタイプの欠損データのことだからです。例えば、全てのケースにおいて、熱のデータを欠損しているのは、実は寒気と痛みのある人は熱があると推測されたために熱を測らなかったためだとします。そうだとすると、寒気と痛みのあった観測値においては、発熱もまた生じていると容易に予測することが出来、欠損値を補完するためにこの情報を使用することが出来ます。実際には、これはもう少しスペクトラム的な話で、悪寒と痛みの両方を訴えており発熱のデータを欠損している患者は発熱もしている可能性が高いが、必ずしもそうというわけではない、ということです。しかし、完全に予測できるわけではなくとも、予測可能ではあります。欠損データの種類としては、最も多いタイプのものです。
 
-3)  **Missing not at Random** (MNAR). Sometimes, this is also called **Not Missing at Random** (NMAR). This assumes that the probability of a value being missing is NOT systematic or predictable using the other information we have but also isn't missing randomly. In this situation data is missing for unknown reasons or for reasons you don't have any information about. For example, in our dataset maybe information on age is missing because some very elderly patients either don't know or refuse to say how old they are. In this situation, missing data on age is related to the value itself (and thus isn't random) and isn't predictable based on the other information we have. MNAR is complex and often the best way of dealing with this is to try to collect more data or information about why the data is missing rather than attempt to impute it.
+3)  **Missing not at Random** (MNAR) このタイプは、 **Not Missing at Random** (NMAR) と呼ばれることもあります。これは、欠損データの割合が系統的でなく、他の情報を用いて予測可能でもなく、また、ランダムに欠損が生じているわけでもないタイプの欠損のデータのことです。すなわち、データは何らかの明らかでない原因により欠損しているか、あるいは情報を持っていない何らかの規則に基づいて欠損しているといえます。例えば、年齢のデータが欠損しているのは、非常に高齢の患者は自分の年齢を知らないか、自分の年齢を開示したくなかったからだとします。この場合、年齢の欠損は、年齢データ自身に関連しており（すなわちランダムに生じているわけではない）、従って他の情報に基づいて欠損を予測することはできません。MNAR は複雑で、対処法としては、欠損を補完しようとするよりも、もっとデータを集めること、そしてなぜ欠損が生じているのかについての情報を収集することが良いでしょう。
 
-In general, imputing MCAR data is often fairly simple, while MNAR is very challenging if not impossible. Many of the common data imputation methods assume MAR.
+まとめると、MCAR データを補完することは比較的容易ですが、一方、MNAR データを補完することは不可能ではないにしても非常にチャレンジングです。多くのデータの補完のメソッドは、MAR を仮定しています。
 
-### Useful packages {.unnumbered}
+### 便利なパッケージ {.unnumbered}
 
-Some useful packages for imputing missing data are Mmisc, missForest (which uses random forests to impute missing data), and mice (Multivariate Imputation by Chained Equations). For this section we'll just use the mice package, which implements a variety of techniques. The maintainer of the mice package has published an online book about imputing missing data that goes into more detail here (<https://stefvanbuuren.name/fimd/>).
+Mmisc、missForest（ランダムフォレストによる欠損値の補完）、そして mice（連鎖方程式による多重代入法）などのパッケージは、欠損値の補完に便利です。このセクションでは、いろいろなテクニックを学ぶことの出来る mice パッケージについてのみ解説します。mice の開発者によるオンラインブックには、より詳細が示されています（<https://stefvanbuuren.name/fimd/>）。
 
-Here is the code to load the mice package:
+mice パッケージを読み込みます；
 
 ```{r}
 pacman::p_load(mice)
 ```
 
-### Mean Imputation {.unnumbered}
+### 平均値代入法 {.unnumbered}
 
-Sometimes if you are doing a simple analysis or you have strong reason to think you can assume MCAR, you can simply set missing numerical values to the mean of that variable. Perhaps we can assume that missing temperature measurements in our dataset were either MCAR or were just normal values. Here is the code to create a new variable that replaces missing temperature values with the mean temperature value in our dataset. However, in many situations replacing data with the mean can lead to bias, so be careful.
+例えば、非常に単純な解析をしている、あるいは MCAR を仮定する強い理由がある時には、数値の欠損を単にその変数の平均値で代入することが出来る場合があります。例えば、我々のデータセット内の気温の欠損値は MCAR であるか単に平年値である、と仮定できる可能性があります。気温の欠損値をデータセットの値の平均値で補完した新しい変数を作成するコードを示します。しかし、多くの場合では単に平均値を補完するとバイアスを生じる可能性があるので、十分注意が必要です。
 
 ```{r}
 linelist <- linelist %>%
   mutate(temp_replace_na_with_mean = replace_na(temp, mean(temp, na.rm = T)))
 ```
 
-You could also do a similar process for replacing categorical data with a specific value. For our dataset, imagine you knew that all observations with a missing value for their outcome (which can be "Death" or "Recover") were actually people that died (note: this is not actually true for this dataset):
+同じような方法で、カテゴリ変数の欠損値をある特定の値で補完することもできます。例えば、転帰について（"Death" または "Recover"）の情報が欠損している観測値はすべて死亡データであるとします（このデータセットについては、これは本当は正しくないのですが）。
 
 ```{r}
 linelist <- linelist %>%
   mutate(outcome_replace_na_with_death = replace_na(outcome, "Death"))
 ```
 
-### Regression imputation {.unnumbered}
+### 回帰代入法 {.unnumbered}
 
-A somewhat more advanced method is to use some sort of statistical model to predict what a missing value is likely to be and replace it with the predicted value. Here is an example of creating predicted values for all the observations where temperature is missing, but age and fever are not, using simple linear regression using fever status and age in years as predictors. In practice you'd want to use a better model than this sort of simple approach.
+いくらかアドバンスな方法として、何らかの統計モデルを用いて欠損値がどんな値らしいのかを推測し、それで補完する方法があります。ここでは、体温についての情報は欠損しているけれど年齢と発熱についての情報は持っている観測値に対して、年齢（年）と発熱を予測因子とした簡単な線形回帰モデルを用いて値を予測する方法を示しています。実際には、このような単純なモデルではなく、より正確なモデルを使用した方が良いでしょう。
 
 ```{r, warning=F, message=F}
 simple_temperature_model_fit <- lm(temp ~ fever + age_years, data = linelist)
 
-#using our simple temperature model to predict values just for the observations where temp is missing
+#単純な体温モデルを用いて、体温の欠損値を予測する
 predictions_for_missing_temps <- predict(simple_temperature_model_fit,
                                         newdata = linelist %>% filter(is.na(temp))) 
 ```
 
-Or, using the same modeling approach through the mice package to create imputed values for the missing temperature observations:
+もしくは、体温の欠損値に対して同様にモデルを作成する方法として mice パッケージを用いる方法もあります。
 
 ```{r}
 model_dataset <- linelist %>%
@@ -517,16 +517,16 @@ temp_imputed_values <- temp_imputed$imp$temp
 
 ```
 
-This is the same type of approach by some more advanced methods like using the missForest package to replace missing data with predicted values. In that case, the prediction model is a random forest instead of a linear regression. You can use other types of models to do this as well. However, while this approach works well under MCAR you should be a bit careful if you believe MAR or MNAR more accurately describes your situation. The quality of your imputation will depend on how good your prediction model is and even with a very good model the variability of your imputed data may be underestimated.
+これは、欠損値を予測値で補完する、という意味で missForest パッケージなどのよりアドバンスな方法と同じタイプの方法だと言えます。missForest の場合は、線形回帰ではなくランダムフォレストを用いて予測モデルを作成します。他のタイプのモデルを使用することもできます。この方法は、MCARの場合はうまくいきますが、MAR あるいは MNAR の方がデータをうまく説明する、と思っている場合には注意が必要です。補完の質は、予測モデルがどのくらい正確か、ということにも拠りますが、正確なモデルであっても補完されたデータのばらつきが少し過小である場合もあります。
 
-### LOCF and BOCF {.unnumbered}
+### LOCF と BOCF {.unnumbered}
 
-Last observation carried forward (LOCF) and baseline observation carried forward (BOCF) are imputation methods for time series/longitudinal data. The idea is to take the previous observed value as a replacement for the missing data. When multiple values are missing in succession, the method searches for the last observed value.
+Last observation carried forward (LOCF) と baseline observation carried forward (BOCF) は、時系列および縦断データの補完方法です。考え方としては、欠損の生じている観測値の前のデータで欠損値を補完しようというものです。連続で値が欠損している場合は、最後に観測された値で補完します。
 
-The `fill()` function from the **tidyr** package can be used for both LOCF and BOCF imputation (however, other packages such as **HMISC**, **zoo**, and **data.table** also include methods for doing this). To show the `fill()` syntax we'll make up a simple time series dataset containing the number of cases of a disease for each quarter of the years 2000 and 2001. However, the year value for subsequent quarters after Q1 are missing so we'll need to impute them. The `fill()` junction is also demonstrated in the [Pivoting data] page.
+LOCF および BOCF のどちらも **tidyr** パッケージの `fill()` 関数を用いて実装することが出来ます（**HMISC**、**zoo**、そして **data.table** などのパッケージを用いても行うことが出来ます）。`fill()` をどのように使うのか示すために、2000 年と 2001 年において四半期ごとの罹患数を含む単純な時系列データを作成します。しかし、Q1 以降の半期に関するデータは欠損しているので、補完する必要があります。[Pivoting data] のページにおいても、`fill()` の使用方法が示されています。
 
 ```{r}
-#creating our simple dataset
+#単純なデータセットを作成する
 disease <- tibble::tribble(
   ~quarter, ~year, ~cases,
   "Q1",    2000,    66013,
@@ -538,15 +538,15 @@ disease <- tibble::tribble(
   "Q3",      NA,    44568,
   "Q4",      NA,    50197)
 
-#imputing the missing year values:
+#year の欠損値を補完する
 disease %>% fill(year)
 
 ```
 
-Note: make sure your data are sorted correctly before using the `fill()` function. `fill()` defaults to filling "down" but you can also impute values in different directions by changing the `.direction` parameter. We can make a similar dataset where the year value is recorded only at the end of the year and missing for earlier quarters:
+`fill()` 関数を使用する前に、データが正しくソートされているかどうかを確認してください。`fill()` はデフォルトで"下向きに"補完しますが、 `.direction` パラメタを用いることで違う方向に補完することもできます。例えば、似たようなデータですが、今度は年の終わり（Q4）のみ記録があり、他は欠損しているデータセットがあるとします。
 
 ```{r}
-#creating our slightly different dataset
+#先ほどと少しだけ違うデータセットを作成する
 disease <- tibble::tribble(
   ~quarter, ~year, ~cases,
   "Q1",      NA,    66013,
@@ -558,25 +558,25 @@ disease <- tibble::tribble(
   "Q3",      NA,    44568,
   "Q4",    2001,    50197)
 
-#imputing the missing year values in the "up" direction:
+#year の欠損値を、今度は"上向き"に補完する
 disease %>% fill(year, .direction = "up")
 
 ```
 
-In this example, LOCF and BOCF are clearly the right things to do, but in more complicated situations it may be harder to decide if these methods are appropriate. For example, you may have missing laboratory values for a hospital patient after the first day. Sometimes, this can mean the lab values didn't change...but it could also mean the patient recovered and their values would be very different after the first day! Use these methods with caution.
+この例では、LOCFおよびにBOCFは明らかに正しい方法でしたが、より複雑な状況ではこの方法が適切かどうかを判断するのが難しい場合もあります。例えば、初日から何日間、患者の検査値が欠損しているとします。ある場合は、これは検査値に変動がないことを示していますが、患者が回復しており、値が初日とは全く異なる可能性もあります！なので、少し注意してこれらのメソッドを使う必要があります。
 
-### Multiple Imputation {.unnumbered}
+### 多重代入法 {.unnumbered}
 
-The online book we mentioned earlier by the author of the mice package (<https://stefvanbuuren.name/fimd/>) contains a detailed explanation of multiple imputation and why you'd want to use it. But, here is a basic explanation of the method:
+先ほど紹介した mice パッケージの開発者によるオンラインブック（<https://stefvanbuuren.name/fimd/>）には多重代入法の説明と、なぜそれをすべきなのかが詳細に記されています。ここでは、非常に基本的な方法について説明します。
 
-When you do multiple imputation, you create multiple datasets with the missing values imputed to plausible data values (depending on your research data you might want to create more or less of these imputed datasets, but the mice package sets the default number to 5). The difference is that rather than a single, specific value each imputed value is drawn from an estimated distribution (so it includes some randomness). As a result, each of these datasets will have slightly different different imputed values (however, the non-missing data will be the same in each of these imputed datasets). You still use some sort of predictive model to do the imputation in each of these new datasets (mice has many options for prediction methods including *Predictive Mean Matching*, *logistic regression*, and *random forest*) but the mice package can take care of many of the modeling details.
+多重代入法では、尤もらしい値で欠損値を代入したデータセットを複数作成します（データによってはより多くもしくは少なくデータセットを作成したい場合もあると思いますが、mice パッケージのデフォルトでは、5 つのデータセットが作成されます）。違いとしては、代入される値は、ある単一の値ではなく、予測された分布に基づき特定される値（したがっていくらかのランダムさを含んでいます）である、という点です。それぞれのデータセットに対してある種の予測モデルを用いる（mice には様々なオプションがあり、例えば[予測平均マッチング]{.ul}、[ロジスティック回帰]{.ul}、[ランダムフォレスト]{.ul}などがあります）点では同じですが、mice パッケージでは様々なモデルの詳細について考慮することが出来ます。
 
-Then, once you have created these new imputed datasets, you can apply then apply whatever statistical model or analysis you were planning to do for each of these new imputed datasets and pool the results of these models together. This works very well to reduce bias in both MCAR and many MAR settings and often results in more accurate standard error estimates.
+代入されたデータセット群を作成したら、これらの新しいデータセットに対して行おうと思っていた解析を行い、結果をプールします。この方法は、MCAR において、また MAR の多くの場合においてバイアスを減少するのに非常に有用で、より正確なスタンダードエラーを得ることが出来ます。
 
-Here is an example of applying the Multiple Imputation process to predict temperature in our linelist dataset using a age and fever status (our simplified model_dataset from above):
+以下では、多重代入法を用いて、ラインリストのデータセット（より単純にした model_dataset を用いります）で、年齢と発熱のデータから体温を予測する方法を示します。
 
 ```{r}
-# imputing missing values for all variables in our model_dataset, and creating 10 new imputed datasets
+# model_datasetにおける欠損をすべて代入し、新たに 10 つのデータセットを作成する
 multiple_imputation = mice(
   model_dataset,
   seed = 1,
@@ -588,7 +588,7 @@ model_fit <- with(multiple_imputation, lm(temp ~ age_years + fever))
 base::summary(mice::pool(model_fit))
 ```
 
-Here we used the mice default method of imputation, which is Predictive Mean Matching. We then used these imputed datasets to separately estimate and then pool results from simple linear regressions on each of these datasets. There are many details we've glossed over and many settings you can adjust during the Multiple Imputation process while using the mice package. For example, you won't always have numerical data and might need to use other imputation methods (you can still use the mice package for many other types of data and methods). But, for a more robust analysis when missing data is a significant concern, Multiple Imputation is good solution that isn't always much more work than doing a complete case analysis.
+ここでは、mice のデフォルトの予測モデルである予測平均マッチングで欠損を補完しました。そして、それぞれの代入されたデータセットを値の推定に用いり、線形回帰によりそれぞれのデータセットにおいて得られた推定値をプールします。ここでは触れませんでしたが、mice パッケージを用いる際のより詳細な方法や多重代入法に関する様々な設定があります。例えば、常に数値データをであるとは限らず、その場合は他の代入方法を用いる必要があります（mice パッケージは、他の様々なデータの種類や補完の方法を含んでいます）。欠損データが非常に問題となる場合は、より頑健な解析結果を得るためには、単にコンプリートケースによる解析を行うよりも、多重代入法を用いる方が良いと言えるでしょう。
 
 <!-- ======================================================= -->
 
