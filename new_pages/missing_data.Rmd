@@ -19,7 +19,7 @@ knitr::include_graphics(here::here("images", "missingness_overview.png"))
 
 ### パッケージの読み込み {.unnumbered}
 
-以下のコードは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を特に使用していますが、パッケージのインストールを必要に応じて行い、[かつ]{.ul}読み込みまで行ってくれます。他にも、**base** R の `library()` を用いてインストールされているパッケージを読み込む方法があります。R のパッケージについてより知りたい場合は、[R の基礎 {\#basics}] を参考にしてください。
+以下のコードは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を特に使用していますが、パッケージのインストールを必要に応じて行い、[かつ]{.ul}読み込みまで行ってくれます。他にも、**base** R の `library()` を用いてインストールされているパッケージを読み込む方法があります。R のパッケージについてより知りたい場合は、[R の基礎 {#basics}] を参考にしてください。
 
 ```{r}
 pacman::p_load(
@@ -32,7 +32,7 @@ pacman::p_load(
 
 ### データのインポート {.unnumbered}
 
-エボラ流行熱のシミュレーションケースのデータセットをインポートします。同じように行いたい場合、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして"クリーニングされた（clean）" ラインリストをダウンロードしてください</a> （.rds 形式のファイルです）。**rio** パッケージの関数 `import()` を用いてデータをインポートしてください（.xlsx, .rds, .csv など、様々な形式のファイルをダウンロードすることが出来ますー詳しくは[インポートとエクスポート {\#Importing}] のページを参照にしてください。）
+エボラ流行熱のシミュレーションケースのデータセットをインポートします。同じように行いたい場合、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>クリックして"クリーニングされた（clean）" ラインリストをダウンロードしてください</a> （.rds 形式のファイルです）。**rio** パッケージの関数 `import()` を用いてデータをインポートしてください（.xlsx, .rds, .csv など、様々な形式のファイルをダウンロードすることが出来ますー詳しくは[インポートとエクスポート {#Importing}] のページを参照にしてください。）
 
 ```{r, echo=F}
 # ラインリストを R にインポートする
@@ -261,13 +261,13 @@ linelist %>%
 vis_miss(linelist)
 ```
 
-### Explore and visualize missingness relationships {.unnumbered}
+### 欠損同士の関係性を探り、視覚化する {.unnumbered}
 
-How do you visualize something that is not there??? By default, `ggplot()` removes points with missing values from plots.
+存在しないものをどうやって視覚化すればよいのでしょうか？デフォルトでは、`ggplot()` を使うと、欠損値は除いてプロットを作成してしまいます。
 
-**naniar** offers a solution via `geom_miss_point()`. When creating a scatterplot of two columns, records with one of the values missing and the other value present are shown by setting the missing values to 10% lower than the lowest value in the column, and coloring them distinctly.
+**naniar** の `geom_miss_point()` を用いれば解決します。2 つの列に対して散布図を作成するときに、ある一方の変数は存在し、片方の変数は欠損である場合には、欠損値をその列の最小値よりもさらに 10% 小さな値に変換し、違う色で散布図上に示してくれます。
 
-In the scatterplot below, the red dots are records where the value for one column is present but the value for the other column is missing. This allows you to see the distribution of missing values in relation to the non-missing values.
+以下に示している散布図では、赤いドットはある一方の変数は存在しているが片方の変数が欠損している場合を示しています。これによって欠損していない値に対する欠損している値の分布を視覚的に確認することが出来ます。
 
 ```{r}
 ggplot(
@@ -276,21 +276,21 @@ ggplot(
   geom_miss_point()
 ```
 
-To assess missingness in the data frame *stratified by another column*, consider `gg_miss_fct()`, which returns a heatmap of percent missingness in the data frame *by a factor/categorical (or date) column*:
+[別の列によって層別化した]{.ul}あとに欠損を評価したい場合は、`gg_miss_fct()` を使います。これは、[カテゴリ変数（または日付）の列ごとに]{.ul}データフレームの欠損の割合をヒートマップで示してくれます。
 
 ```{r}
 gg_miss_fct(linelist, age_cat5)
 ```
 
-This function can also be used with a date column to see how missingness has changed over time:
+この関数を日付ごとにデータフレームを示すのに用いると、欠損が時系列を追うごとにどのように変化しているかを示すことも出来ます。
 
 ```{r}
 gg_miss_fct(linelist, date_onset)
 ```
 
-### "Shadow" columns {.unnumbered}
+### "付随する"列 {.unnumbered}
 
-Another way to visualize missingness in one column by values in a second column is using the "shadow" that **naniar** can create. `bind_shadow()` creates a binary `NA`/not `NA` column for every existing column, and binds all these new columns to the original dataset with the appendix "\_NA". This doubles the number of columns - see below:
+ある一方の列の欠損を、もう片方の列の値ごとに示す別の方法として、**naniar** の作成する"付随する列"を用いるものがあります。`bind_shadow()` を用いると、全ての列に対して `NA` または not `NA` の 2 値変数を作成し、これらの新しい列を "\_NA" を末尾に付けた新しい列として元のデータセットに結合してくれます。すなわち、データセットの列は 2 倍になります。
 
 ```{r}
 shadowed_linelist <- linelist %>% 
@@ -299,58 +299,58 @@ shadowed_linelist <- linelist %>%
 names(shadowed_linelist)
 ```
 
-These "shadow" columns can be used to plot the proportion of values that are missing, by any another column.
+これらの"付随する列"は、他のどの列に対してでも、欠損している値の割合をプロットするのに使えます。
 
-For example, the plot below shows the proportion of records missing `days_onset_hosp` (number of days from symptom onset to hospitalisation), by that record's value in `date_hospitalisation`. Essentially, you are plotting the density of the x-axis column, but stratifying the results (`color =`) by a shadow column of interest. This analysis works best if the x-axis is a numeric or date column.
+例えば、以下のプロットでは、`date_hospitalisation` 列の値ごとに、`days_onset_hosp` 列（発症してから入院までの日数）における欠損の割合を示しています。x 軸の列の密度をプロットしており、興味のある付随する列によって層別化（`color =`）していることに注意してください。x 軸が数値もしくは日付の列である場合、このプロットはうまく行きます。
 
 ```{r, message = F}
-ggplot(data = shadowed_linelist,          # data frame with shadow columns
-  mapping = aes(x = date_hospitalisation, # numeric or date column
-                colour = age_years_NA)) + # shadow column of interest
-  geom_density()                          # plots the density curves
+ggplot(data = shadowed_linelist,          # 付随する列を含むデータフレーム
+  mapping = aes(x = date_hospitalisation, # 数値もしくは日付の列
+                colour = age_years_NA)) + # 興味のある付随する列
+  geom_density()                          # 密度曲線をプロットする
 ```
 
-You can also use these "shadow" columns to stratify a statistical summary, as shown below:
+以下に示すように、統計量のサマリを層別化して示すのにも"付随する列"を使用することが出来ます。
 
 ```{r}
 linelist %>%
-  bind_shadow() %>%                # create the shows cols
-  group_by(date_outcome_NA) %>%    # shadow col for stratifying
+  bind_shadow() %>%                # "付随する列"を作成する
+  group_by(date_outcome_NA) %>%    # 層別化に用いる"付随する列"を指定する
   summarise(across(
-    .cols = age_years,             # variable of interest for calculations
-    .fns = list("mean" = mean,     # stats to calculate
+    .cols = age_years,             # 統計量を示したい変数を指定する
+    .fns = list("mean" = mean,     # 興味のある統計量を指定する
                 "sd" = sd,
                 "var" = var,
                 "min" = min,
                 "max" = max),  
-    na.rm = TRUE))                 # other arguments for the stat calculations
+    na.rm = TRUE))                 # 統計量の計算に用いるその他のコマンド
 ```
 
-An alternative way to plot the proportion of a column's values that are missing over time is shown below. It does *not* involve **naniar**. This example shows percent of weekly observations that are missing).
+以下に、列の欠損値の割合を時系列ごとに示す他の方法を示します。以下の方法では、**naniar** は[使用しません]{.ul}。以下の例は、週ごとの観測値の欠損の割合を示しています。
 
-1)  Aggregate the data into a useful time unit (days, weeks, etc.), summarizing the proportion of observations with `NA` (and any other values of interest)\
-2)  Plot the proportion missing as a line using `ggplot()`
+1)  データを、興味のある単位時間（日、週、など）でまとめ、`NA`（そしてその他興味のある値）を含む観測値の割合を計算します\
+2)  `ggplot()` を用いて、欠損の割合をラインとしてプロットします
 
-Below, we take the linelist, add a new column for week, group the data by week, and then calculate the percent of that week's records where the value is missing. (note: if you want % of 7 days the calculation would be slightly different).
+以下では、ラインリストを用いて、まず週ごとの値を新しい列として加え、値が欠損している週ごとの記録の割合を計算しています（7 に置換の割合を計算したい場合は、以下のスクリプトとは少し異なります）。
 
 ```{r}
 outcome_missing <- linelist %>%
-  mutate(week = lubridate::floor_date(date_onset, "week")) %>%   # create new week column
-  group_by(week) %>%                                             # group the rows by week
-  summarise(                                                     # summarize each week
-    n_obs = n(),                                                  # number of records
+  mutate(week = lubridate::floor_date(date_onset, "week")) %>%   # 新しく week の列を作成する
+  group_by(week) %>%                                             # 行を、week ごとにグルーピングする
+  summarise(                                                     # それぞれの week ごとにまとめる
+    n_obs = n(),                                                  # 観測値の数
     
-    outcome_missing = sum(is.na(outcome) | outcome == ""),        # number of records missing the value
-    outcome_p_miss  = outcome_missing / n_obs,                    # proportion of records missing the value
+    outcome_missing = sum(is.na(outcome) | outcome == ""),        # 欠損を含む観測値の数
+    outcome_p_miss  = outcome_missing / n_obs,                    # 欠損を含む観測値の割合
   
-    outcome_dead    = sum(outcome == "Death", na.rm=T),           # number of records as dead
-    outcome_p_dead  = outcome_dead / n_obs) %>%                   # proportion of records as dead
+    outcome_dead    = sum(outcome == "Death", na.rm=T),           # 死亡例の観測値の数
+    outcome_p_dead  = outcome_dead / n_obs) %>%                   # 死亡例の観測地の割合
   
-  tidyr::pivot_longer(-week, names_to = "statistic") %>%         # pivot all columns except week, to long format for ggplot
-  filter(stringr::str_detect(statistic, "_p_"))                  # keep only the proportion values
+  tidyr::pivot_longer(-week, names_to = "statistic") %>%         # ggplot のために week を除くすべての列をロング形式にピボットする
+  filter(stringr::str_detect(statistic, "_p_"))                  # 割合を示す値だけを残す
 ```
 
-Then we plot the proportion missing as a line, by week. The [ggplot basics] page if you are unfamiliar with the **ggplot2** plotting package.
+このデータを用いて、週ごとに欠損の割合をラインで示します。**ggplot2** というプロットのためのパッケージについてあまり詳しくない場合は、[ggplot basics] のページを参考にしてください。
 
 ```{r, message=F, warning=F}
 ggplot(data = outcome_missing)+
