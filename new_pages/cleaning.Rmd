@@ -759,6 +759,18 @@ In this simple example, we just add the empty command `distinct()` to the pipe c
 
 We begin with `nrow(linelist)` rows in `linelist`.
 
+**重複排除**
+
+重複排除の方法については、ハンドブックの[[重複排除]](https://epirhandbook.com/de-duplication.html#de-duplication)のページを参照してください。ここでは、非常に簡単な行の重複排除の例のみを紹介します。
+
+**dplyr**パッケージには、`distinct()`関数があります。この関数は、すべての行を調べ、データフレームをユニークな行のみに削減します。つまり、100%重複している行を削除します。
+
+重複する行を評価する際には、列の範囲を考慮しますが、デフォルトではすべての列を考慮します。重複排除のページにあるように、この列の範囲を調整して、特定の列に関してのみ行の一意性が評価されるようにすることができます。
+
+この単純な例では、空のコマンドdistinct()をパイプチェーンに追加するだけです。これにより、他の行と100%重複している行がないことが保証されます（すべての列で評価されます）。
+
+まず `linelist` の行数を `nrow(linelist)`とします。
+
 ```{r}
 linelist <- linelist %>% 
   distinct()
@@ -768,30 +780,41 @@ After de-duplication there are `nrow(linelist)` rows. Any removed rows would hav
 
 Below, the `distinct()` command is added to the cleaning pipe chain:
 
+重複排除後の行数は `nrow(linelist)`です。削除された行は、他の行と100%重複しています。
+
+以下では、パイプチェーンに`distinct()`コマンドを追加しています。
+
 ```{r}
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+＃クリーニングパイプチェーン(生データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
 # begin cleaning pipe chain
+#パイプチェーンのクリーニン開始
 ###########################
 linelist <- linelist_raw %>%
     
     # standardize column name syntax
+     ＃列名の構文の標準化
     janitor::clean_names() %>% 
     
     # manually re-name columns
+     ＃手動でカラム列を変更
            # NEW name             # OLD name
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
     # remove column
+     ＃列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
     # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+＃上記は、すでに説明した上流側のクリーニング手順
     #####################################################
     
     # de-duplicate
+＃重複除去
     distinct()
 ```
 
@@ -813,12 +836,34 @@ In Stata, this is similar to the command `generate`, but R's `mutate()` can also
 
 The most basic `mutate()` command to create a new column might look like this. It creates a new column `new_col` where the value in every row is 10.
 
+**列の作成と変換**
+
+新しい列を追加したり、既存の列を修正したりするには、**dplyr**の関数`mutate()`を使うことをお勧めします。
+
+以下は、`mutate()`を使って新しい列を作成する例です。構文は次のとおりです： `mutate(new_column_name = value or transformation)`
+
+Stataでは、これは`generate`コマンドに似ていますが、Rの`mutate()`は既存の列を修正するためにも使用できます。
+
+カラムの作成と変換
+
+新しいカラムを追加したり、既存のカラムを修正したりするには、dplyrの関数mutate()を使うことをお勧めします。
+
+以下は、mutate()を使って新しいカラムを作成する例です。構文は次のとおりです： mutate(new_column_name = value or transformation)
+
+Stataでは、これはgenerateコマンドに似ていますが、Rのmutate()は既存の列を修正するためにも使用できます。
+
+**新しいカラム**
+
+新しい列を作成する最も基本的な`mutate()`コマンドは次のようになります。これは、すべての行の値が10である新しい列`new_col`を作成します。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(new_col = 10)
 ```
 
 You can also reference values in other columns, to perform calculations. Below, a new column `bmi` is created to hold the Body Mass Index (BMI) for each case - as calculated using the formula BMI = kg/m\^2, using column `ht_cm` and column `wt_kg`.
+
+また、他の列の値を参照して、計算を行うこともできます。以下では、新しい列`bmi`が作成され、各ケースのボディマス指数（BMI）を保持しています。これは、列`ht_cm`と列`wt_kg`を使用して、BMI = kg/m\^2の式で計算されたものです。
 
 ```{r}
 linelist <- linelist %>% 
@@ -827,29 +872,42 @@ linelist <- linelist %>%
 
 If creating multiple new columns, separate each with a comma and new line. Below are examples of new columns, including ones that consist of values from other columns combined using `str_glue()` from the **stringr** package (see page on [Characters and strings].
 
+複数の新しい列を作成する場合は、それぞれをコンマで区切って改行します。以下は、**stringr**パッケージの`str_glue()`を使って他列の値を組み合わせたものなど、新しい列の例です（[[文字と文字列]](https://epirhandbook.com/characters-and-strings.html#characters-and-strings)のページを参照）。
+
 ```{r}
 new_col_demo <- linelist %>%                       
   mutate(
     new_var_dup    = case_id,             # new column = duplicate/copy another existing column
+    ＃新しい列＝重複削除/存在する他の列をコピー
     new_var_static = 7,                   # new column = all values the same
+    ＃新しい列＝全ての値が同じ
     new_var_static = new_var_static + 5,  # you can overwrite a column, and it can be a calculation using other variables
+    ＃列を上書きしたり、他の変数を使って計算したりすることができます。
     new_var_paste  = stringr::str_glue("{hospital} on ({date_hospitalisation})") # new column = pasting together values from other columns
+    # 新しい列 = 他の列の値を貼り付ける
     ) %>% 
   select(case_id, hospital, date_hospitalisation, contains("new"))        # show only new columns, for demonstration purposes
+＃デモ用に新しい列のみを表示
 ```
 
 Review the new columns. For demonstration purposes, only the new columns and the columns used to create them are shown:
 
+新しい列を確認します。デモのために、新しい列とそれを作成するために使用された列のみが表示されています。
+
 ```{r message=FALSE, echo=F}
 # display the linelist data as a table
+# ラインリストのデータを表にして表示する
 DT::datatable(head(new_col_demo,50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
 [***TIP:*** A variation on `mutate()` is the function `transmute()`. This function adds a new column just like `mutate()`, but also drops/removes all other columns that you do not mention within its parentheses.]{style="color: darkgreen;"}
 
+[***ヒント:*** `mutate()`のバリエーションとして、`transmute()`という関数があります。この関数は、`mutate()`と同じように新しい列を追加しますが、括弧の中に書かれていない他のすべての列を削除または取り除きます。]{style="color: darkgreen;"}
+
 ```{r, eval=F}
 # HIDDEN FROM READER
 # removes new demo columns created above
+
 # linelist <- linelist %>% 
 #   select(-contains("new_var"))
 ```
@@ -864,17 +922,31 @@ First, let's run some checks on important columns to see if they are the correct
 
 Currently, the class of the `age` column is character. To perform quantitative analyses, we need these numbers to be recognized as numeric!
 
+**列クラスの変換**
+
+日付、数字、理論値（TRUE/FALSE）を含む列は、正しく分類されれば期待通の動きをします。文字クラスの"2"と数字クラスの2は異なります。
+
+インポートコマンド中に列クラスを設定する方法もありますが、扱いにくい場合が多いです。オブジェクトや列のクラスを変換する方法については、[[Rの基本]](https://epirhandbook.com/en/r-basics.html#r-basics)のオブジェクトクラスの項を参照してください。
+
+まず、重要なカラムについて、正しいクラスであるかどうかのチェックを行ってみましょう。これは最初に`skim()`を実行したときに確認しまし。
+
+現在、`age`の列のクラスはcharacterです。定量的な分析を行うためには、これらの数字が数値として認識される必要があります!
+
 ```{r}
 class(linelist$age)
 ```
 
 The class of the `date_onset` column is also character! To perform analyses, these dates must be recognized as dates!
 
+`date_onset`列のクラスも文字です! 分析を行うには、これらの日付を日付として認識する必要があります。
+
 ```{r}
 class(linelist$date_onset)
 ```
 
 To resolve this, use the ability of `mutate()` to re-define a column with a transformation. We define the column as itself, but converted to a different class. Here is a basic example, converting or ensuring that the column `age` is class Numeric:
+
+これを解決するには、mutate()の機能を使って、変換で列を再定義します。列をそれ自体として定義しますが、異なるクラスに変換します。ここでは、基本的な例として、列`age`がクラスNumericであることを変換または適正化します。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
@@ -885,9 +957,17 @@ In a similar way, you can use `as.character()` and `as.logical()`. To convert to
 
 You must be careful when converting to class Date. Several methods are explained on the page [Working with dates]. Typically, the raw date values must all be in the same format for conversion to work correctly (e.g "MM/DD/YYYY", or "DD MM YYYY"). After converting to class Date, check your data to confirm that each value was converted correctly.
 
+同様に、`as.character()`や`as.logical()`を使うこともできます。クラスFactorに変換するには、**base R**の`factor()`やforcatsの`as_factor()`が使えます。詳しくは[[Factors]](https://epirhandbook.com/en/factors.html#factors)のページをご覧ください。
+
+Date クラスへの変換には注意が必要です。いくつかの方法は[[Working with dates]](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)のページで説明されています。通常、変換が正しく行われるためには、生の日付値がすべて同じ形式である必要があります (例: "MM/DD/YYYY"、または "DD MM YYYY")。クラスの日付に変換した後、データをチェックして、各値が正しく変換されたことを確認してください。
+
 ### Grouped data {.unnumbered}
 
 If your data frame is already *grouped* (see page on [Grouping data]), `mutate()` may behave differently than if the data frame is not grouped. Any summarizing functions, like `mean()`, `median()`, `max()`, etc. will calculate by group, not by all the rows.
+
+**グループ化されたデータ**
+
+データフレームがすでにグループ化されている場合（[[データのグループ化]](https://epirhandbook.com/en/grouping-data.html#grouping-data)のページを参照）、`mutate()`の動作はグループ化されていない場合とは異なるかもしれません。`mean()`、`median()`、`max()`などの要約関数は、すべての行ではなく、グループごとに計算されます。
 
 ```{r, eval=F}
 # age normalized to mean of ALL rows
@@ -902,17 +982,31 @@ linelist %>%
 
 Read more about using `mutate ()` on grouped dataframes in this [tidyverse mutate documentation](https://dplyr.tidyverse.org/reference/mutate.html).
 
+グループ化されたデータフレームでの `mutate ()`の使用については、この [tidyverse mutate documentation](https://dplyr.tidyverse.org/reference/mutate.html) ドキュメントで詳しく説明しています。
+
 ### Transform multiple columns {#clean_across .unnumbered}
 
 Often to write concise code you want to apply the same transformation to multiple columns at once. A transformation can be applied to multiple columns at once using the `across()` function from the package **dplyr** (also contained within **tidyverse** package). `across()` can be used with any **dplyr** function, but is commonly used within `select()`, `mutate()`, `filter()`, or `summarise()`. See how it is applied to `summarise()` in the page on [Descriptive tables].
 
 Specify the columns to the argument `.cols =` and the function(s) to apply to `.fns =`. Any additional arguments to provide to the `.fns` function can be included after a comma, still within `across()`.
 
+**複数のカラムの変換**
+
+簡潔なコードを書くために、同じ変換を複数の列に一度に適用したいことがあります。**dplyr**パッケージ（**Tidyverse**パッケージにも含まれています）の `across()` 関数を使用して、変換を複数の列に一度に適用することができます。 `across()`はどの**dplyr**関数で使用することができますが、一般的には`select()`、`mutate()`、`filter()`、`summarise()`内で使用されます。`summarise()`にどのように適用されるかは、[[記述式テーブル]](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables)のページを参照してください。
+
+引数`.cols =`には列を指定し、`.fns =`には適用する関数を指定します。`.fns`関数に与える追加の引数は、カンマの後に含めることができます。
+
 #### `across()` column selection {.unnumbered}
 
 Specify the columns to the argument `.cols =`. You can name them individually, or use "tidyselect" helper functions. Specify the function to `.fns =`. Note that using the function mode demonstrated below, the function is written *without* its parentheses ( ).
 
 Here the transformation `as.character()` is applied to specific columns named within `across()`.
+
+`cross()`列選択
+
+引数`.cols =` に列を指定します。 個別に名前を付けることもできますし、"tidyselect" ヘルパー関数を使用することもできます。関数を`.fns =`に指定します。 以下に示す関数機能を使用すると、関数はその括弧（ ）なしで記述することに注意してください。
+
+ここでは、`as.character()`という変換が、 `across()`で指定された特定の列に適用されています。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
@@ -923,6 +1017,10 @@ The "tidyselect" helper functions are available to assist you in specifying colu
 
 Here is an example of how one would change **all columns** to character class:
 
+"tidyselect"ヘルパー関数は、列の指定する際に参考になります。これらの関数は上記の列の選択と並び替えのセクションで詳述されており、次のものが含まれます：`everything()`、`last_col()`、`where()`、`starts_with()`、`ends_with()`、`contains()`、`matches()`、`num_range()`、`any_of()`。
+
+ここでは、すべての列を文字クラスに変更する例を示します。
+
 ```{r, eval=F}
 #to change all columns to character class
 linelist <- linelist %>% 
@@ -930,6 +1028,8 @@ linelist <- linelist %>%
 ```
 
 Convert to character all columns where the name contains the string "date" (note the placement of commas and parentheses):
+
+名前に "date "という文字列が含まれるすべての列を文字に変換します（カンマと括弧の配置に注意してください）。
 
 ```{r, eval=F}
 #to change all columns to character class
@@ -939,13 +1039,20 @@ linelist <- linelist %>%
 
 Below, an example of mutating the columns that are currently class POSIXct (a raw datetime class that shows timestamps) - in other words, where the function `is.POSIXct()` evaluates to `TRUE`. Then we want to apply the function `as.Date()` to these columns to convert them to a normal class Date.
 
+以下は、現在POSIXctクラス（タイムスタンプを示す生のdatetimeクラス）である列、つまり`is.POSIXct()`関数の評価値が`TRUE`である列を変換する例です。次に、これらの列に`as.Date()`という関数を適用して、通常のDateクラスに変換したいと思います。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(across(.cols = where(is.POSIXct), .fns = as.Date))
 ```
 
 -   Note that within `across()` we also use the function `where()` as `is.POSIXct` is evaluating to either TRUE or FALSE.\
+
 -   Note that `is.POSIXct()` is from the package **lubridate**. Other similar "is" functions like `is.character()`, `is.numeric()`, and `is.logical()` are from **base R**
+
+-   is.POSIXctがTRUEまたはFALSEに評価されるように、`across()`内では`where()`という関数も使用していることに注意してください。
+
+-   `is.POSIXct()`は**lubridate**パッケージのものであることに注意してください。`is.character()`、`is.numeric()`、`is.logical()`のような他の類似した「is」関数は**base R**のものです。
 
 #### `across()` functions {.unnumbered}
 
@@ -961,11 +1068,29 @@ You can read the documentation with `?across` for details on how to provide func
 
 Here are a few online resources on using `across()`: [creator Hadley Wickham's thoughts/rationale](https://www.tidyverse.org/blog/2020/04/dplyr-1-0-0-colwise/)
 
+**`across()`関数**
+
+`across()`に関数を提供する方法の詳細については、`?across`のドキュメントをお読みください。要約すると、列に対して実行する関数を指定する方法はいくつかあり、独自の関数を定義することもできます。
+
+-   関数名のみを指定することができます（例：`mean`または`as.character`）。
+
+-   関数を**purrr**スタイルで提供することができます（例：`~ mean(.x, na.rm = TRUE))`([本ページ](https://epirhandbook.com/en/iteration-loops-and-lists.html#iteration-loops-and-lists)参照)
+
+-   リストを指定することで，複数の関数を指定することができます（例：`list(mean = mean, n_miss = ~ sum(is.na(.x)))`）．
+
+-   複数の関数を指定した場合は、入力列ごとに複数の変換後の列が返され、`col_fn`という形式で一意の名前が付けられます。新しい列の名前を調整するには、`.names =` 引数で**glue**の構文（[Characters and strings](https://epirhandbook.com/en/characters-and-strings.html#characters-and-strings)のページを参照）を使用します。`{.col}`と`{.fn}`は入力列と関数の省略形です。
+
 ### `coalesce()` {.unnumbered}
 
 This **dplyr** function finds the first non-missing value at each position. It "fills-in" missing values with the first available value in an order you specify.
 
 Here is an example *outside the context of a data frame*: Let us say you have two vectors, one containing the patient's village of detection and another containing the patient's village of residence. You can use coalesce to pick the first non-missing value for each index:
+
+**`coalesce()`**
+
+この**dplyr**関数は、各位置で最初の非欠損値を見つけます。この関数は、指定された順序で、利用可能な最初の値で欠損値を「埋める」。
+
+ここでは、データフレーム以外の例を示します。2つのベクトルがあるとします。1つは患者の発見された村、もう1つは患者の居住地の村です。coalesceを使って、各インデックスの最初の非欠損値を選ぶことができます。
 
 ```{r}
 village_detection <- c("a", "b", NA,  NA)
@@ -977,6 +1102,8 @@ village    # print
 
 This works the same if you provide data frame columns: for each row, the function will assign the new column value with the first non-missing value in the columns you provided (in order provided).
 
+これは、データフレームの列を指定した場合にも同じように動作します。この関数は、各行ごとに、指定した列の中で最初に欠落していない値を新しい列の値として割り当てます（指定した順に）。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(village = coalesce(village_detection, village_residence))
@@ -984,26 +1111,41 @@ linelist <- linelist %>%
 
 This is an example of a "row-wise" operation. For more complicated row-wise calculations, see the section below on Row-wise calculations.
 
+これは "row-wise "演算の一例です。より複雑な行単位の計算については、下記の「行単位の計算」の項をご覧ください。
+
 ### Cumulative math {.unnumbered}
 
 If you want a column to reflect the cumulative sum/mean/min/max etc as assessed down the rows of a dataframe to that point, use the following functions:
 
 `cumsum()` returns the cumulative sum, as shown below:
 
+**累積計算**
+
+データフレームの行を評価して、その時点までの累積和/平均/最小/最大などを列に反映させたい場合は、以下の関数を使用します。
+
+cumsum()は、以下のように、累積和を返します。
+
 ```{r}
 sum(c(2,4,15,10))     # returns only one number
+　　　　　　　　　　　# 1つの数字のみを返す
 cumsum(c(2,4,15,10))  # returns the cumulative sum at each step
+　　　　　　　　　　　# 各ステップでの累積和を返す
 ```
 
 This can be used in a dataframe when making a new column. For example, to calculate the cumulative number of cases per day in an outbreak, consider code like this:
 
+これは、データフレームで新しい列を作るときに使用できます。例えば、アウトブレイクにおける1日あたりの累積症例数を計算するには、次のようなコードを考えます。
+
 ```{r, warning=F, message=F}
 cumulative_case_counts <- linelist %>%  # begin with case linelist
-  count(date_onset) %>%                 # count of rows per day, as column 'n'   
-  mutate(cumulative_cases = cumsum(n))  # new column, of the cumulative sum at each row
+     　　　　　　　　　　　　　　　　　 #  ケースラインリスト出始める 
+  count(date_onset) %>%                 # count of rows per day, as column 'n'   　　　　　　　　　　　　　 #一日当たりの行数をカウント 　　
+  mutate(cumulative_cases = cumsum(n))  # new column, of the cumulative sum at each row　　　　　　　　　　　　 #累積の新しい列
 ```
 
 Below are the first 10 rows:
+
+以下は、最初の10行です。
 
 ```{r}
 head(cumulative_case_counts, 10)
@@ -1014,9 +1156,17 @@ See the page on [Epidemic curves] for how to plot cumulative incidence with the 
 See also:\
 `cumsum()`, `cummean()`, `cummin()`, `cummax()`, `cumany()`, `cumall()`
 
+エピカーブで累積罹患率をプロットする方法については、[Epidemic curves](https://epirhandbook.com/en/epidemic-curves.html#epidemic-curves) のページを参照してください。
+
+関連項目： `cumsum()`, `cummean()`,`cummin()`, `cummax()`, `cumany()`, `cumall()`
+
 ### Using **base** R {.unnumbered}
 
 To define a new column (or re-define a column) using **base** R, write the name of data frame, connected with `$`, to the *new* column (or the column to be modified). Use the assignment operator `<-` to define the new value(s). Remember that when using **base** R you must specify the data frame name before the column name every time (e.g. `dataframe$column`). Here is an example of creating the `bmi` column using **base** R:
+
+### **base** R**の使い方** {.unnumbered}
+
+**base** Rを使って新しい列を定義する（または列を再定義する）。新しい列（または修正する列）にデータフレームの名前を\$でつないで書きます。代入演算子`<-`を使って新しい値を定義します。**base** R を使用する際には、毎回、列名の前にデータフレーム名を指定しなければならないことを覚えておいてください（例：dataframe\$column）。ここでは、**base** R を使って`bmi`カラムを作成する例を示します。
 
 ```{r, eval=F}
 linelist$bmi = linelist$wt_kg / (linelist$ht_cm / 100) ^ 2)
@@ -1026,35 +1176,49 @@ linelist$bmi = linelist$wt_kg / (linelist$ht_cm / 100) ^ 2)
 
 **Below, a new column is added to the pipe chain and some classes are converted.**
 
+**パイプチェーンへの追加**
+
+**以下では、パイプチェーンに新しいカラムを追加し、いくつかのクラスを変換しています。**
+
 ```{r }
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+#CLEANING 'PIPE' CHAIN (生データから始まり、クリーニングステップを通じてデータをパイプする)
 ##################################################################################
 
 # begin cleaning pipe chain
+# パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
     # standardize column name syntax
+　　# 列カラム名の構文の標準化
     janitor::clean_names() %>% 
     
     # manually re-name columns
-           # NEW name             # OLD name
+     #手動で列名を変更
+           # NEW name　　　　　　　# OLD name
+     　　　#　新しい名前　　　　　　#古い名前
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
     # remove column
+　　#　列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
     # de-duplicate
+　　#重複排除
     distinct() %>% 
   
     # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+    #  上記は、すでに説明した上流側の前処理手順
     ###################################################
     # add new column
+　　#新しい列の追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>% 
   
-    # convert class of columns
+    # convert class of columns　
+　　#列のクラスを変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) 
@@ -1069,14 +1233,33 @@ Here are a few scenarios where you need to re-code (change) values:
 -   to create a new column of categorical values\
 -   to create a new column of numeric categories (e.g. age categories)
 
+**値の再コード化**
+
+値を再コード化（変更）する必要があるいくつかのシナリオがあります。
+
+-   特定の値を編集する場合（例：日付の年号や書式が間違っている場合など
+
+-   同じ綴りでない値を調整する場合
+
+-   カテゴリー値の新しい列を作成する場合
+
+-   数値カテゴリーの新しい列を作成する（例：年齢カテゴリー）。
+
 ### Specific values {.unnumbered}
 
 To change values manually you can use the `recode()` function within the `mutate()` function.
 
 Imagine there is a nonsensical date in the data (e.g. "2014-14-15"): you could fix the date manually in the raw source data, or, you could write the change into the cleaning pipeline via `mutate()` and `recode()`. The latter is more transparent and reproducible to anyone else seeking to understand or repeat your analysis.
 
+**特定の値**
+
+値を手動で変更するには、`mutate()`関数の中の`recode()`関数を使用します。
+
+データの中に意味のない日付（例："2014-14-15"）があるとします。生のソースデータの中で手動で日付を修正することもできますし、mutate()とrecode()を介してクリーニングパイプラインに変更を書き込むこともできます。後者の方がより透明性が高く、あなたの分析を理解しようとする人や再現しようとする人にとって再現性があります。
+
 ```{r, eval=F}
 # fix incorrect values                   # old value       # new value
+#不正な値の修正　　　　　　　　　　　　　#古い値　　　　　#新しい値
 linelist <- linelist %>% 
   mutate(date_onset = recode(date_onset, "2014-14-15" = "2014-04-15"))
 ```
@@ -1087,11 +1270,20 @@ The `mutate()` line above can be read as: "mutate the column `date_onset` to equ
 
 In `linelist` the values in the column "hospital" must be cleaned. There are several different spellings and many missing values.
 
+上記の`mutate()`の行は、次のように読むことができます。"OLD VALUEがNEW VALUEに変更されるように再コード化された列`date_onset`と同じになるように列date_onsetを変異させる "と読めます。`recode()`のこのパターン(OLD = NEW)は、ほとんどのRのパターン(new = old)とは逆であることに注意してください。Rの開発コミュニティでは、この点の修正に取り組んでいます。
+
+**ここでは、1つの列の中の複数の値を再コード化する別の例を紹介します。**
+
+`linelist`では、列 "hospital "の値をクリーンアップする必要があります。いくつかの異なる記載があり、多くの欠損値があります。
+
 ```{r}
 table(linelist$hospital, useNA = "always")  # print table of all unique values, including missing  
+ # 欠損値を含むすべてのユニークな値のテーブルを表示
 ```
 
 The `recode()` command below re-defines the column "hospital" as the current column "hospital", but with the specified recode changes. Don't forget commas after each!
+
+以下の`recode()`コマンドは、列 "hospital "を現在の列 "hospital "として再定義しますが、指定されたrecodeの変更があります。それぞれの後にカンマを忘れないでください
 
 ```{r}
 linelist <- linelist %>% 
@@ -1109,6 +1301,8 @@ linelist <- linelist %>%
 
 Now we see the spellings in the `hospital` column have been corrected and consolidated:
 
+現在、 `hospital`のスペルが修正され、統合されているのがわかります。
+
 ```{r}
 table(linelist$hospital, useNA = "always")
 ```
@@ -1117,12 +1311,24 @@ table(linelist$hospital, useNA = "always")
 
 [***TIP:*** Sometimes a *blank* character value exists in a dataset (not recognized as R's value for missing - `NA`). You can reference this value with two quotation marks with no space inbetween ("").]{style="color: darkgreen;"}
 
+[**ヒント**：等号の前後のスペースの数は関係ありません。コードを読みやすくするために、すべての行またはほとんどの行で=を揃えてください。また、ハッシュ化されたコメント行を追加して、どちらが古いか、どちらが新しいかを将来の読み手に明確にすることも検討してください。]{style="color: darkgreen;"}
+
+[**ヒント**：データセットの中に空白文字の値が存在することがあります（Rのmissingの値であるNAとして認識されません）。この値を参照するには、スペースを空けずに2つのクォーテーションマーク（""）を使用します。]{style="color: darkgreen;"}
+
 ### By logic {.unnumbered}
 
 Below we demonstrate how to re-code values in a column using logic and conditions:
 
 -   Using `replace()`, `ifelse()` and `if_else()` for simple logic
 -   Using `case_when()` for more complex logic
+
+**ロジック**
+
+以下では、ロジックと条件を使って列の値を再コード化する方法を示します。
+
+-   単純なロジックには`replace()`、`ifelse()`、`if_else()`を使う
+
+-   より複雑なロジックには`case_when()`を使う
 
 ### Simple logic {.unnumbered}
 
@@ -1134,6 +1340,16 @@ To re-code with simple logical criteria, you can use `replace()` within `mutate(
 
 One common situation to use `replace()` is **changing just one value in one row, using an unique row identifier**. Below, the gender is changed to "Female" in the row where the column `case_id` is "2195".
 
+**シンプルなロジック**
+
+`replace()`
+
+`replace()`は**base** Rの関数で、論理条件を使って変更する行を指定します。一般的な構文は次のとおりです。
+
+`mutate(col_to_change = replace(col_to_change, criteria for rows, new value))`です。
+
+`replace()`を使用する一般的な状況としては、一意の行識別子を使用して、1つの行の1つの値だけを変更する場合です。下の例では、`case_id`が "2195 "である行で、性別を "Female "に変更しています。
+
 ```{r, eval=F}
 # Example: change gender of one specific observation to "Female" 
 linelist <- linelist %>% 
@@ -1141,6 +1357,8 @@ linelist <- linelist %>%
 ```
 
 The equivalent command using **base** R syntax and indexing brackets `[ ]` is below. It reads as "Change the value of the dataframe `linelist`'s column `gender` (for the rows where `linelist`'s column `case_id` has the value '2195') to 'Female' ".
+
+Rの基本的な構文と索引括弧[ ]を使った同等のコマンドは以下の通りです。データフレームの`linelist`の列`gender`の値を（`linelist`の列`case_id`の値が'2195'である行について）'Female'に変更する」と読めます。
 
 ```{r, eval=F}
 linelist$gender[linelist$case_id == "2195"] <- "Female"
@@ -1153,6 +1371,12 @@ Another tool for simple logic is `ifelse()` and its partner `if_else()`. However
 
 Below, the column `source_known` is defined. Its value in a given row is set to "known" if the row's value in column `source` is *not* missing. If the value in `source` *is* missing, then the value in `source_known` is set to "unknown".
 
+**`ifelse()`**と**`if_else()`**
+
+単純なロジックのためのツールとして、`ifelse()`とそのパートナーである`if_else()`があります。しかし、ほとんどの場合、再コーディングのためには`case_when()`（以下に詳述）を使ったほうがわかりやすいでしょう。これらの「if else」コマンドは、`if`と`else`のプログラミング文を簡略化したものです。一般的な構文は次のとおりです： `ifelse(condition, value to return if condition evaluates to TRUE, value to return if condition evaluates to FALSE)`
+
+下の例では、`source_known`という列が定義されています。ある行の列s`ource`の値が欠損していなければ、その値は「known」に設定されます。sourceの値が欠落している場合、`source_known`の値は "unknown "に設定されます。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(source_known = ifelse(!is.na(source), "known", "unknown"))
@@ -1160,19 +1384,26 @@ linelist <- linelist %>%
 
 `if_else()` is a special version from **dplyr** that handles dates. Note that if the 'true' value is a date, the 'false' value must also qualify a date, hence using the special value `NA_real_` instead of just `NA`.
 
+`if_else()`は、日付を扱う**dplyr**の特別バージョンです。真の値が日付の場合、「偽」の値も日付でなければならないことに注意してください。そのため、単にNAではなくNA_real_という特別な値を使用しています。
+
 ```{r, eval=F}
 # Create a date of death column, which is NA if patient has not died.
+#  患者が死亡していない場合はNAとなる、死亡日列を作成します。
 linelist <- linelist %>% 
   mutate(date_death = if_else(outcome == "Death", date_outcome, NA_real_))
 ```
 
 **Avoid stringing together many ifelse commands... use `case_when()` instead!** `case_when()` is much easier to read and you'll make fewer errors.
 
+**ifelseコマンドをたくさん並べるのは避けましょう...**代わりに`case_when()`を使ってください！`case_when()`はずっと読みやすく、エラーも少なくなります。
+
 ```{r, fig.align = "center", out.width = "100%", echo=F}
 knitr::include_graphics(here::here("images", "ifelse bad.png"))
 ```
 
 Outside of the context of a data frame, if you want to have an object used in your code switch its value, consider using `switch()` from **base** R.
+
+データフレーム以外で、コード内で使用するオブジェクトの値を切り替えたい場合は、**base** Rの`switch()`の使用を検討してください。
 
 ### Complex logic {#clean_case_when .unnumbered}
 
@@ -1181,6 +1412,14 @@ Use **dplyr**'s `case_when()` if you are re-coding into many new groups, or if y
 `case_when()` commands consist of statements that have a Right-Hand Side (RHS) and a Left-Hand Side (LHS) separated by a "tilde" `~`. The logic criteria are in the left side and the pursuant values are in the right side of each statement. Statements are separated by commas.
 
 For example, here we utilize the columns `age` and `age_unit` to create a column `age_years`:
+
+**複雑なロジック**
+
+多数の新しいグループに再コード化する場合や、複雑なロジック文を使って値を再コード化する必要がある場合は、**dplyr**の`case_when()`を使用します。この関数は、データフレーム内のすべての行を評価し、その行が指定された基準を満たしているかどうかを評価して、正しい新しい値を割り当てます。
+
+`case_when()`コマンドは、右手側(RHS)と左手側(LHS)を「チルダ」～で区切ったステートメントで構成されています。各ステートメントの左側には論理条件が、右側には準拠値が記述されています。ステートメントはコンマで区切られています。
+
+例えば、ここでは`age`と`age_unit`の列を利用して`age_years`の列を作成しています。
 
 ```{r}
 linelist <- linelist %>% 
@@ -1195,7 +1434,13 @@ As each row in the data is evaluated, the criteria are applied/evaluated in the 
 
 Along those lines, in your final statement, place `TRUE` on the left-side, which will capture any row that did not meet any of the previous criteria. The right-side of this statement could be assigned a value like "check me!" or missing.
 
+データの各行が評価されるとき、基準は`case_when()`ステートメントが書かれた順に、上から下へと適用/評価されます。ある行で一番上の基準が`TRUE`と評価された場合、RHSの値が割り当てられ、残りの基準はその行ではテストされません。したがって、最も明確な基準を最初に書き、最も一般的な基準を最後に書くのがよいでしょう。
+
+このようにして、最後の文では、左側に`TRUE`を置くことで、前の基準のどれにも当てはまらない行を捕捉することができます。この文の右側には、"check me!" や missing のような値を割り当てることができます。
+
 [***DANGER:*** **Vvalues on the right-side must all be the same class** - either numeric, character, date, logical, etc. To assign missing (`NA`), you may need to use special variations of `NA` such as `NA_character_`, `NA_real_` (for numeric or POSIX), and `as.Date(NA)`. Read more in [Working with dates].]{style="color: red;"}
+
+[危険：右辺のVvaluesはすべて同じクラスでなければなりません。欠落（NA）を割り当てるには、`NA_character_`、`NA_real_`（数値やPOSIXの場合）、`as.Date(NA)`など、NAの特別なバリエーションを使用する必要があるかもしれません。詳しくは[Working with dates](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)をご覧ください]{style="color: red;"}
 
 ### Missing values {.unnumbered}
 
@@ -1206,6 +1451,16 @@ See the page on [Missing data] for more detailed tips on identifying and handlin
 **`replace_na()`**
 
 To change missing values (`NA`) to a specific value, such as "Missing", use the **dplyr** function `replace_na()` within `mutate()`. Note that this is used in the same manner as `recode` above - the name of the variable must be repeated within `replace_na()`.
+
+**欠損値**
+
+以下は、データクリーニングの観点から欠損値を処理するための特別な関数です。
+
+欠損値の識別と処理に関するより詳細なヒントは、[Missing data](https://epirhandbook.com/en/missing-data.html#missing-data) のページを参照してください。例えば、論理的に欠損をテストする`is.na()`関数などです。
+
+**`replace_na()`**
+
+欠損値（NA）を「Missing」などの特定の値に変更するには、`mutate()`内の**dply**r関数`replace_na()`を使用します。これは、上記の`recode`と同じ方法で使用されることに注意してください 。変数の名前は`replace_na()`内で繰り返されなければなりません。
 
 ```{r}
 linelist <- linelist %>% 
@@ -1220,6 +1475,14 @@ If your data are class Factor and you try to convert `NA` to "Missing" by using 
 
 The easiest way to solve this is to use the **forcats** function `fct_explicit_na()` which converts a column to class factor, and converts `NA` values to the character "(Missing)".
 
+**fct_explicit_na()**
+
+これは、**forcats** パッケージの関数です。**forcats**パッケージはFactorクラスの列を扱います。因子は、`c("First", "Second", "Third")`のような順序付きの値を扱うためのRの方法であり、表やプロットに表示される値（病院など）の順序を設定します。[Factors](https://epirhandbook.com/en/factors.html#factors)のページを参照してください。
+
+データがクラスFactorで、`replace_na()`を使ってNAを "Missing "に変換しようとすると、次のようなエラーが表示されます： `invalid factor level, NA generated.` 因子の可能なレベルとして定義されていない "Missing" を値として追加しようとしたため、拒否されます。
+
+この問題を解決する最も簡単な方法は、forcatsの関数`fct_explicit_na()`を使用することです。この関数は、列をクラス因子に変換し、NA値を文字「(Missing)」に変換します。
+
 ```{r, eval=F}
 linelist %>% 
   mutate(hospital = fct_explicit_na(hospital))
@@ -1227,9 +1490,15 @@ linelist %>%
 
 A slower alternative would be to add the factor level using `fct_expand()` and then convert the missing values.
 
+よりゆっくりとした方法としては、`fct_expand()`を用いて因子レベルを追加し、その後、欠損値を変換する方法があります。
+
 **`na_if()`**
 
 To convert a *specific value to* `NA`, use **dplyr**'s `na_if()`. The command below performs the opposite operation of `replace_na()`. In the example below, any values of "Missing" in the column `hospital` are converted to `NA`.
+
+**`na_if()`**
+
+特定の値をNAに変換するには、**dplyr**の`na_if()`を使います。以下のコマンドは`replace_na()`の逆の操作を行います。以下の例では、列 `hospital` の "Missing" の値はすべて`NA`に変換されます。
 
 ```{r}
 linelist <- linelist %>% 
@@ -1238,12 +1507,16 @@ linelist <- linelist %>%
 
 Note: `na_if()` **cannot be used for logic criteria** (e.g. "all values \> 99") - use `replace()` or `case_when()` for this:
 
+注意： `na_if()`は論理的条件（例：「 "all values \> 99"」）には使用できません。これには`replace()`または`case_when()`を使用してください。
+
 ```{r, eval=F}
-# Convert temperatures above 40 to NA 
+# Convert temperatures above 40 to NA
+#40以上の温度をNAに変換 
 linelist <- linelist %>% 
   mutate(temp = replace(temp, temp > 40, NA))
 
 # Convert onset dates earlier than 1 Jan 2000 to missing
+# 2000年1月1日以前の発症日を欠損に変換する
 linelist <- linelist %>% 
   mutate(date_onset = replace(date_onset, date_onset > as.Date("2000-01-01"), NA))
 ```
@@ -1266,6 +1539,8 @@ knitr::include_graphics(here::here("images", "cleaning_dict.png"))
 
 2)  Import the dictionary file into R. This example can be downloaded via instructions on the [Download handbook and data] page.
 
+    この例題は、[Download handbook and data](https://epirhandbook.com/en/download-handbook-and-data.html#download-handbook-and-data)のページにある手順でダウンロードできます。
+
 ```{r, echo=F}
 cleaning_dict <- rio::import(here("data", "case_linelists", "cleaning_dict.csv"))
 ```
@@ -1281,6 +1556,7 @@ linelist <- linelist %>%
   linelist::clean_variable_spelling(
     wordlists = cleaning_dict,
     spelling_vars = "col",        # dict column containing column names, defaults to 3rd column in dict
+    
   )
 ```
 
