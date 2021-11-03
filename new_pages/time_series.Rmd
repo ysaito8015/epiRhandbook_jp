@@ -850,20 +850,26 @@ Box.test(observed$resid, type = "Ljung-Box")
 
 <!-- ======================================================= -->
 ## Relation of two time series {  }
+## 2つの時系列の関係性 {  }
 
 Here we look at using weather data (specifically the temperature) to explain 
 campylobacter case counts. 
+ここでは、気象データ（特に気温）を用いてカンピロバクターの症例数を説明する方法を見てみます。
 
 <!-- ======================================================= -->
 ### Merging datasets {.unnumbered}
+### データセットのマージ {.unnumbered}
 
 We can join our datasets using the week variable. For more on merging see the 
 handbook section on [joining](https://epirhandbook.com/joining-data.html).
+weekという変数を使ってデータセットを結合することができます。結合の詳細については、ハンドブックの[結合](https://epirhandbook.com/joining-data.html)のセクションを参照してください。
 
 ```{r join}
 
 ## left join so that we only have the rows already existing in counts
+## 左結合で、countsに既に存在する行だけを保持するようにします。
 ## drop the date variable from temp_data (otherwise is duplicated)
+## temp_dataから、date変数を除外します（そうしないと重複します）。
 counts <- left_join(counts, 
                     select(temp_data, -date),
                     by = "epiweek")
@@ -872,62 +878,83 @@ counts <- left_join(counts,
 
 <!-- ======================================================= -->
 ### Descriptive analysis {.unnumbered}
+### 記述統計 {.unnumbered}
 
 First plot your data to see if there is any obvious relation. 
 The plot below shows that there is a clear relation in the seasonality of the two
 variables, and that temperature might peak a few weeks before the case number.
 For more on pivoting data, see the handbook section on [pivoting data](https://epirhandbook.com/pivoting-data.html). 
+まず、データをプロットして、明らかな関係があるかどうかを確認します。 下のプロットは、2つの変数の季節性に明確な関係があることを示しています。温度がケース番号の数週間前にピークに達することがあります。データのピボットについての詳細は、ハンドブックの[ピボットデータ](https://epirhandbook.com/pivoting-data.html)のセクションを参照してください。
 
 ```{r basic_plot_bivar}
 
 counts %>% 
-  ## keep the variables we are interested 
+  ## keep the variables we are interested
+  ## 関心のある変数を保持します。
   select(epiweek, case_int, t2m) %>% 
   ## change your data in to long format
+  ## 縦型のフォーマットにデータを変更します。
   pivot_longer(
     ## use epiweek as your key
+    ## epiweekをキーとして使用します。
     !epiweek,
     ## move column names to the new "measure" column
+    ## 列名を新たな「measure」列に移動させます。
     names_to = "measure", 
     ## move cell values to the new "values" column
+    ## セルの値を新たな「values」列に移動させます。
     values_to = "value") %>% 
   ## create a plot with the dataset above
+  ## 上記のデータセットでプロットを作成します。
   ## plot epiweek on the x axis and values (counts/celsius) on the y 
+  ## epiweekをX軸、値（カウント/摂氏）をY軸にプロットします。
   ggplot(aes(x = epiweek, y = value)) + 
     ## create a separate plot for temperate and case counts 
+    ## 気温とケースの数について分離したプロットを作成します。
     ## let them set their own y-axes
+    ## それらを書くY軸に配置します。
     facet_grid(measure ~ ., scales = "free_y") +
     ## plot both as a line
+    ## 両方を線にしてプロットします。
     geom_line()
 
 ```
 
 <!-- ======================================================= -->
 ### Lags and cross-correlation {.unnumbered}
+### ラグと相互相関 {.unnumbered}
 
 To formally test which weeks are most highly related between cases and temperature. 
 We can use the cross-correlation function (`CCF()`) from the **feasts** package. 
-You could also visualise (rather than using `arrange`) using the `autoplot()` function. 
+You could also visualise (rather than using `arrange`) using the `autoplot()` function.
+ケースと温度の間にどの週が最も高い関係にあるかを正式に検証するために  これには **feasts** パッケージの相互相関関数 (`CCF()`) が使えます。 また、（`arrange`ではなく）`autoplot()`関数を使って視覚化することもできます。
 
 ```{r cross_correlation, warning=FALSE}
 
 counts %>% 
   ## calculate cross-correlation between interpolated counts and temperature
+  ## 補完された和と気温の間の相互相関を計算します。
   CCF(case_int, t2m,
       ## set the maximum lag to be 52 weeks
+      ## 最大のラグを52週としてセットします。
       lag_max = 52, 
       ## return the correlation coefficient 
+      ## 相関係数を返します。
       type = "correlation") %>% 
   ## arange in decending order of the correlation coefficient 
+  ## 相関係数を降順に並び替えします。
   ## show the most associated lags
+  ## 最も関連するラグを表示します。
   arrange(-ccf) %>% 
   ## only show the top ten 
+  ## 上位10のみ表示します。
   slice_head(n = 10)
 
 ```
 
 We see from this that a lag of 4 weeks is most highly correlated, 
 so we make a lagged temperature variable to include in our regression. 
+このことから、4週間のラグが最も相関性が高いことがわかりますので、ラグ付きの温度変数を作って回帰に含めます。
 
 <span style="color: red;">**_DANGER:_** Note that the first four weeks of our data
 in the lagged temperature variable are missing (`NA`) - as there are not four 
@@ -935,13 +962,15 @@ weeks prior to get data from. In order to use this dataset with the **trending**
 `predict()` function, we need to use the the `simulate_pi = FALSE` argument within
 `predict()` further down. If we did want to use the simulate option, then 
 we have to drop these missings and store as a new data set by adding `drop_na(t2m_lag4)` 
-to the code chunk below.</span>  
+to the code chunk below.</span> 
+<span style="color: red;">**_DANGER:_** 遅延した温度変数のデータの最初の4週間が欠けている（`NA`）ことに注意してください - データを取得するための4週間前のデータがないからです。このデータセットを **トレンド** の `predict()` 関数で使用するためには、`predict()` の中の `simulate_pi = FALSE` 引数をさらに下の方で使用する必要があります。simulateオプションを使用したい場合は、以下のコードチャンクに`drop_na(t2m_lag4)`を追加することで、これらのミスを削除し、新しいデータセットとして保存しなければなりません。
  
 
 ```{r lag_tempvar}
 
 counts <- counts %>% 
   ## create a new variable for temperature lagged by four weeks
+  ## 4週でラグされた気温の変数を作成する。
   mutate(t2m_lag4 = lag(t2m, n = 4))
 
 ```
@@ -949,34 +978,44 @@ counts <- counts %>%
 
 <!-- ======================================================= -->
 ### Negative binomial with two variables {.unnumbered}
+### 2変数における負の二項分布 {.unnumbered}
 
 We fit a negative binomial regression as done previously. This time we add the 
 temperature variable lagged by four weeks. 
+前述のように負の二項回帰を当てはめます。今回は、4週間遅れの 今回は、4週間遅れの温度変数を加えます。
 
 <span style="color: orange;">**_CAUTION:_** Note the use of `simulate_pi = FALSE`
 within the `predict()` argument. This is because the default behaviour of **trending** 
 is to use the **ciTools** package to estimate a prediction interval. This does not 
 work if there are `NA` counts, and also produces more granular intervals. 
 See `?trending::predict.trending_model_fit` for details. </span>  
+<span style="color: orange;">**_CAUTION:_** `predict()`の引数の中で`simulate_pi = FALSE`を使用していることに注意してください。これは、**trending**のデフォルトの動作として、**ciTools**パッケージを使用して予測区間を推定するためです。これは、`NA`カウントがある場合には機能せず、また、より詳細な間隔を生成します。詳細は `?trending::predict.trending_model_fit` を参照してください。</span> </span
 
 ```{r nb_reg_bivar, warning = FALSE}
 
 ## define the model you want to fit (negative binomial) 
+## 当てはめたいモデル（負の二項分布）を定義します。
 model <- glm_nb_model(
   ## set number of cases as outcome of interest
+  ## 関心のあるアウトカムとしてケースの数をセットします。
   case_int ~
     ## use epiweek to account for the trend
+    ## トレンドの説明のためにepiweekを使います。
     epiweek +
     ## use the fourier terms to account for seasonality
+    ## 季節性の説明のためにフーリエ項を使用します。
     fourier + 
     ## use the temperature lagged by four weeks 
+    ## 4週間ラグされた気温を使います。
     t2m_lag4
     )
 
 ## fit your model using the counts dataset
+## countsデータセットを使用してモデルの当てはめを行います。
 fitted_model <- trending::fit(model, counts)
 
 ## calculate confidence intervals and prediction intervals 
+## 信頼区間と予測区間を計算します。
 observed <- predict(fitted_model, simulate_pi = FALSE)
 
 ```
@@ -985,7 +1024,8 @@ observed <- predict(fitted_model, simulate_pi = FALSE)
 To investigate the individual terms, we can pull the original negative binomial
 regression out of the **trending** format using `get_model()` and pass this to the
 **broom** package `tidy()` function to retrieve exponentiated estimates and associated
-confidence intervals.  
+confidence intervals.
+個々の項を調べるために、`get_model()`を使って**trending**フォーマットから元の負の二項回帰を取り出し、指数化された推定値と関連する信頼区間を取得するために、これを**broom**パッケージの`tidy()`関数に渡します。
 
 What this shows us is that lagged temperature, after controlling for trend and seasonality, 
 is similar to the case counts (estimate ~ 1) and significantly associated. 
