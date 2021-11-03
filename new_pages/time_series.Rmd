@@ -450,16 +450,22 @@ See the [Moving averages](https://epirhandbook.com/moving-averages.html) page fo
 ```{r moving_averages}
 
 ## create a moving average variable (deals with missings)
+## 移動平均変数の作成（欠損値の処理）
 counts <- counts %>% 
      ## create the ma_4w variable 
+     ## ma_4W 変数の作成
      ## slide over each row of the case variable
+     ## ケース変数の各行をスライドさせる
      mutate(ma_4wk = slider::slide_dbl(case, 
                                ## for each row calculate the name
+                               ## すべての業についてnameを計算する
                                ~ mean(.x, na.rm = TRUE),
                                ## use the four previous weeks
+                               ## 4週前を使う
                                .before = 4))
 
 ## make a quick visualisation of the difference 
+## 違いを一目で分かるように作成
 ggplot(counts, aes(x = epiweek)) + 
      geom_line(aes(y = case)) + 
      geom_line(aes(y = ma_4wk), colour = "red")
@@ -469,23 +475,33 @@ ggplot(counts, aes(x = epiweek)) +
 
 <!-- ======================================================= -->
 ### Periodicity {.unnumbered}
+### 周期性 {.unnumbered}
 
-Below we define a custom function to create a periodogram. See the [Writing functions] page for information about how to write functions in R.  
+Below we define a custom function to create a periodogram. See the [Writing functions] page for information about how to write functions in R.
+以下では、ピリオドグラムを作成するためのカスタム関数を定義します。Rでの関数の書き方については、「関数の書き方」のページを参照してください。
 
 First, the function is defined. Its arguments include a dataset with a column `counts`, `start_week = ` which is the first week of the dataset, a number to indicate how many periods per year (e.g. 52, 12), and lastly the output style (see details in the code below).  
-
+まず，この関数を定義します．この関数の引数には、`counts`列を持つデータセット、データセットの最初の週を表す`start_week = `、1年に何回の期間があるかを示す数字（例：52, 12）、そして最後に出力スタイルが含まれます（詳細は以下のコードを参照してください）。 
 
 ```{r periodogram}
 ## Function arguments
+## 関数の引数
 #####################
 ## x is a dataset
+## xはデータセット
 ## counts is variable with count data or rates within x 
+## countsはx内のカウントデータまたはレートの変数
 ## start_week is the first week in your dataset
+## start_weekはあなたのデータセットの最初の州
 ## period is how many units in a year 
+## periodは1年においてユニットがいくつあるか
 ## output is whether you want return spectral periodogram or the peak weeks
+## outputはスペクトルのペリオドグラムを返すか、ピークの週数を返すかを指定します。
   ## "periodogram" or "weeks"
+  ## ”periodogram" or "weeks"
 
 # Define function
+# 関数の定義
 periodogram <- function(x, 
                         counts, 
                         start_week = c(2002, 1), 
@@ -494,19 +510,23 @@ periodogram <- function(x,
   
 
     ## make sure is not a tsibble, filter to project and only keep columns of interest
+    ## tsibbleでないことを確認し、プロジェクトにフィルターをかけ、関心のある列だけ残します。
     prepare_data <- dplyr::as_tibble(x)
     
     # prepare_data <- prepare_data[prepare_data[[strata]] == j, ]
     prepare_data <- dplyr::select(prepare_data, {{counts}})
     
     ## create an intermediate "zoo" time series to be able to use with spec.pgram
+    ## spec.pgramで使用できるように、中間的な「zoo」時系列を作成します。
     zoo_cases <- zoo::zooreg(prepare_data, 
                              start = start_week, frequency = period)
     
     ## get a spectral periodogram not using fast fourier transform 
+    ## 高速フーリエ変換を使わずにスペクトル・ピリオドグラムを得ることができます。
     periodo <- spec.pgram(zoo_cases, fast = FALSE, plot = FALSE)
     
     ## return the peak weeks 
+    ## ピークの週を返します。
     periodo_weeks <- 1 / periodo$freq[order(-periodo$spec)] * period
     
     if (output == "weeks") {
@@ -518,23 +538,28 @@ periodogram <- function(x,
 }
 
 ## get spectral periodogram for extracting weeks with the highest frequencies 
+## 最も多い頻度を持つ週を抽出するためのスペクトル・ピリオドグラムを取得します。
 ## (checking of seasonality) 
+## （季節性の確認）
 periodo <- periodogram(counts, 
                        case_int, 
                        start_week = c(2002, 1),
                        output = "periodogram")
 
 ## pull spectrum and frequence in to a dataframe for plotting
+## スペクトルと周期をデータフレームに取り込み、プロットします。
 periodo <- data.frame(periodo$freq, periodo$spec)
 
 ## plot a periodogram showing the most frequently occuring periodicity 
+## 最も頻繁に発生する周期性を示すピリオドグラムを作成します。
 ggplot(data = periodo, 
                 aes(x = 1/(periodo.freq/52),  y = log(periodo.spec))) + 
   geom_line() + 
   labs(x = "Period (Weeks)", y = "Log(density)")
 
 
-## get a vector weeks in ascending order 
+## get a vector weeks in ascending order
+## 昇順で週のベクトルを取得します。
 peak_weeks <- periodogram(counts, 
                           case_int, 
                           start_week = c(2002, 1), 
@@ -543,9 +568,11 @@ peak_weeks <- periodogram(counts,
 ```
 
 <span style="color: black;">**_NOTE:_** It is possible to use the above weeks to add them to sin and cosine terms, however we will use a function to generate these terms (see regression section below) </span>
+<span style="color: black;">**_NOTE:_** 上の週を使ってsinとcosの項に追加することも可能ですが、ここではこれらの項を生成する関数を使用します（下記の回帰の項を参照）</span>。
 
 <!-- ======================================================= -->
 ### Decomposition {.unnumbered}
+### 分解 {.unnumbered}
 
 Classical decomposition is used to break a time series down several parts, which
 when taken together make up for the pattern you see. 
@@ -555,25 +582,37 @@ These different parts are:
 * The seasonality (repeating patterns)  
 * The random (what is left after removing trend and season)  
 
+古典的分解は、時系列をいくつかの部分に分割するために使用され、それらの部分を組み合わせることで、目に見えるパターンを構成します。
+これらの異なる部分とは
+
+* トレンド・サイクル（データの長期的な方向性  
+* 季節性（繰り返されるパターン  
+* ランダム（トレンドと季節を取り除いた後に残るもの 
 
 ```{r decomposition, warning=F, message=F}
 
 ## decompose the counts dataset 
+## counts データセットの分解
 counts %>% 
   # using an additive classical decomposition model
+  # 追加的な分解モデルを使用します。
   model(classical_decomposition(case_int, type = "additive")) %>% 
   ## extract the important information from the model
+  ## モデルから重要な情報を抽出します。
   components() %>% 
   ## generate a plot 
+  ## プロットを生成します。
   autoplot()
 
 ```
 
 <!-- ======================================================= -->
 ### Autocorrelation {.unnumbered}
+### 自己相関 {.unnumbered}
 
 Autocorrelation tells you about the relation between the counts of each week 
-and the weeks before it (called lags).  
+and the weeks before it (called lags).
+自己相関は、各週のカウント値とその前の週（ラグと呼ばれる）との関係を示します。
 
 Using the `ACF()` function, we can produce a plot which shows us a number of lines 
 for the relation at different lags. Where the lag is 0 (x = 0), this line would 
@@ -584,24 +623,34 @@ each observation and the observation before last (lag of 2) and so on until lag 
 52 which shows the relation between each observation and the observation from 1 
 year (52 weeks before).  
 
+`ACF()`関数を使って，異なるラグでの関係を示す複数の線を示すプロットを作成することができる。ラグが0(x = 0)の場合、この線は観測値とそれ自体の関係を示すため、常に1になります（ここでは示していません）。
+ここで示されている最初の線（x = 1）は、各観測値とその前の観測値との関係（ラグ1）を示し、2番目の線は、各観測値と直前の観測値との関係（ラグ2）を示し、さらに1年後（52週前）の観測値との関係を示すラグ52まで続きます。
+
 Using the `PACF()` function (for partial autocorrelation) shows the same type of relation 
 but adjusted for all other weeks between. This is less informative for determining
 periodicity. 
+`PACF()`関数（部分自己相関）を使うと同じような関係が見られますが、他のすべての週の間で調整されています。これは、周期性を決定するための情報としては不十分です。
 
 ```{r autocorrelation}
 
 ## using the counts dataset
+## countsデータセットを使用します。
 counts %>% 
   ## calculate autocorrelation using a full years worth of lags
+  ## 1年分のラグを使用して自己相関を計算します。
   ACF(case_int, lag_max = 52) %>% 
   ## show a plot
+  ## プロットを表示します。
   autoplot()
 
 ## using the counts data set 
+## countsデータセットを使用します。
 counts %>% 
   ## calculate the partial autocorrelation using a full years worth of lags
+  ## 1年分のラグを使用して部分自己相関を計算します。
   PACF(case_int, lag_max = 52) %>% 
   ## show a plot
+  ## プロットを表示します。
   autoplot()
 
 ```
@@ -609,10 +658,13 @@ counts %>%
 You can formally test the null hypothesis of independence in a time series (i.e. 
 that it is not autocorrelated) using the Ljung-Box test (in the **stats** package). 
 A significant p-value suggests that there is autocorrelation in the data.
+Ljung-Box検定（**stats**パッケージ）を使用して、時系列の独立性の帰無仮説を正式に検定することができます（つまり、自己相関がない）。 
+有意なp値は、データに自己相関があることを示唆します。
 
 ```{r ljung_box}
 
 ## test for independance 
+## 独立性を検定します。
 Box.test(counts$case_int, type = "Ljung-Box")
 
 ```
@@ -620,35 +672,43 @@ Box.test(counts$case_int, type = "Ljung-Box")
 
 <!-- ======================================================= -->
 ## Fitting regressions {  }
+## 回帰式の当てはめ {  }
 
 It is possible to fit a large number of different regressions to a time series, 
 however, here we will demonstrate how to fit a negative binomial regression - as 
 this is often the most appropriate for counts data in infectious diseases. 
+時系列には多くの異なる回帰をフィットさせることができますが、ここでは、負の二項回帰をフィットさせる方法を示します。 これは、感染症のカウントデータに最も適しているからです。
 
 <!-- ======================================================= -->
 ### Fourier terms {.unnumbered}
+### フーリエ項 {.unnumbered}
 
 Fourier terms are the equivalent of sin and cosin curves. The difference is that 
 these are fit based on finding the most appropriate combination of curves to explain
-your data.  
+your data.
+フーリエ項は、sinとcosinの曲線に相当します。違いは、データを説明するのに最も適した曲線の組み合わせを見つけてフィットさせることです。
 
 If only fitting one fourier term, this would be the equivalent of fitting a sin 
 and a cosin for your most frequently occurring lag seen in your periodogram (in our 
-case 52 weeks). We use the `fourier()` function from the **forecast** package.  
+case 52 weeks). We use the `fourier()` function from the **forecast** package.
+1つのフーリエ項をフィッティングするだけなら、ピリオドグラムに見られる最も頻繁に発生するラグ（ここでは52週）に対して、sinとcosinをフィッティングするのと同じことになります。ここでは、**forecast**パッケージの`fourier()`関数を使用しています。
 
 In the below code we assign using the `$`, as `fourier()` returns two columns (one 
 for sin one for cosin) and so these are added to the dataset as a list, called 
-"fourier" - but this list can then be used as a normal variable in regression. 
+"fourier" - but this list can then be used as a normal variable in regression.
+以下のコードでは、`$`を使って代入しています。これは、`fourier()`が2つの列（sinとcosin）を返すので、これらを「fourier」と呼ばれるリストとしてデータセットに追加しているためです。
 
 ```{r fourier}
 
 ## add in fourier terms using the epiweek and case_int variabless
+## epiweekとcase_int変数を使ってフーリエ項を追加する
 counts$fourier <- select(counts, epiweek, case_int) %>% 
   fourier(K = 1)
 ```
 
 <!-- ======================================================= -->
 ### Negative binomial {.unnumbered}
+### 負の二項 {.unnumbered}
 
 It is possible to fit regressions using base **stats** or **MASS**
 functions (e.g. `lm()`, `glm()` and `glm.nb()`). However we will be using those from 
@@ -656,49 +716,64 @@ the **trending** package, as this allows for calculating appropriate confidence
 and prediction intervals (which are otherwise not available). 
 The syntax is the same, and you specify an outcome variable then a tilde (~) 
 and then add your various exposure variables of interest separated by a plus (+). 
+ベースとなる **stats** や **MASS** 関数（例：`lm()`, `glm()`, `glm.nb()`）を用いて回帰をフィットさせることができます。しかし、ここでは**trending**パッケージのものを使用します。それは、適切な信頼区間と予測区間を計算できるからです（これは他の方法では利用できません）。構文は同じで、アウトカム変数を指定した後、チルダ(~)を入力し、プラス（+）で区切って興味のある様々な暴露変数を追加します。
 
 The other difference is that we first define the model and then `fit()` it to the 
 data. This is useful because it allows for comparing multiple different models 
 with the same syntax. 
+もう一つの違いは、まずモデルを定義し、それをデータに「fit()」することです。これは、同じ構文で複数の異なるモデルを比較できるという点で便利です。 
 
 <span style="color: darkgreen;">**_TIP:_** If you wanted to use rates, rather than 
 counts you could include the population variable as a logarithmic offset term, by adding 
 `offset(log(population)`. You would then need to set population to be 1, before 
 using `predict()` in order to produce a rate. </span>
+<span style="color: darkgreen;">**_TIP:_** もし、数ではなく率を使いたい場合は、`offset(log(population)` を追加することで、対数オフセット項として population 変数を含めることができます。 レートを生成するには、`predict()`を使う前にpopulationを1に設定する必要があります。</span>
 
 <span style="color: darkgreen;">**_TIP:_** For fitting more complex models such 
 as ARIMA or prophet, see the [**fable**](https://fable.tidyverts.org/index.html) package.</span>
+<span style="color: darkgreen;">**_TIP:_** ARIMAやprophetなどのより複雑なモデルのフィッティングについては、[**fable**](https://fable.tidyverts.org/index.html)パッケージをご参照ください。</span>。
 
 ```{r nb_reg, warning = FALSE}
 
 ## define the model you want to fit (negative binomial) 
+## 当てはめたいモデル（負の二項回帰）の定義
 model <- glm_nb_model(
   ## set number of cases as outcome of interest
+  ## 関心のあるアウトカムとしてケースの番号をセットします。
   case_int ~
     ## use epiweek to account for the trend
+    ## トレンドを説明するためepiweekを使用します。
     epiweek +
     ## use the fourier terms to account for seasonality
+    ## 季節性を説明するためフーリエ項を使用します。
     fourier)
 
 ## fit your model using the counts dataset
+## countsデータセットを使用してモデルを当てはめます。
 fitted_model <- trending::fit(model, counts)
 
 ## calculate confidence intervals and prediction intervals 
+## 信頼区間と予測区間を計算します。
 observed <- predict(fitted_model, simulate_pi = FALSE)
 
-## plot your regression 
+## plot your regression
+## 回帰式をプロットします。
 ggplot(data = observed, aes(x = epiweek)) + 
   ## add in a line for the model estimate
+  ## モデル推定値の線を追加します。
   geom_line(aes(y = estimate),
             col = "Red") + 
   ## add in a band for the prediction intervals 
+  ## 予測区間のバンドを追加します。
   geom_ribbon(aes(ymin = lower_pi, 
                   ymax = upper_pi), 
               alpha = 0.25) + 
   ## add in a line for your observed case counts
+  ## 観察されたケースの数を現す線を追加します。
   geom_line(aes(y = case_int), 
             col = "black") + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（黒の軸、白い背景）を作成します。
   theme_classic()
 
 
@@ -711,6 +786,7 @@ To see how well our model fits the observed data we need to look at the residual
 The residuals are the difference between the observed counts and the counts 
 estimated from the model. We could calculate this simply by using `case_int - estimate`, 
 but the `residuals()` function extracts this directly from the regression for us.
+我々のモデルが観測されたデータにどれだけフィットしているかを見るには、残差を見る必要があります。 残差は、観測されたカウントとモデルから推定されたカウントとの差です。これは、単純に`case_int - estimate`を使って計算することもできますが、`residuals()`関数は，回帰から直接残差を抽出してくれます。
 
 What we see from the below, is that we are not explaining all of the variation 
 that we could with the model. It might be that we should fit more fourier terms, 
@@ -718,14 +794,18 @@ and address the amplitude. However for this example we will leave it as is.
 The plots show that our model does worse in the peaks and troughs (when counts are
 at their highest and lowest) and that it might be more likely to underestimate 
 the observed counts. 
+下の図からわかることは、モデルで説明できる変動のすべてを説明できていないということです。もっとフーリエ項をフィットさせて、振幅に対処すべきかもしれません。しかし、この例では、このままにしておきます。
+このプロットは、我々のモデルが、山と谷（カウントが最大と最小の時 このプロットは、我々のモデルがピークとトラフ（カウントが最高と最低の時）で悪く、観測されたカウントをより過小評価する可能性があることを示しています。
 
 ```{r, warning=F, message=F}
 
 ## calculate the residuals 
+## 残差を計算します。
 observed <- observed %>% 
   mutate(resid = residuals(fitted_model$fitted_model, type = "response"))
 
 ## are the residuals fairly constant over time (if not: outbreaks? change in practice?)
+## 残差は時間経過でかなり一定か？（そうでない場合： アウトブレイク？治療の変化？）
 observed %>%
   ggplot(aes(x = epiweek, y = resid)) +
   geom_line() +
@@ -733,12 +813,14 @@ observed %>%
   labs(x = "epiweek", y = "Residuals")
 
 ## is there autocorelation in the residuals (is there a pattern to the error?)  
+## 残差に自己相関があるか（誤差にパターンがあるか？）
 observed %>% 
   as_tsibble(index = epiweek) %>% 
   ACF(resid, lag_max = 52) %>% 
   autoplot()
 
 ## are residuals normally distributed (are under or over estimating?)  
+## 残差が正規分布しているか（過小または過大推定か？）
 observed %>%
   ggplot(aes(x = resid)) +
   geom_histogram(binwidth = 100) +
@@ -746,16 +828,22 @@ observed %>%
   labs(y = "count") 
   
 ## compare observed counts to their residuals 
+## 観測されたカウントとその残差を比較する
   ## should also be no pattern 
+  ## パターンがないべき 
 observed %>%
   ggplot(aes(x = estimate, y = resid)) +
   geom_point() +
   labs(x = "Fitted", y = "Residuals")
 
 ## formally test autocorrelation of the residuals
+## 残差の自己相関を正式に検定します。
 ## H0 is that residuals are from a white-noise series (i.e. random)
+## H0は残差がホワイトノイズ系列（つまりランダム）であるとします。
 ## test for independence 
+## 独立性を検定します。
 ## if p value significant then non-random
+## p値が有意であればランダムではありません。
 Box.test(observed$resid, type = "Ljung-Box")
 
 ```
