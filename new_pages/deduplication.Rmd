@@ -293,7 +293,7 @@ obs %>% slice_max(encounter, n = 1)  # 最大の encounter を持つ行を返す
 
 `.order_by = ` は slice_min() や slice_max() の中でスライスする前に順序付ける列を指定するのに使用されます。  
 `with_ties = ` デフォルトはTRUEで、タイが保持されます。  
-`.preserve = ` デフォルトはFALSEです。TRUEの場合、スライス後にグループ化構造が再計算されます???????。  
+`.preserve = ` デフォルトはFALSEです。TRUEの場合、スライス後にグループの構造が再計算されます。  
 `weight_by = ` オプションで、重み付けのための数値列を指定します（数字が大きいほどサンプリングされる可能性が高い）。 また、サンプリングが復元／非復元で行われるかを示す `replace = ` もあります。  
 
 <span style="color: darkgreen;">**_ヒント：_** `slice_max()` や `slice_min()` を使用する際には，必ず `n = ` を指定し記述してください（例：`2` だけでなく、`n = 2`）。そうしないと、`Error: `...` is not empty.` というエラーが発生することがあります。 </span>
