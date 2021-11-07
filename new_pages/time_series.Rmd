@@ -416,7 +416,7 @@ counts <- counts %>%
 ## ## 元の値と比較してどのような値がインピュートされたかを確認するために
 ggplot_na_imputations(counts$case_miss, counts$case_int) + 
   ## make a traditional plot (with black axes and white background)
-  ## ## 伝統的なプロット（軸が黒で背景が白）を作成
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic()
 
 ```
@@ -773,7 +773,7 @@ ggplot(data = observed, aes(x = epiweek)) +
   geom_line(aes(y = case_int), 
             col = "black") + 
   ## make a traditional plot (with black axes and white background)
-  ## 伝統的なプロット（黒の軸、白い背景）を作成します。
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic()
 
 
@@ -805,7 +805,7 @@ observed <- observed %>%
   mutate(resid = residuals(fitted_model$fitted_model, type = "response"))
 
 ## are the residuals fairly constant over time (if not: outbreaks? change in practice?)
-## 残差は時間経過でかなり一定か？（そうでない場合： アウトブレイク？治療の変化？）
+## 残差は時間経過で概ね一定か？（そうでない場合： アウトブレイク？治療の変化？）
 observed %>%
   ggplot(aes(x = epiweek, y = resid)) +
   geom_line() +
@@ -1031,35 +1031,45 @@ What this shows us is that lagged temperature, after controlling for trend and s
 is similar to the case counts (estimate ~ 1) and significantly associated. 
 This suggests that it might be a good variable for use in predicting future case
 numbers (as climate forecasts are readily available). 
+このことからわかるのは、トレンドと季節性を制御した後のラグ付き温度は、症例数（推定値～1）と類似しており、有意に関連していることがわかります。  
+これは、将来の症例数を予測するのに適した変数であることを示唆しています（気候予測は容易に入手可能です）。
 
 ```{r results_nb_reg_bivar}
 
 fitted_model %>% 
   ## extract original negative binomial regression
+  ## 元の負の二項回帰を抽出します。
   get_model() %>% 
-  ## get a tidy dataframe of results
+  ## get a tidy dataframe of result
+  ## 結果についてのtidyなデータフレームを取得します。
   tidy(exponentiate = TRUE, 
        conf.int = TRUE)
 ```
 
 A quick visual inspection of the model shows that it might do a better job of 
 estimating the observed case counts. 
+このモデルを目で見てみると、観測された症例数をより正確に推定することができるかもしれないことがわかります。
 
 ```{r plot_nb_reg_bivar, warning=F, message=F}
 
 ## plot your regression 
+## 回帰式をプロットします。
 ggplot(data = observed, aes(x = epiweek)) + 
   ## add in a line for the model estimate
+  ## モデルの推定値の線を追加します。
   geom_line(aes(y = estimate),
             col = "Red") + 
-  ## add in a band for the prediction intervals 
+  ## add in a band for the prediction intervals
+  ## 予測区間のバンドを追加します。
   geom_ribbon(aes(ymin = lower_pi, 
                   ymax = upper_pi), 
               alpha = 0.25) + 
   ## add in a line for your observed case counts
+  ## 観測されたケースの数の線を追加します。
   geom_line(aes(y = case_int), 
             col = "black") + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic()
 
 
@@ -1067,18 +1077,24 @@ ggplot(data = observed, aes(x = epiweek)) +
 
 
 #### Residuals {.unnumbered}
+#### 残差 {.unnumbered}
 
 We investigate the residuals again to see how well our model fits the observed data. 
 The results and interpretation here are similar to those of the previous regression, 
-so it may be more feasible to stick with the simpler model without temperature. 
+so it may be more feasible to stick with the simpler model without temperature.
+
+私たちのモデルが観測されたデータにどれだけフィットしているかを見るために、再び残差を調査します。
+ここでの結果と解釈は前回の回帰のものと似ているので、温度なしのよりシンプルなモデルにこだわる方が実現性が高いかもしれません。
 
 ```{r}
 
 ## calculate the residuals 
+## 残差を計算します。
 observed <- observed %>% 
   mutate(resid = case_int - estimate)
 
 ## are the residuals fairly constant over time (if not: outbreaks? change in practice?)
+## 残差は時間経過で概ね一定か？（そうでない場合： アウトブレイク？治療の変化？）
 observed %>%
   ggplot(aes(x = epiweek, y = resid)) +
   geom_line() +
@@ -1086,12 +1102,14 @@ observed %>%
   labs(x = "epiweek", y = "Residuals")
 
 ## is there autocorelation in the residuals (is there a pattern to the error?)  
+## 残差に自己相関があるか（誤差にパターンがあるか？）
 observed %>% 
   as_tsibble(index = epiweek) %>% 
   ACF(resid, lag_max = 52) %>% 
   autoplot()
 
 ## are residuals normally distributed (are under or over estimating?)  
+## 残差が正規分布しているか（過小または過大推定か？） 
 observed %>%
   ggplot(aes(x = resid)) +
   geom_histogram(binwidth = 100) +
@@ -1099,22 +1117,36 @@ observed %>%
   labs(y = "count") 
   
 ## compare observed counts to their residuals 
+## 観測されたカウントとその残差を比較する
+
   ## should also be no pattern 
+  ## パターンがないべき 
 observed %>%
   ggplot(aes(x = estimate, y = resid)) +
   geom_point() +
   labs(x = "Fitted", y = "Residuals")
 
 ## formally test autocorrelation of the residuals
+## 残差の自己相関を正式に検定します。
 ## H0 is that residuals are from a white-noise series (i.e. random)
+## H0は残差がホワイトノイズ系列（つまりランダム）であるとします。
 ## test for independence 
+## 独立性を検定します。
 ## if p value significant then non-random
+## p値が有意であればランダムではありません。
 Box.test(observed$resid, type = "Ljung-Box")
+
+
+## test for independence 
+## 独立性を検定します。
+## if p value significant then non-random
+## p値が有意であればランダムではありません。
 
 ```
 
 <!-- ======================================================= -->
 ## Outbreak detection {  }
+## アウトブレイク {  }
 
 We will demonstrate two (similar) methods of detecting outbreaks here. 
 The first builds on the sections above. 
@@ -1124,43 +1156,61 @@ what we expect, then it could suggest there is an outbreak.
 The second method is based on similar principles but uses the **surveillance** package,
 which has a number of different algorithms for aberration detection.
 
+ここでは、集団発生を検知する2つの（類似した）方法を紹介します。  
+1つ目は、上記のセクションを基にしています。  
+**trending**パッケージを使用して、過去の年に回帰を当てはめ、次の年に何が起こるかを予測します。観察された数が予測を上回っていれば、集団発生が発生していることを示唆しています。 
+2つ目の方法は、同様の原理に基づいていますが、**surveillance**パッケージを使用します。このパッケージには、異常を検出するためのさまざまなアルゴリズムが含まれています。
+
 <span style="color: orange;">**_CAUTION:_** Normally, you are interested in the current year (where you only know counts up to the present week). So in this example we are pretending to be in week 39 of 2011.</span>
+<span style="color: orange;">**_CAUTION:_** 通常は、現在の年（現在の週までのカウントしかわからない場合）に関心があります。この例では、2011年の第39週にいると仮定しています。
 
 <!-- ======================================================= -->
 ### **trending** package {.unnumbered}
+### **trending** パッケージ {.unnumbered}
 
 For this method we define a baseline (which should usually be about 5 years of data). 
 We fit a regression to the baseline data, and then use that to predict the estimates
-for the next year. 
+for the next year.
+この方法では、ベースライン（通常は約5年分のデータ）を定義します。  
+ベースラインのデータに回帰分析を行い、それをもとに次年度の推定値を予測します。
 
 <!-- ======================================================= -->
 #### Cut-off date { -}
+#### 日付のカットオフ { -}
 
 It is easier to define your dates in one place and then use these throughout the
-rest of your code.  
+rest of your code.
+日付を一箇所で定義し、それを残りのコードで使用するのが簡単です。
 
 Here we define a start date (when our observations started) and a cut-off date 
 (the end of our baseline period - and when the period we want to predict for starts). 
 ~We also define how many weeks are in our year of interest (the one we are going to
 be predicting)~.
 We also define how many weeks are between our baseline cut-off and the end date 
-that we are interested in predicting for. 
+that we are interested in predicting for.
+ここでは、開始日（観測を開始した日）とカットオフ日（ベースライン期間の終了日であり、予測したい期間の開始日）を定義します。 
+~また、対象年（予測する年）に何週あるかを定義します。~
+また、ベースラインのカットオフと予測対象の終了日の間に何週あるかを定義します。予測したい終了日までの週数も定義します。
 
-
-<span style="color: black;">**_NOTE:_** In this example we pretend to currently be at the end of September 2011 ("2011 W39").</span>  
+<span style="color: black;">**_NOTE:_** In this example we pretend to currently be at the end of September 2011 ("2011 W39").</span>
+<span style="color: black;">**_NOTE:_** この例では、現在、2011年9月末（「2011W39」）にいることにしています。
 
 ```{r cut_off}
 
 ## define start date (when observations began)
+## 開始日（いつ観測を開始したか）を定義します。
 start_date <- min(counts$epiweek)
 
 ## define a cut-off week (end of baseline, start of prediction period)
+## カットオフ週（ベースラインの最終、予測期間の開始）を定義します。
 cut_off <- yearweek("2010-12-31")
 
 ## define the last date interested in (i.e. end of prediction)
+## 関心のある最終日を定義します（例：予測の最後）
 end_date <- yearweek("2011-12-31")
 
 ## find how many weeks in period (year) of interest
+## 関心のある期間（年）における週の数を見つけます。
 num_weeks <- as.numeric(end_date - cut_off)
 
 ```
@@ -1168,24 +1218,32 @@ num_weeks <- as.numeric(end_date - cut_off)
 
 <!-- ======================================================= -->
 #### Add rows {.unnumbered}
+#### 行の追加 {.unnumbered}
 
 To be able to forecast in a tidyverse format, we need to have the right number 
 of rows in our dataset, i.e. one row for each week up to the `end_date`defined above. 
 The code below allows you to add these rows for by a grouping variable - for example
 if we had multiple countries in one dataset, we could group by country and then 
-add rows appropriately for each. 
+add rows appropriately for each.
 The `group_by_key()` function from **tsibble** allows us to do this grouping 
 and then pass the grouped data to **dplyr** functions, `group_modify()` and 
 `add_row()`. Then we specify the sequence of weeks between one after the maximum week 
 currently available in the data and the end week. 
 
+Tidyverse形式で予測するためには、データセットに適切な数の行が必要です。すなわち、上記で定義した`end_date`までの各週に1行ずつ必要です。 
+以下のコードでは、グループ化変数によってこれらの行を追加することができます。例えば、1つのデータセットに複数の国がある場合、国ごとにグループ化して、それぞれに適切な行を追加することができます。
+**tsibble**の`group_by_key()`関数により、このグループ化を行い、グループ化されたデータを**dplyr**の`group_modify()`および`add_row()`関数に渡すことができます。次に、現在データにある最大の週の1つ後から最終週までの週の順序を指定します。
+
 ```{r add_rows}
 
 ## add in missing weeks till end of year 
+## 年末までの欠損週を追加します。
 counts <- counts %>%
   ## group by the region
+  ## 地域でグループ化します。
   group_by_key() %>%
   ## for each group add rows from the highest epiweek to the end of year
+  ## 各グループに対して最も高いepiweekから年末までの行を追加します。
   group_modify(~add_row(.,
                         epiweek = seq(max(.$epiweek) + 1, 
                                       end_date,
@@ -1197,41 +1255,55 @@ counts <- counts %>%
 
 <!-- ======================================================= -->
 #### Fourier terms {.unnumbered}
+#### フーリエ項 {.unnumbered}
 
 We need to redefine our fourier terms - as we want to fit them to the baseline 
 date only and then predict (extrapolate) those terms for the next year. 
 To do this we need to combine two output lists from the `fourier()` function together; 
 the first one is for the baseline data, and the second one predicts for the 
-year of interest (by defining the `h` argument).  
+year of interest (by defining the `h` argument).
+フーリエ項を再定義する必要があります。これは、基準日にのみフーリエ項をフィットさせ、翌年のフーリエ項を予測（外挿）したいからです。 
+そのためには、`fourier()`関数からの2つのリストの出力を組み合わせる必要があります。1つ目はベースラインデータに対するもので、2つ目は（`h`引数を定義することで）対象となる年の予測です。
 
 *N.b.* to bind rows we have to use `rbind()` (rather than tidyverse `bind_rows`) as
 the fourier columns are a list (so not named individually). 
+フーリエ列はリストなので（そのため個別に名前がついていない）、*N.b.*行を結合するには、（Tidyverseの`bind_rows`ではなく）`rbind()`を使用しなければなりません。
 
 ```{r fourier_terms_pred}
 
 
 ## define fourier terms (sincos) 
+## フーリエ項（sincos）を定義します。
 counts <- counts %>% 
   mutate(
     ## combine fourier terms for weeks prior to  and after 2010 cut-off date
+    ## 2010年のカットオフ日前後の週のフーリエ項を組み合わせる
     ## (nb. 2011 fourier terms are predicted)
+    ## （nb. フーリエ項は予測されます）
     fourier = rbind(
       ## get fourier terms for previous years
+      ## 過去の年のフーリエ項を取得します。
       fourier(
         ## only keep the rows before 2011
+        ## 2011年以前の行のみ保持します。
         filter(counts, 
                epiweek <= cut_off), 
         ## include one set of sin cos terms 
+        ## サイン、コサインの項を1つのセットとして含めます。
         K = 1
         ), 
       ## predict the fourier terms for 2011 (using baseline data)
+      ## 2011年におけるフーリエ項を予測します（ベースラインデータを用いて）。
       fourier(
         ## only keep the rows before 2011
+        ## 2011年以前の行のみ保持します。
         filter(counts, 
                epiweek <= cut_off),
-        ## include one set of sin cos terms 
+        ## include one set of sin cos terms
+        ## サイン、コサインの項を1つのセットとして含めます。
         K = 1, 
         ## predict 52 weeks ahead
+        ## 52週後を予測します。
         h = num_weeks
         )
       )
@@ -1333,6 +1405,7 @@ ggplot(data = observed, aes(x = epiweek)) +
            vjust = 1
            ) + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic()
 ```
 
@@ -1633,6 +1706,7 @@ ggplot(counts, aes(x = epiweek)) +
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Alert threshold" = "red")) + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic() + 
   ## remove title of legend 
   theme(legend.title = element_blank())
@@ -1694,6 +1768,7 @@ ggplot(counts, aes(x = epiweek)) +
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Alert threshold" = "red")) + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic() + 
   ## remove title of legend 
   theme(legend.title = element_blank())
@@ -1855,6 +1930,7 @@ ggplot(observed, aes(x = epiweek)) +
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Estimate" = "red")) + 
   ## make a traditional plot (with black axes and white background)
+  ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic()
 
 ```
