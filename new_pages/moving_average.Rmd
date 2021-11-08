@@ -4,30 +4,30 @@
 knitr::include_graphics(here::here("images", "moving_avg_epicurve.png"))
 ```
 
-This page will cover two methods to calculate and visualize moving averages:
+このページでは、移動平均を計算し、可視化する方法として、以下の２つを説明します:
 
-1)  Calculate with the **slider** package\
-2)  Calculate *within* a `ggplot()` command with the **tidyquant** package
+1)  **slider** パッケージを利用した計算\
+2)  `ggplot()` 内のコマンドとして、**tidyquant** パッケージを利用した計算
 
 <!-- ======================================================= -->
 
-## Preparation
+## 準備
 
-### Load packages {.unnumbered}
+### パッケージをロードする {.unnumbered}
 
-This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with `library()` from **base** R. See the page on [R basics] for more information on R packages.
+以下にある一連のコードは、本ページの分析に必要なパッケージのロードについて示しています。このハンドブックでは、**pacman** の `p_load()` の利用を強調しています。 `p_load()` を利用することで、必要に応じてパッケージをインストールし、ロードすることが可能となります。 R の基本仕様である `library()` でインストール済みのパッケージをロードすることもできます。 R のパッケージに関する更なる情報は [R basics] のページを参照してください。
 
 ```{r}
 pacman::p_load(
-  tidyverse,      # for data management and viz
-  slider,         # for calculating moving averages
-  tidyquant       # for calculating moving averages within ggplot
+  tidyverse,      # データマネージメントと可視化のため
+  slider,         # 移動平均の計算のため
+  tidyquant       # ggplot内の移動平均の計算のため
 )
 ```
 
-### Import data {.unnumbered}
+### データのインポート {.unnumbered}
 
-We import the dataset of cases from a simulated Ebola epidemic. If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>click to download the "clean" linelist</a> (as .rds file). Import data with the `import()` function from the **rio** package (it handles many file types like .xlsx, .csv, .rds - see the [Import and export] page for details).
+シミュレーションしたエボラ出血熱の流行から得られた症例のデータセットを取り込みます。説明とともに作業をしたい場合は、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'> をクリックして「クリーン」なラインリストをダウンロードしてください（ .rds 　ファイルとして）。**rio** パッケージの `import()` 関数を使用してデータをインポートします（.xlsx、.csv、.rds など、様々な種類のファイルを扱うことができます - 詳細は [Import and export] のページをご覧ください）。
 
 ```{r, echo=F}
 # import the linelist into R
