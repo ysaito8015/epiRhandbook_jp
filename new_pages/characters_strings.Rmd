@@ -1,41 +1,41 @@
 
-# Characters and strings { }  
+# 文字と文字列 { }  
 
-```{r, out.width=c('100%'), echo=F, message=F}
-knitr::include_graphics(here::here("images", "Characters_Strings_1500x500.png"))
-```
-
-
-
-This page demonstrates use of the **stringr** package to evaluate and handle character values ("strings").  
-
-1. Combine, order, split, arrange - `str_c()`, `str_glue()`, `str_order()`, `str_split()`  
-2. Clean and standardise  
-    * Adjust length - `str_pad()`, `str_trunc()`, `str_wrap()`  
-    * Change case - `str_to_upper()`, `str_to_title()`, `str_to_lower()`, `str_to_sentence()`  
-3. Evaluate and extract by position - `str_length()`, `str_sub()`, `word()`  
-4. Patterns  
-    * Detect and locate - `str_detect()`, `str_subset()`, `str_match()`, `str_extract()`  
-    * Modify and replace - `str_sub()`, `str_replace_all()`  
-7. Regular expressions ("regex")
+#```{r, out.width=c('100%'), echo=F, message=F}
+#knitr::include_graphics(here::here("images", "Characters_Strings_1500x500.png"))
+#```
 
 
-For ease of display most examples are shown acting on a short defined character vector, however they can easily be adapted to a column within a data frame.  
 
-This [stringr vignette](
-https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html) provided much of the inspiration for this page.  
+このページでは **stringr** パッケージを使用して、文字（character）と文字列（string）を評価し、処理する方法を紹介します。  
+
+1. 結合、並べ替え、分割 - `str_c()`, `str_glue()`, `str_order()`, `str_split()`  
+2. 整理と標準化  
+    * 長さの調整 - `str_pad()`, `str_trunc()`, `str_wrap()`  
+    * 大文字小文字の変更 - `str_to_upper()`, `str_to_title()`, `str_to_lower()`, `str_to_sentence()`  
+3. 位置による評価と抽出 - `str_length()`, `str_sub()`, `word()`  
+4. パターン認識  
+    * 検出と検索 - `str_detect()`, `str_subset()`, `str_match()`, `str_extract()`  
+    * 修正と置換 - `str_sub()`, `str_replace_all()`  
+7. 正規表現（"regex"）
+
+
+表示を簡単にするためほとんどの例で短い文字ベクトルを用いていますが、それらの内容はデータフレーム内の列にも簡単に適用できます。
+
+このページを作成するにあたり、この [stringr のビネット](
+https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html)が大変参考になりました。
 
 
 
 <!-- ======================================================= -->
-## Preparation { }
+## 準備 { }
 
-### Load packages {.unnumbered}  
+### パッケージの読み込み {.unnumbered}  
 
-Install or load the **stringr** and other **tidyverse** packages.  
+**stringr** およびその他の **tidyverse** パッケージをインストールまたは読み込みます。  
 
 ```{r}
-# install/load packages
+# パッケージのインストール/読み込み
 pacman::p_load(
   stringr,    # many functions for handling strings
   tidyverse,  # for optional data manipulation
@@ -44,25 +44,25 @@ pacman::p_load(
 ```
 
 
-### Import data  {.unnumbered}  
+### データの読み込み  {.unnumbered}  
 
 
-In this page we will occassionally reference the cleaned `linelist` of cases from a simulated Ebola epidemic. If you want to follow along, <a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>click to download the "clean" linelist</a> (as .rds file). Import data with the `import()` function from the **rio** package (it handles many file types like .xlsx, .csv, .rds - see the [Import and export] page for details).  
+このページでは、エボラ出血熱のシミュレーションから得られた症例の整理された `linelist` を参照することがあります。 それらに沿って作業をしたい場合は、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>こちらから</a>ラインリストをダウンロードしてください（.rdsファイル）。ダウンロードしたファイルは **rio** パッケージの`import()` を使って取り込むことができます（.xlsx、.csv、.rdsなど、さまざまなファイルタイプを扱うことができます。詳細は [インポートとエクスポート] のページを参照してください）。 
 
 ```{r, echo=F}
-# import the linelist into R
+# 症例ラインリストの読み込み
 linelist <- rio::import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
 ```
 
 ```{r, eval=F}
-# import case linelist 
+# 症例ラインリストの読み込み 
 linelist <- import("linelist_cleaned.rds")
 ```
 
-The first 50 rows of the linelist are displayed below.
+ラインリストの最初の50行が以下に表示されます。
 
 ```{r, message=FALSE, echo=F}
-# display the linelist data as a table
+# ラインリストのデータをテーブルで表示
 DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
@@ -70,75 +70,75 @@ DT::datatable(head(linelist, 50), rownames = FALSE, filter="top", options = list
 
 
 <!-- ======================================================= -->
-## Unite, split, and arrange { }
+## 結合、分割、配列 { }
 
 
-This section covers:  
+このセクションでは以下の事柄を扱います:  
 
-* Using `str_c()`, `str_glue()`, and `unite()` to combine strings  
-* Using `str_order()` to arrange strings  
-* Using `str_split()` and `separate()` to split strings  
+* `str_c()`、`str_glue()`、`unite()` を使った文字列の結合  
+* `str_order()` を使った文字列の並べ替え  
+* `str_split()` と `separate()` 文字列の分割  
 
 
 
 <!-- ======================================================= -->
-### Combine strings {.unnumbered}
+### 文字列の結合 {.unnumbered}
 
-To combine or concatenate multiple strings into one string, we suggest using `str_c` from **stringr**. If you have distinct character values to combine, simply provide them as unique arguments, separated by commas.     
+複数の文字列を1つの文字列に結合するには、**stringr** の `str_c` を使うことをお勧めします。結合するそれぞれの文字列はカンマで区切って指定します。     
 
 ```{r}
 str_c("String1", "String2", "String3")
 ```
 
-The argument `sep = ` inserts a character value between each of the arguments you provided (e.g. inserting a comma, space, or newline `"\n"`)  
+引数 `sep = ` は、与えられた各引数の間に文字値を挿入します（例：カンマ、スペース、改行 `"\n"` の挿入）。
 
 ```{r}
 str_c("String1", "String2", "String3", sep = ", ")
 ```
 
-The argument `collapse = ` is relevant if you are inputting multiple *vectors* as arguments to `str_c()`. It is used to separate the elements of what would be an *output* vector, such that the output vector only has one long character element.   
+引数 `collapse = ` は `str_c()` に複数の値をを*ベクター*で入力する場合に使用します。これは、*出力*ベクターの要素を区切るために使用され、出力ベクターが1つの長い文字列のみを要素として持つようにします。
 
-The example below shows the combination of two vectors into one (first names and last names). Another similar example might be jurisdictions and their case counts. In this example:  
+以下の例では、2つのベクトルを1つにまとめています（姓と名）。また、似たような例として、管轄区域とその症例数があります。この例では
 
-* The `sep = ` value appears between each first and last name  
-* The `collapse = ` value appears between each person  
+* 姓と名の間に `sep = ` で指定した値が表示されます  
+* 各姓名の間に `collapse = ` で指定した値が表示されます  
 
 
 ```{r}
 first_names <- c("abdul", "fahruk", "janice") 
 last_names  <- c("hussein", "akinleye", "okeke")
 
-# sep displays between the respective input strings, while collapse displays between the elements produced
+# sep は入力された文字列（ここでは姓と名）を繋ぐ際間に挿入される文字（列）を指定し、collapse は繋がれた文字列同士（ここでは姓名）の間に挿入有される文字（列）を指定します。
 str_c(first_names, last_names, sep = " ", collapse = ";  ")
 ```
 
-Note: Depending on your desired display context, when printing such a combined string with newlines, you may need to wrap the whole phrase in `cat()` for the newlines to print properly:  
+注：目的の表示形式により、例えばこのように結合された文字列を改行付きで表示したい場合など、正しく表示されるようにフレーズ全体を `cat()` で囲む必要がある場合があります：
 
 ```{r}
-# For newlines to print correctly, the phrase may need to be wrapped in cat()
+# 改行を正しく表示するためにフレーズ全体を cat() で囲む
 cat(str_c(first_names, last_names, sep = " ", collapse = ";\n"))
 ```
 
 
 
 <!-- ======================================================= -->
-### Dynamic strings {.unnumbered}
+### 動的文字列 {.unnumbered}
 
-Use `str_glue()` to insert dynamic R code into a string. This is a very useful function for creating dynamic plot captions, as demonstrated below.  
+`str_glue()` を使うと、文字列に動的なRコードを挿入することができます。これは、以下のように、動的なプロットキャプションを作成するのに非常に便利な関数です。 
 
-* All content goes between double quotation marks `str_glue("")`  
-* Any dynamic code or references to pre-defined values are placed within curly brackets `{}` within the double quotation marks. There can be many curly brackets in the same `str_glue()` command.  
-* To display character quotes '', use *single* quotes within the surrounding double quotes (e.g. when providing date format - see example below)  
-* Tip: You can use `\n` to force a new line  
-* Tip: You use `format()` to adjust date display, and use `Sys.Date()` to display the current date  
+* すべての内容は二重引用符で囲まれます：`str_glue("")`  
+* 動的なコードやあらかじめ定義された値への参照は、二重引用符の中の中括弧 `{}` に入力します。1つの `str_glue()` コマンド中に複数の中括弧を入れることができます。 
+* 文字としての引用符 ''　を表示するには、二重引用符の中に*一重*引用符を使用します（例：日付の書式を指定する場合など。以下の例を参照）。  
+* ヒント：`\n` で強制的に改行することができます。  
+* ヒント：`format()` で日付の表示を調整し、`Sys.Date()` で現在の日付を表示することができます。
 
-A simple example, of a dynamic plot caption:  
+動的なプロットキャプションの簡単な例を示します:  
 
 ```{r}
 str_glue("Data include {nrow(linelist)} cases and are current to {format(Sys.Date(), '%d %b %Y')}.")
 ```
 
-An alternative format is to use placeholders within the brackets and define the code in separate arguments at the end of the `str_glue()` function, as below. This can improve code readability if the text is long.
+もうひとつの方法は、以下のように中括弧内にプレースホルダー（仮置きされた変数）を置き、`str_glue()` の最後にそれらを定義する方法です。これにより、テキストが長い場合でもコードを読みやすくすることができます。
 
 ```{r}
 str_glue("Linelist as of {current_date}.\nLast case hospitalized on {last_hospital}.\n{n_missing_onset} cases are missing date of onset and not shown",
@@ -150,12 +150,12 @@ str_glue("Linelist as of {current_date}.\nLast case hospitalized on {last_hospit
 ```
 
 
-**Pulling from a data frame**  
+**データフレームからの引き出し**  
 
-Sometimes, it is useful to pull data from a data frame and have it pasted together in sequence. Below is an example data frame. We will use it to to make a summary statement about the jurisdictions and the new and total case counts.  
+データフレームからデータを取り出して、文字列としてまとめておくと便利な場合があります。以下にデータフレームの例を示します。これを使って、管轄区域、新規および総症例数についての要約文を作成します。
 
 ```{r}
-# make case data frame
+# 症例データフレームの作成
 case_table <- data.frame(
   zone        = c("Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"),
   new_cases   = c(3, 0, 7, 0, 15),
@@ -167,7 +167,7 @@ case_table <- data.frame(
 DT::datatable(case_table, rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-Use `str_glue_data()`, which is specially made for taking data from data frame rows:  
+`str_glue_data()` を使用することで、データフレームの各行から取り出した情報を文字列にまとめることができます：  
 
 ```{r}
 case_table %>% 
@@ -175,19 +175,19 @@ case_table %>%
 ```
 
 
-**Combine strings across rows**  
+**異なる行の文字列を結合する**  
 
-If you are trying to "roll-up" values in a data frame column, e.g. combine values from multiple rows into just one row by pasting them together with a separator, see the section of the [De-duplication] page on ["rolling-up" values](#str_rollup).  
+複数の行の値を結合して1つの行にまとめる場合など、データフレームの値を列に沿って結合したい際は、[De-duplication](#de-duplication) 内の ["rolling-up" values](#str_rollup) のページを参照してください。 
 
-**Data frame to one line**  
+**データフレームを1行の文字列にまとめる**  
 
-You can make the statement appear in one line using `str_c()` (specifying the data frame and column names), and providing `sep = ` and `collapse = ` arguments.  
+`str_c()` でデータフレーム名と列名を指定し、`sep = ` と `collapse = ` の引数を与えることで、データフレーム内の情報を一行に表示させることができます。  
 
 ```{r}
 str_c(case_table$zone, case_table$new_cases, sep = " = ", collapse = ";  ")
 ```
 
-You could add the pre-fix text "New Cases:" to the beginning of the statement by wrapping with a separate `str_c()` (if "New Cases:" was within the original `str_c()` it would appear multiple times).  
+もう1つの `str_c()` でこの `str_c()` を包むことで、文の先頭に文字列 "New Cases:" を追加することができます（「New Cases: 」が元のstr_c()内にあった場合、複数回表示されます）。
 
 ```{r}
 str_c("New Cases: ", str_c(case_table$zone, case_table$new_cases, sep = " = ", collapse = ";  "))
@@ -197,7 +197,7 @@ str_c("New Cases: ", str_c(case_table$zone, case_table$new_cases, sep = " = ", c
 
 
 
-### Unite columns  {#str_unite .unnumbered}
+### 列の結合  {#str_unite .unnumbered}
 
 Within a data frame, bringing together character values from multiple columns can be achieved with `unite()` from **tidyr**. This is the opposite of `separate()`.  
 
