@@ -265,13 +265,13 @@ DT::datatable(country_data, rownames = FALSE, options = list(pageLength = 5, scr
 最後に、直接標準化のために、参照人口（性別毎の世界"標準人口"）のデータを読み込みます。
 
 ```{r, echo=F}
-# Reference population
+# 参照人口
 standard_pop_data <- rio::import(here::here("data", "standardization", "world_standard_population_by_sex.csv")) %>% 
      rename(age_cat5 = AgeGroup)
 ```
 
 ```{r, eval=F}
-# Reference population
+# 参照人口
 standard_pop_data <- import("world_standard_population_by_sex.csv")
 ```
 
