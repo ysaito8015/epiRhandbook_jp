@@ -1313,87 +1313,111 @@ counts <- counts %>%
 
 <!-- ======================================================= -->
 #### Split data and fit regression {.unnumbered}
+#### データの分割と回帰式の当てはめ {.unnumbered}
 
 We now have to split our dataset in to the baseline period and the prediction 
 period. This is done using the **dplyr** `group_split()` function after `group_by()`, 
 and will create a list with two data frames, one for before your cut-off and one 
-for after.  
+for after.
+次に、データセットをベースライン期間と予測期間に分割する必要があります。これは、`group_by()`の後に**dplyr**の`group_split()`関数を使って行い、カットオフ前とカットオフ後の2つのデータフレームを持つリストを作成します。
 
 We then use the **purrr** package `pluck()` function to pull the datasets out of the
 list (equivalent of using square brackets, e.g. `dat[[1]]`), and can then fit 
 our model to the baseline data, and then use the `predict()` function for our data
-of interest after the cut-off.  
+of interest after the cut-off.
+次に，**purrr** パッケージの `pluck()` 関数を使ってリストからデータセットを取り出し（角括弧を使った場合と同じです，例：`dat[[1]]`），ベースラインデータにモデルを適合させ，カットオフ後のデータに対して `predict()` 関数を使います．
 
-See the page on [Iteration, loops, and lists] to learn more about **purrr**.  
+See the page on [Iteration, loops, and lists] to learn more about **purrr**.
+*purrr**については[反復、ループ、リスト]のページを参照してください。
 
 <span style="color: orange;">**_CAUTION:_** Note the use of `simulate_pi = FALSE`
 within the `predict()` argument. This is because the default behaviour of **trending** 
 is to use the **ciTools** package to estimate a prediction interval. This does not 
 work if there are `NA` counts, and also produces more granular intervals. 
 See `?trending::predict.trending_model_fit` for details. </span>  
+<span style="color: orange;">**_CAUTION:_** `predict()`の引数で`simulate_pi = FALSE`を使用していることに注意してください。これは、**trending**のデフォルトの動作として、**ciTools**のパッケージを使用して予測区間を推定するためです。これは、`NA`カウントがある場合には機能せず、また、より詳細な間隔を生成します。 詳細は `?trending::predict.trending_model_fit` を参照してください。</span>
 
 ```{r forecast_regression, warning = FALSE}
 # split data for fitting and prediction
+# 当てはめと予測のためにデータを分割します。
+
 dat <- counts %>% 
   group_by(epiweek <= cut_off) %>%
   group_split()
 
 ## define the model you want to fit (negative binomial) 
+## 当てはめたいモデル（負の二項回帰）を定義します。
 model <- glm_nb_model(
   ## set number of cases as outcome of interest
+  ## 関心のあるアウトカムとしてケースの数をセットします。
   case_int ~
     ## use epiweek to account for the trend
+    ## トレンドの説明のためにepiweekを使用します。
     epiweek +
     ## use the furier terms to account for seasonality
+    ## 季節性の説明のためにフーリエ項を使用します。
     fourier
 )
 
 # define which data to use for fitting and which for predicting
+## どのデータをあてはめに使用し、どのデータを予測に使用するかを定義します。
 fitting_data <- pluck(dat, 2)
 pred_data <- pluck(dat, 1) %>% 
   select(case_int, epiweek, fourier)
 
 # fit model 
+# モデルの当てはめを行います。
 fitted_model <- trending::fit(model, fitting_data)
 
 # get confint and estimates for fitted data
+# 当てはめたデータのconfintと推定値を得ます。
 observed <- fitted_model %>% 
   predict(simulate_pi = FALSE)
 
 # forecast with data want to predict with 
+# 予測したいデータで予測したいです。
 forecasts <- fitted_model %>% 
   predict(pred_data, simulate_pi = FALSE)
 
 ## combine baseline and predicted datasets
+## ベースラインと予測されたデータセットを結合します。
 observed <- bind_rows(observed, forecasts)
 
 ```
 
 As previously, we can visualise our model with **ggplot**. We highlight alerts with
 red dots for observed counts above the 95% prediction interval. 
-This time we also add a vertical line to label when the forecast starts. 
+This time we also add a vertical line to label when the forecast starts.
+前述のように、モデルを **ggplot** で可視化することができます。95%予測区間を超えて観測された数のアラートを赤いドットで強調しています。
+今回は、予測開始時刻を示す縦線も加えています。
 
 ```{r forecast_plot}
 
 ## plot your regression 
+## 回帰式をプロットします。
 ggplot(data = observed, aes(x = epiweek)) + 
   ## add in a line for the model estimate
+  ## モデル推定値についての線を追加します。
   geom_line(aes(y = estimate),
             col = "grey") + 
   ## add in a band for the prediction intervals 
+  ## 予測区間のバンドを追加します。
   geom_ribbon(aes(ymin = lower_pi, 
                   ymax = upper_pi), 
               alpha = 0.25) + 
   ## add in a line for your observed case counts
+  ## 観測されたケースの数についての線を追加します。
   geom_line(aes(y = case_int), 
             col = "black") + 
   ## plot in points for the observed counts above expected
+  ## 期待値以上の観測値観測されたケースについての点をプロットします。
   geom_point(
     data = filter(observed, case_int > upper_pi), 
     aes(y = case_int), 
     colour = "red", 
     size = 2) + 
   ## add vertical line and label to show where forecasting started
+  ## 予測開始の箇所を表示するために水平線とラベルを追加します。
   geom_vline(
            xintercept = as.Date(cut_off), 
            linetype = "dashed") + 
