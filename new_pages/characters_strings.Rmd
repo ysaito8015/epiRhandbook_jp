@@ -199,15 +199,15 @@ str_c("New Cases: ", str_c(case_table$zone, case_table$new_cases, sep = " = ", c
 
 ### 列の結合  {#str_unite .unnumbered}
 
-Within a data frame, bringing together character values from multiple columns can be achieved with `unite()` from **tidyr**. This is the opposite of `separate()`.  
+データフレーム中の複数の列を文字列にまとめるには、**tidyr** パッケージの `unite()` を用います。これは `separate()` の逆の操作にあたります。
 
-Provide the name of the new united column. Then provide the names of the columns you wish to unite.  
+まず新しい統合された列の名前を指定します。次に、結合したい列の名前を指定します。
 
-* By default, the separator used in the united column is underscore `_`, but this can be changed with the `sep = ` argument.  
-* `remove = ` removes the input columns from the data frame (TRUE by default)  
-* `na.rm = ` removes missing values while uniting (FALSE by default)  
+* 初期設定ではアンダースコア `_` によって各列の値が結合されますが、これは `sep = ` によって変更できます。  
+* `remove = ` は入力に用いた列をデータフレームから削除します（初期設定ではTRUE）。
+* `na.rm = ` は結合時に欠測値を取り除きます（初期設定ではFALSE）。
 
-Below, we define a mini-data frame to demonstrate with:  
+以下に、デモ用のミニデータフレームを定義します:  
 
 ```{r, message = F, warning=F}
 df <- data.frame(
@@ -226,22 +226,22 @@ df <- data.frame(
 df_split <- separate(df, symptoms, into = c("sym_1", "sym_2", "sym_3"), extra = "merge")
 ```
 
-Here is the example data frame:  
+ここで作られたデータフレームはこのようになります：
 
 ```{r, echo=F}
 DT::datatable(df_split, rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-Below, we unite the three symptom columns:  
+B以下に、3つの症状の列を統一します：  
 
 ```{r}
 df_split %>% 
   unite(
-    col = "all_symptoms",         # name of the new united column
-    c("sym_1", "sym_2", "sym_3"), # columns to unite
-    sep = ", ",                   # separator to use in united column
-    remove = TRUE,                # if TRUE, removes input cols from the data frame
-    na.rm = TRUE                  # if TRUE, missing values are removed before uniting
+    col = "all_symptoms",         # 新しく作られる列の名前
+    c("sym_1", "sym_2", "sym_3"), # 結合する列
+    sep = ", ",                   # 区切りに使われる結合子
+    remove = TRUE,                # TRUEの場合、結合元の列をデータフレームから削除します。
+    na.rm = TRUE                  # TRUEの場合、欠測値を無視して結合します。
   )
 ```
 
@@ -252,54 +252,54 @@ df_split %>%
 
 
 <!-- ======================================================= -->
-### Split {.unnumbered}  
+### 分割 {.unnumbered}  
 
-To split a string based on a pattern, use `str_split()`. It evaluates the string(s) and returns a `list` of character vectors consisting of the newly-split values.
+パターンに基づいて文字列を分割するには、`str_split()`を使います。文字（列）を評価し、新たに分割された値からなる文字ベクターの `list` を返します。
 
-The simple example below evaluates one string and splits it into three. By default it returns an object of class `list` with one element (a character vector) for each string initially provided. If `simplify = TRUE` it returns a character matrix.  
+以下の簡単な例では，1つの文字列を3つに分割しています．初期設定では、最初に与えられた文字列ごとに1つの要素（文字ベクター）を持つ `list` を返します。`simplify = TRUE` の場合は、文字行列を返します。
 
-In this example, one string is provided, and the function returns a list with one element - a character vector with three values.  
+この例では、1つの文字列が与えられ、この関数は1つの要素を持つリスト - つまり3つの値を持つ文字ベクターを返します。 
 
 ```{r}
 str_split(string = "jaundice, fever, chills",
           pattern = ",")
 ```
 
-If the output is saved, you can then access the nth split value with bracket syntax. To access a specific value you can use syntax like this: `the_returned_object[[1]][2]`, which would access the second value from the first evaluated string ("fever"). See the [R basics] page for more detail on accessing elements.    
+出力が保存されていれば、大括弧を使ってn番目の値にアクセスできます。特定の値にアクセスするには、次のような構文を使用できます：`the_returned_object[[1]][2]`。この例では、最初に評価された文字列（"fever"）から2番目の値にアクセスします。要素へのアクセスの詳細については、[R の基礎](#basics) のページを参照してください。
 
 ```{r}
 pt1_symptoms <- str_split("jaundice, fever, chills", ",")
 
-pt1_symptoms[[1]][2]  # extracts 2nd value from 1st (and only) element of the list
+pt1_symptoms[[1]][2]  # リスト内の1つ目（かつここでは唯一）の要素内にある2つ目の値を返す
 ```
 
-If multiple strings are provided by `str_split()`, there will be more than one element in the returned list.  
+`str_split()` で複数の文字列を指定した場合、返されるリストには複数の要素が含まれます。
 
 ```{r}
-symptoms <- c("jaundice, fever, chills",     # patient 1
-              "chills, aches, pains",        # patient 2 
-              "fever",                       # patient 3
-              "vomiting, diarrhoea",         # patient 4
-              "bleeding from gums, fever",   # patient 5
-              "rapid pulse, headache")       # patient 6
+symptoms <- c("jaundice, fever, chills",     # 患者 1
+              "chills, aches, pains",        # 患者 2 
+              "fever",                       # 患者 3
+              "vomiting, diarrhoea",         # 患者 4
+              "bleeding from gums, fever",   # 患者 5
+              "rapid pulse, headache")       # 患者 6
 
-str_split(symptoms, ",")                     # split each patient's symptoms
+str_split(symptoms, ",")                     # 各患者の症状を分割する
 ```
 
 
-To return a "character matrix" instead, which may be useful if creating data frame columns, set the argument `simplify = TRUE` as shown below:  
+データフレームの列を作成したい場合、次のように `simplify = TRUE` を設定することで文字行列を出力すると便利です：
 
 ```{r}
 str_split(symptoms, ",", simplify = TRUE)
 ```
 
-You can also adjust the number of splits to create with the `n = ` argument. For example, this restricts the number of splits to 2. Any further commas remain within the second values. 
+また `n = ` を使って、分割する数を調整することもできます。例えば以下の例は分割数を2に制限するもので、それ以上のカンマは2番目の値の中に残ります。
 
 ```{r}
 str_split(symptoms, ",", simplify = TRUE, n = 2)
 ```
 
-*Note - the same outputs can be achieved with `str_split_fixed()`, in which you do not give the `simplify` argument, but must instead designate the number of columns (`n`).* 
+*注 - `str_split_fixed()` でも同じ出力が得られますが、その場合は `simplify` 引数を与えず、代わりに列数（`n`）を指定しなければなりません。* 
 
 ```{r, eval=F}
 str_split_fixed(symptoms, ",", n = 2)
@@ -308,46 +308,45 @@ str_split_fixed(symptoms, ",", n = 2)
 
 
 
-### Split columns {.unnumbered}  
+### 列の分割 {.unnumbered}  
 
-If you are trying to split data frame column, it is best to use the `separate()` function from **dplyr**. It is used to split one character column into other columns.  
+データフレームの列を分割する場合は、**dplyr** パッケージの `separate()` 関数が最適です。この関数は、文字列を要素に持つ 1 つの列を複数の列に分割することができます。
 
-Let's say we have a simple data frame `df` (defined and united in the [unite section](#str_unite)) containing a `case_ID` column, one character column with many symptoms, and one outcome column. Our goal is to separate the `symptoms` column into many columns - each one containing one symptom.  
-
+例えば、以前に[結合](#str_unite)の節で定義した簡単なデータフレーム `df` を見てみましょう。このデータフレームは `case_ID` の列、多くの症状をまとめた文字列からなる列、そして予後を示す列を含んでいます。我々のここでの目的は、`symptoms` 列を複数の列に分割し、各列が単一の症状を示すようにすることです。
 
 ```{r, echo=F}
 DT::datatable(df, rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-Assuming the data are piped into `separate()`, first provide the column to be separated. Then provide `into = ` as a vector `c( )` containing the *new* columns names, as shown below.  
+データを `separate()` で処理したい場合、まず分離する列を指定します。次に、以下のように新しい列名を含むベクター `c()` によって `into = ` を指定します。
 
-* `sep = ` the separator, can be a character, or a number (interpreted as the character position to split at) 
-* `remove = ` FALSE by default, removes the input column  
-* `convert = ` FALSE by default, will cause string "NA"s to become `NA`  
-* `extra = ` this controls what happens if there are more values created by the separation than new columns named.  
-     * `extra = "warn"` means you will see a warning but it will drop excess values (**the default**)  
-     * `extra = "drop"` means the excess values will be dropped with no warning  
-     * **`extra = "merge"` will only split to the number of new columns listed in `into` - *this setting will preserve all your data***  
+* `sep = ` 分割する位置を、文字または数字で指定します。
+* `remove = ` 初期設定ではFALSE。入力された列を削除します。  
+* `convert = ` 初期設定ではFALSE。文字列 "NA"を NAに変換します。
+* `extra = ` 分離によって作成された値の数が、指定された新規列の名前よりも多い場合の動作を制御します。
+     * `extra = "warn"` は、警告を表示しますが、過剰な値は削除されます（**初期設定**）。
+     * `extra = "drop"` は、警告を表示せずに余分な値を削除します。
+     * **`extra = "merge"` は、`into = `で指定された新しい列の数だけ分割します。- *この設定では全ての入力データが保存されます。***  
 
 
-An example with `extra = "merge"` is below - no data is lost. Two new columns are defined but any third symptoms are left in the second new column:  
+`extra = "merge"` を使用した例を以下に示します - ここではデータは失われません。2つの新しい列が定義され、3つ目の症状は2つ目の列に残されます：  
 
 ```{r}
-# third symptoms combined into second new column
+# 3 つ目の症状は 2 つ目の新しい列に組み込まれる
 df %>% 
   separate(symptoms, into = c("sym_1", "sym_2"), sep=",", extra = "merge")
 ```
 
-When the default `extra = "drop"` is used below, a warning is given but the third symptoms are lost:  
+初期設定の `extra = "drop"` では ≈、警告が表示されます：
 
 ```{r}
-# third symptoms are lost
+# 3番目の症状は失われる
 df %>% 
   separate(symptoms, into = c("sym_1", "sym_2"), sep=",")
 ```
 
 
-<span style="color: orange;">**_CAUTION:_** If you do not provide enough `into` values for the new columns, your data may be truncated.</span>  
+<span style="color: orange;">**注意：** `into = `に入力された値の数が不足していると、データが切り捨てられる可能性があります。</span>  
 
 
 
@@ -355,31 +354,31 @@ df %>%
 
 
 <!-- ======================================================= -->
-### Arrange alphabetically {.unnumbered} 
+### アルファベット順に並べる {.unnumbered} 
 
-Several strings can be sorted by alphabetical order. `str_order()` returns the order, while `str_sort()` returns the strings in that order.  
+複数の文字列をアルファベット順に並べることができます。 `str_order()` は順序を返し、`str_sort()` はその順序に並べ替えた文字列を返します。
 
 ```{r}
-# strings
+# 文字列の定義
 health_zones <- c("Alba", "Takota", "Delta")
 
-# return the alphabetical order
+# アルファベット順を返す
 str_order(health_zones)
 
-# return the strings in alphabetical order
+# アルファベット順に並び替える
 str_sort(health_zones)
 ```
 
-To use a different alphabet, add the argument `locale = `. See the full list of locales by entering `stringi::stri_locale_list()` in the R console.  
+異なるアルファベットを使用するには、引数 `locale = `を追加します。R コンソールで `stringi::stri_locale_list()` と入力することで、指定可能なアルファベットの一覧を表示することができます。
 
 
 
 
 
 <!-- ======================================================= -->
-### base R functions {.unnumbered}
+### R の基本関数 {.unnumbered}
 
-It is common to see **base** R functions `paste()` and `paste0()`, which concatenate vectors after converting all parts to character. They act similarly to `str_c()` but the syntax is arguably more complicated - in the parentheses each part is separated by a comma. The parts are either character text (in quotes) or pre-defined code objects (no quotes). For example:
+R の **base** （基本）関数である `paste()` や `paste0()` は、与えられたベクターのすべての要素を文字に変換した後、連結して1つの文字列を返すためにしばしば使われます。これらの関数は `str_c()` と似ていますが、構文はより複雑で、括弧の中では各部分がカンマで区切られています。各パーツは引用符で囲まれた文字テキストまたは既に定義されたコードオブジェクト（引用符なし）です。例えば、以下のようになります：
 
 ```{r}
 n_beds <- 10
@@ -388,20 +387,20 @@ n_masks <- 20
 paste0("Regional hospital needs ", n_beds, " beds and ", n_masks, " masks.")
 ```
 
-`sep = ` and `collapse = ` arguments can be specified. `paste()` is simply `paste0()` with a default `sep = " "` (one space).  
+`sep = ` と `collapse = ` の引数を指定できます。`paste()` は `sep = " "` （半角スペース）を初期設定に持つ `paste0()` と同値です。
 
 
 
 
 
 
-## Clean and standardise  
+## 整理と標準化
 
 
 <!-- ======================================================= -->
-### Change case {.unnumbered}
+### 大文字小文字の変更 {.unnumbered}
 
-Often one must alter the case/capitalization of a string value, for example names of jursidictions. Use `str_to_upper()`, `str_to_lower()`, and `str_to_title()`, from **stringr**, as shown below:  
+しばしば、管轄区域の名称などで大文字小文字を変更する必要に迫られることがあります。その際は以下のように、**stringr** に含まれる `str_to_upper()`、`str_to_lower()`、`str_to_title()` を用います：
 
 ```{r}
 str_to_upper("California")
@@ -409,24 +408,24 @@ str_to_upper("California")
 str_to_lower("California")
 ```
 
-Using *base** R, the above can also be achieved with `toupper()`, `tolower()`.  
+Rの **base** 関数である `toupper()`,`tolower()` を用いることでも上記と同じ処理が可能です。
 
 
-**Title case**  
+**タイトルケース**  
 
-Transforming the string so each word is capitalized can be achieved with `str_to_title()`:  
+各単語の語頭を大文字にするには `str_to_title()` を用います：  
 
 ```{r}
 str_to_title("go to the US state of california ")
 ```
 
-Use `toTitleCase()` from the **tools** package to achieve more nuanced capitalization (words like "to", "the", and "of" are not capitalized).  
+**tools** パッケージの `toTitleCase()` を使うことで、より厳密なタイトルケース（"to", "the", "of" といった単語は大文字化されません）に変更することができます。
 
 ```{r}
 tools::toTitleCase("This is the US state of california")
 ```
 
-You can also use `str_to_sentence()`, which capitalizes only the first letter of the string.
+`str_to_sentence()` を使えば、文字列の最初の文字のみを大文字化することができます。
 
 ```{r}
 str_to_sentence("the patient must be transported")
@@ -434,9 +433,9 @@ str_to_sentence("the patient must be transported")
 
 
 
-### Pad length  {#str_pad .unnumbered}
+### 文字列を伸長する  {#str_pad .unnumbered}
 
-Use `str_pad()` to add characters to a string, to a minimum length. By default spaces are added, but you can also pad with other characters using the `pad = ` argument.  
+`str_pad()` を用いると、文字列に特定の文字を足すことで、指定した最小の長さまで文字列を伸ばすことができます。初期設定では空白が追加されますが、`pad = `によって他の文字を指定することも可能です。
 
 
 ```{r}
@@ -452,20 +451,20 @@ str_pad(ICD_codes, 7, "right")
 str_pad(ICD_codes, 7, "right", pad = ".")
 ```
 
-For example, to pad numbers with leading zeros (such as for hours or minutes), you can pad the number to minimum length of 2 with `pad = "0"`.
+例えば、`pad = "0"` により先頭に 0 を足すことで、時間や分のように数字からなる文字列の長さが少なくとも 2 になるように処理することができます。
 
 ```{r}
-# Add leading zeros to two digits (e.g. for times minutes/hours)
+# 先頭に 0 を足して 2 桁にする(例：時間・分の表示)
 str_pad("4", 2, pad = "0") 
 
-# example using a numeric column named "hours"
+# "hours" という名前の数字列を作る場合
 # hours <- str_pad(hours, 2, pad = "0")
 ```
 
 
-### Truncate {.unnumbered} 
+### 文字数を短縮する {.unnumbered} 
 
-`str_trunc()` sets a maximum length for each string. If a string exceeds this length, it is truncated (shortened) and an ellipsis (...) is included to indicate that the string was previously longer. Note that the ellipsis *is* counted in the length. The ellipsis characters can be changed with the argument `ellipsis = `.  The optional `side = ` argument specifies which where the ellipsis will appear within the truncated string ("left", "right", or "center").  
+`str_trunc()` で文字列の長さの最大値を設定できます。与えられた文字列の長さが指定した最大値を超える場合、その文字列は短縮され、省略記号（...）が挿入されます。このとき、省略記号は文字数にカウントされることに注意してください。使用される省略記号は `ellipsis = `で指定することができます。また `side = ` によって、省略記号がどこに挿入されるか（“left”、 “right”、 “center”）を指定することができます。
 
 ```{r}
 original <- "Symptom onset on 4/3/2020 with vomiting"
@@ -473,57 +472,57 @@ str_trunc(original, 10, "center")
 ```
 
 
-### Standardize length {.unnumbered}
+### 長さの標準化 {.unnumbered}
 
-Use `str_trunc()` to set a maximum length, and then use `str_pad()` to expand the very short strings to that truncated length. In the example below, 6 is set as the maximum length (one value is truncated), and then one very short value is padded to achieve length of 6.    
+文字列の長さの最大値を `str_trunc()` で指定し、さらに `str_pad()` を用いて短い文字列をその長さまで伸長することができます。以下の例では、最大値を 6 に設定し（ 1 つの文字列が短縮されます）、続いて 1 つの短い文字列がその長さまで伸長されます。  
 
 ```{r}
-# ICD codes of differing length
+# 異なる長さのICDコード
 ICD_codes   <- c("R10.13",
                  "R10.819",
                  "R17")
 
-# truncate to maximum length of 6
+# 最大の長さが 6 になるよう文字列を短縮
 ICD_codes_2 <- str_trunc(ICD_codes, 6)
 ICD_codes_2
 
-# expand to minimum length of 6
+# 最小の長さが 6 になるよう文字列を伸長
 ICD_codes_3 <- str_pad(ICD_codes_2, 6, "right")
 ICD_codes_3
 ```
 
 
-### Remove leading/trailing whitespace {.unnumbered}  
+### 先頭・末尾の空白を削除する {.unnumbered}  
 
-Use `str_trim()` to remove spaces, newlines (`\n`) or tabs (`\t`) on sides of a string input. Add `"right"` `"left"`, or `"both"` to the command to specify which side to trim (e.g. `str_trim(x, "right")`. 
+`str_trim()` を用いて文字列の端にある空白、改行（`\n`）、タブ （`\t`）を削除できます。`"right"`、`"left"`、または `"both"` を指定することにより、どちらの端から削除するかを選択することができます（例：`str_trim(x, "right")`）。
 
 ```{r}
-# ID numbers with excess spaces on right
-IDs <- c("provA_1852  ", # two excess spaces
-         "provA_2345",   # zero excess spaces
-         "provA_9460 ")  # one excess space
+# 右端に余分な空白を持つID
+IDs <- c("provA_1852  ", # 2 つの余分な空白
+         "provA_2345",   # 余分な空白なし
+         "provA_9460 ")  # 1 つの余分な空白
 
-# IDs trimmed to remove excess spaces on right side only
+# 右端から空白を削除
 str_trim(IDs)
 ```
 
 
-### Remove repeated whitespace within {.unnumbered}  
+### 繰り返される空白の削除 {.unnumbered}  
 
-Use `str_squish()` to remove repeated spaces that appear *inside* a string. For example, to convert double spaces into single spaces. It also removes spaces, newlines, or tabs on the outside of the string like `str_trim()`.  
+`str_squish()` を用いて文字列の内部に連続して現れる空白を作事できます。例えば、2 つ続きになっている空白を単一の空白に変更できます。`str_trim()` と同様、文字列の端にある空白、改行、タブを削除することもできます。
 
 
 ```{r}
-# original contains excess spaces within string
+# 元の文字列は内部に余分な空白を含む
 str_squish("  Pt requires   IV saline\n") 
 ```
 
-Enter `?str_trim`, `?str_pad` in your R console to see further details.  
+R コンソールに `?str_trim`、`?str_pad` と入力することで詳細を参照できます。
 
 
-### Wrap into paragraphs {.unnumbered}  
+### 指定の文字数で文章を改行する {.unnumbered}  
 
-Use `str_wrap()` to wrap a long unstructured text into a structured paragraph with fixed line length. Provide the ideal character length for each line, and it applies an algorithm to insert newlines (`\n`) within the paragraph, as seen in the example below.   
+`str_wrap()` を用いることで、長い文章を指定した文字数で改行し整理することができます。任意の文字数を指定すれば、アルゴリズムにより以下のように文章中に改行（`\n`）が挿入されます。
 
 ```{r}
 pt_course <- "Symptom onset 1/4/2020 vomiting chills fever. Pt saw traditional healer in home village on 2/4/2020. On 5/4/2020 pt symptoms worsened and was admitted to Lumta clinic. Sample was taken and pt was transported to regional hospital on 6/4/2020. Pt died at regional hospital on 7/4/2020."
@@ -531,7 +530,7 @@ pt_course <- "Symptom onset 1/4/2020 vomiting chills fever. Pt saw traditional h
 str_wrap(pt_course, 40)
 ```
 
-The **base** function `cat()` can be wrapped around the above command in order to print the output, displaying the new lines added.  
+**base** 関数である `cat()` に上記のコマンドを入力することで、改行された文章を表示することができます。
 
 ```{r}
 cat(str_wrap(pt_course, 40))
