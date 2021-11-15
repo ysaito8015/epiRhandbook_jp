@@ -1437,89 +1437,125 @@ ggplot(data = observed, aes(x = epiweek)) +
 
 <!-- ======================================================= -->
 #### Prediction validation {.unnumbered}
+#### 予測と妥当性検証 {.unnumbered}
 
 Beyond inspecting residuals, it is important to investigate how good your model is
 at predicting cases in the future. This gives you an idea of how reliable your 
-threshold alerts are.  
+threshold alerts are. 
+残差を調べるだけでなく、モデルが将来のケースをどの程度予測できるかを調べることも重要です。これにより、閾値アラートの信頼性を知ることができます。
 
 The traditional way of validating is to see how well you can predict the latest 
 year before the present one (because you don't yet know the counts for the "current year"). 
 For example in our data set we would use the data from 2002 to 2009 to predict 2010, 
 and then see how accurate those predictions are. Then refit the model to include
-2010 data and use that to predict 2011 counts.  
+2010 data and use that to predict 2011 counts.
+従来の検証方法では、現在の年よりも前の最新の年をどれだけ予測できるかを確認していました（「現在の年」のカウント数がまだわからないため）。
+例えば、今回のデータセットでは、2002年から2009年までのデータを使って2010年を予測し、その予測の正確さを確認します。その後、2010年のデータを含むようにモデルを修正し、それを使って2011年の数を予測します。
 
 As can be seen in the figure below by *Hyndman et al* in ["Forecasting principles 
-and practice"](https://otexts.com/fpp3/). 
+and practice"](https://otexts.com/fpp3/).
+下の図は、Hyndman et al*による["Forecasting principles and practice"](https://otexts.com/fpp3/)に掲載されています。
 
 ![](`r "https://otexts.com/fpp3/fpp_files/figure-html/traintest-1.png"`)
-*figure reproduced with permission from the authors* 
+*figure reproduced with permission from the authors*
+*図は著者の許可を得て転載しています。*
 
 The downside of this is that you are not using all the data available to you, and 
-it is not the final model that you are using for prediction. 
+it is not the final model that you are using for prediction.
+この場合のデメリットは、利用可能なすべてのデータを使用していないことと、予測に使用する最終モデルではないことです。
 
 An alternative is to use a method called cross-validation. In this scenario you 
 roll over all of the data available to fit multiple models to predict one year ahead. 
 You use more and more data in each model, as seen in the figure below from the 
 same [*Hyndman et al* text]((https://otexts.com/fpp3/). 
 For example, the first model uses 2002 to predict 2003, the second uses 2002 and 
-2003 to predict 2004, and so on. 
+2003 to predict 2004, and so on.
+もう一つの方法は、クロスバリデーションと呼ばれる方法です。このシナリオでは、利用可能なすべてのデータをロールオーバーして、1年先を予測するための複数のモデルに適合させます。
+以下の図のように、それぞれのモデルにはより多くのデータを使用します。同じ[*Hyndman et al* text]((https://otexts.com/fpp3/). 
+例えば、1つ目のモデルは2002年を使って2003年を予測し、2つ目は2002年と2003年を使って2004年を予測する、といった具合です。
 ![](`r "https://otexts.com/fpp2/fpp_files/figure-html/cv1-1.png"`)
 *figure reproduced with permission from the authors*
+*図は著者の許可を得て転載しています。*
 
 In the below we use **purrr** package `map()` function to loop over each dataset. 
 We then put estimates in one data set and merge with the original case counts, 
 to use the **yardstick** package to compute measures of accuracy. 
 We compute four measures including: Root mean squared error (RMSE), Mean absolute error	
 (MAE), Mean absolute scaled error (MASE), Mean absolute percent error (MAPE).
+以下では、 **purrr** パッケージの `map()` 関数を使って、各データセットをループさせます。
+次に、推定値を1つのデータセットにまとめ、元の症例数とマージし、**yardstick**パッケージを使って精度の測定値を計算します。
+以下の4つの指標を計算しました。平均平方根誤差（RMSE）、平均絶対誤差（MAE）、平均絶対尺度誤差（MASE）。平均絶対誤差(MAE)、平均絶対スケール誤差(MASE)、平均絶対パーセント誤差(MAPE)です。
 
 <span style="color: orange;">**_CAUTION:_** Note the use of `simulate_pi = FALSE`
 within the `predict()` argument. This is because the default behaviour of **trending** 
 is to use the **ciTools** package to estimate a prediction interval. This does not 
 work if there are `NA` counts, and also produces more granular intervals. 
 See `?trending::predict.trending_model_fit` for details. </span>  
+<span style="color: orange;">**_CAUTION:_** `predict()` の引数で `simulate_pi = FALSE` を使用していることに注意してください。これは **trending** のデフォルトの動作が **ciTools** パッケージを使用して予測区間を推定することだからです。
+これは これは`NA`カウントがある場合には機能せず、また、より細かい間隔を生成します。 
+詳細は `?trending::predict.trending_model_fit` を参照してください。</span>
 
 ```{r cross_validation, warning = FALSE}
 
 ## Cross validation: predicting week(s) ahead based on sliding window
+## 交差確認法： スライディングウィンドウに基づいて1週間先を予測します。
 
 ## expand your data by rolling over in 52 week windows (before + after) 
+## データを52週分（前+後）に分割して表示します。
 ## to predict 52 week ahead
+## 52週先を予測すること
 ## (creates longer and longer chains of observations - keeps older data)
+## (観察の連鎖がどんどん長くなり、古いデータが残ります。）
 
 ## define window want to roll over
+## ロールオーバーしたい窓を定義します。
 roll_window <- 52
 
 ## define weeks ahead want to predict 
+## 何週間先を予測したいかを定義します。
 weeks_ahead <- 52
 
 ## create a data set of repeating, increasingly long data
+## 繰り返しの、長いデータセットを作成します。
 ## label each data set with a unique id
+## 各データセットに一意のIDを付与します。
 ## only use cases before year of interest (i.e. 2011)
+## 関心のある年（例： 2011年）の前のケースのみを使用します。
 case_roll <- counts %>% 
   filter(epiweek < cut_off) %>% 
   ## only keep the week and case counts variables
+  ## 週とケースの数の変数のみを保持します。
   select(epiweek, case_int) %>% 
     ## drop the last x observations 
+    ## 最新のx観測値を落とします。
     ## depending on how many weeks ahead forecasting 
+    ## 何週間先まで予測するかによって
     ## (otherwise will be an actual forecast to "unknown")
+    ##（そうでない場合は""unknownへの実際の予測となります。） 
     slice(1:(n() - weeks_ahead)) %>%
     as_tsibble(index = epiweek) %>% 
     ## roll over each week in x after windows to create grouping ID 
+    ## グループ化されたIDを作成するために、xの後のウィンドウで各週を検索します。
     ## depending on what rolling window specify
+    ## ローリングウィンドウの指定に応じて
     stretch_tsibble(.init = roll_window, .step = 1) %>% 
   ## drop the first couple - as have no "before" cases
+  ## 「以前」のケースがないため - 最初のカップルを削除します。
   filter(.id > roll_window)
 
 
 ## for each of the unique data sets run the code below
+## それぞれのデータセットに対して、以下のコードを実行します。
 forecasts <- purrr::map(unique(case_roll$.id), 
                         function(i) {
   
-  ## only keep the current fold being fit 
+  ## only keep the current fold being fit
+  ## 現在の折り返しをフィットさせるだけ
   mini_data <- filter(case_roll, .id == i) %>% 
     as_tibble()
   
   ## create an empty data set for forecasting on 
+  ## 予測するための空のデータセットを作成します。
   forecast_data <- tibble(
     epiweek = seq(max(mini_data$epiweek) + 1,
                   max(mini_data$epiweek) + weeks_ahead,
@@ -1528,42 +1564,57 @@ forecasts <- purrr::map(unique(case_roll$.id),
     .id = rep.int(i, weeks_ahead)
   )
   
-  ## add the forecast data to the original 
+  ## add the forecast data to the original
+  ## 予測データを元のデータに追加します。
   mini_data <- bind_rows(mini_data, forecast_data)
   
-  ## define the cut off based on latest non missing count data 
+  ## define the cut off based on latest non missing count data
+  ## 最新の非欠損カウントデータに基づいてカットオフを定義します。
   cv_cut_off <- mini_data %>% 
     ## only keep non-missing rows
+    ## 欠損していない行のみを保持します。
     drop_na(case_int) %>% 
     ## get the latest week
+    ## 最新の週を取得します。
     summarise(max(epiweek)) %>% 
     ## extract so is not in a dataframe
+    ## 抽出したものはデータフレームには含まれません。
     pull()
   
   ## make mini_data back in to a tsibble
+  ## mini_dataをtsibbleに戻します。
   mini_data <- tsibble(mini_data, index = epiweek)
   
   ## define fourier terms (sincos) 
+  ## フーリエ項（sincos）を定義します。
   mini_data <- mini_data %>% 
     mutate(
     ## combine fourier terms for weeks prior to  and after cut-off date
+    ## カットオフ日の前後の週のフーリエ項を組み合わせます。
     fourier = rbind(
       ## get fourier terms for previous years
+      ## 以前の年のフーリエ項を取得します。
       forecast::fourier(
         ## only keep the rows before cut-off
+        ## カットオフ以前の行のみを保持します。
         filter(mini_data, 
                epiweek <= cv_cut_off), 
         ## include one set of sin cos terms 
+        ## サイン・コサイン項のセットを1つ含めます。
         K = 1
         ), 
       ## predict the fourier terms for following year (using baseline data)
+      ## 後の年についてのフーリエ項を予測します（ベースラインデータを用いて）
       fourier(
         ## only keep the rows before cut-off
+        ## カットオフ以前の行のみを保持します。
         filter(mini_data, 
                epiweek <= cv_cut_off),
         ## include one set of sin cos terms 
+        ## サイン・コサインの項を1つ含めます。
         K = 1, 
         ## predict 52 weeks ahead
+        ## 52週先を予測します。
         h = weeks_ahead
         )
       )
@@ -1571,63 +1622,83 @@ forecasts <- purrr::map(unique(case_roll$.id),
   
   
   # split data for fitting and prediction
+  ## 当てはめと予測のためにデータを分割します。
   dat <- mini_data %>% 
     group_by(epiweek <= cv_cut_off) %>%
     group_split()
 
   ## define the model you want to fit (negative binomial) 
+  ## 当てはめたいモデルを定義します（負の二項回帰）
   model <- glm_nb_model(
     ## set number of cases as outcome of interest
+    ## 関心のあるアウトカムとしてケースの数をセットします。
     case_int ~
       ## use epiweek to account for the trend
+      ## 傾向を説明するためにepiweekを使います。
       epiweek +
       ## use the furier terms to account for seasonality
+      ## 季節性を説明するためにフーリエ項を使用します。
       fourier
   )
 
   # define which data to use for fitting and which for predicting
+  ## 度のデータを当てはめと予測に使用するかを定義します。
   fitting_data <- pluck(dat, 2)
   pred_data <- pluck(dat, 1)
   
   # fit model 
+  # モデルの当てはめを行います。
   fitted_model <- trending::fit(model, fitting_data)
   
   # forecast with data want to predict with 
+  # 予測したいデータを予想します。
   forecasts <- fitted_model %>% 
     predict(pred_data, simulate_pi = FALSE) %>% 
     ## only keep the week and the forecast estimate
+    ## 週と予想する推定値のみを保持します。
     select(epiweek, estimate)
     
   }
   )
 
 ## make the list in to a data frame with all the forecasts
+## リストを全ての予測を含むデータフレームにします。
 forecasts <- bind_rows(forecasts)
 
 ## join the forecasts with the observed
+## 予測値と観測値を結合します。
 forecasts <- left_join(forecasts, 
                        select(counts, epiweek, case_int),
                        by = "epiweek")
 
 ## using {yardstick} compute metrics
+## {yardstick}を用いて指標を計算します。
   ## RMSE: Root mean squared error
+  ## RMSE： 平均二乗偏差
   ## MAE:  Mean absolute error	
+  ## MAE： 平均絶対誤差
   ## MASE: Mean absolute scaled error
+  ## MASE：平均絶対スケール誤差
   ## MAPE: Mean absolute percent error
+  ## MAPE： 平均z接待パーセント誤差
 model_metrics <- bind_rows(
   ## in your forcasted dataset compare the observed to the predicted
+  ## 予測されたデータセット内の観測値と推定値を比較
   rmse(forecasts, case_int, estimate), 
   mae( forecasts, case_int, estimate),
   mase(forecasts, case_int, estimate),
   mape(forecasts, case_int, estimate),
   ) %>% 
   ## only keep the metric type and its output
+  ## 指標タイプと結果のみを保持します。
   select(Metric  = .metric, 
          Measure = .estimate) %>% 
   ## make in to wide format so can bind rows after
+  ## 後で行を結合できるようにワイドフォーマットで作成します。
   pivot_wider(names_from = Metric, values_from = Measure)
 
 ## return model metrics 
+## モデルの指標を返します。
 model_metrics
 
 ```
