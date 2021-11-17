@@ -548,83 +548,83 @@ cat(str_wrap(pt_course, 40))
 
 
 <!-- ======================================================= -->
-## Handle by position { }
+## 位置による操作 { }
 
 
-### Extract by character position {.unnumbered}  
+### 位置を指定して文字を抽出する {.unnumbered}  
 
-Use `str_sub()` to return only a part of a string. The function takes three main arguments:  
+`str_sub()` は文字列の一部を返します。この関数は3つの引数を取ります：
 
-1) the character vector(s)  
-2) start position  
-3) end position  
+1) 文字ベクター
+2) 開始位置
+3) 終了位置
 
-A few notes on position numbers:  
+位置を定義する際にいくつかの注意点があります：
 
-* If a position number is positive, the position is counted starting from the left end of the string.  
-* If a position number is negative, it is counted starting from the right end of the string.  
-* Position numbers are inclusive.  
-* Positions extending beyond the string will be truncated (removed).  
+* 位置数が正のとき、位置は文字列の左端からカウントされます。
+* 位置数が負のとき、位置は文字列の右端からカウントされます。
+* 開始・終了位置は選択範囲に含まれます。
+* 文字列の長さを超えて選択された範囲は無視されます。
 
-Below are some examples applied to the string "pneumonia":  
+以下に文字列 "pneumonia" を用いた例を示します：
 
 ```{r}
-# start and end third from left (3rd letter from left)
+# 左から 3 文字目を開始および終了位置に設定
 str_sub("pneumonia", 3, 3)
 
-# 0 is not present
+# 位置 0 は存在しません
 str_sub("pneumonia", 0, 0)
 
-# 6th from left, to the 1st from right
+# 左から 6 文字目を開始位置、右から 1 文字目を終了位置に設定
 str_sub("pneumonia", 6, -1)
 
-# 5th from right, to the 2nd from right
+# 右から 5 文字目を開始位置、右から 2 文字目を終了位置に設定
 str_sub("pneumonia", -5, -2)
 
-# 4th from left to a position outside the string
+# 左から 4 文字目を開始位置、文字列の長さを超えた位置を終了位置に設定
 str_sub("pneumonia", 4, 15)
 ```
 
 
 
-### Extract by word position {.unnumbered} 
+### 位置を指定して単語を抽出する {.unnumbered} 
 
-To extract the nth 'word', use `word()`, also from **stringr**. Provide the string(s), then the first word position to extract, and the last word position to extract.  
+n番目の '単語' を抽出するには、**stringr** パッケージから `word()` を用います。文字列、開始位置、終了位置を引数に取ります。
 
-By default, the separator between 'words' is assumed to be a space, unless otherwise indicated with `sep = ` (e.g. `sep = "_"` when words are separated by underscores.  
+初期設定では空白で区切られた部分が単語と認識されます。区切りは `sep = ` で変更でき、例えば `sep = "_"` と指定すると下線で区切られた部分が単語と認識されます。
 
 
 ```{r}
-# strings to evaluate
+# 評価したい文字列
 chief_complaints <- c("I just got out of the hospital 2 days ago, but still can barely breathe.",
                       "My stomach hurts",
                       "Severe ear pain")
 
-# extract 1st to 3rd words of each string
+# 1 から 3 番目の単語を抽出
 word(chief_complaints, start = 1, end = 3, sep = " ")
 ```
 
 
-### Replace by character position {.unnumbered} 
+### 位置を指定して文字を入れ替える {.unnumbered} 
 
-`str_sub()` paired with the assignment operator (`<-`) can be used to modify a part of a string: 
+`str_sub()` と代入演算子（`<-`）を組み合わせて文字列の一部を変更できます：
 
 ```{r}
 word <- "pneumonia"
 
-# convert the third and fourth characters to X 
+# 3 番目と 4 番目の文字を X に変更する
 str_sub(word, 3, 4) <- "XX"
 
-# print
+# 結果を表示
 word
 ```
 
-An example applied to multiple strings (e.g. a column). Note the expansion in length of "HIV".  
+データフレームの行など、複数の文字列に対して用いる場合の例を示します。"HIV" の例では文字列が長くなることに注意してください。  
 
 ```{r}
 words <- c("pneumonia", "tubercolosis", "HIV")
 
-# convert the third and fourth characters to X 
+# 3 番目と 4 番目の文字を X に変更する
 str_sub(words, 3, 4) <- "XX"
 
 words
@@ -632,14 +632,14 @@ words
 
 
 
-### Evaluate length  {.unnumbered}
+### 長さを評価する  {.unnumbered}
 
 
 ```{r}
 str_length("abc")
 ```
 
-Alternatively, use `nchar()` from **base** R
+**base** 関数 `nchar()` でも同等の操作が可能です。
 
 
 
@@ -648,37 +648,37 @@ Alternatively, use `nchar()` from **base** R
 
 
 <!-- ======================================================= -->
-## Patterns { }
+## パターン { }
 
-Many **stringr** functions work to detect, locate, extract, match, replace, and split based on a specified *pattern*.  
+**stringr** に含まれる関数の多くは、与えられた文字列から特定の*パターン*を見つけ、その位置を特定したり、抽出・入れ替えなどの操作を行うことができます。  
 
 
 
 <!-- ======================================================= -->
-### Detect a pattern {.unnumbered}
+### パターンを見つける {.unnumbered}
 
-Use `str_detect()` as below to detect presence/absence of a pattern within a string. First provide the string or vector to search in (`string = `), and then the pattern to look for (`pattern = `). Note that by default the search *is case sensitive*!
+以下の例のように `str_detect()` を使うことで、文字列中に特定のパターンが存在するか否かを判別することができます。初めに検索する文字列を与え（`string = `）、さらに探したいパターンを入力します（`pattern = `）。 初期設定では*大文字小文字が区別される*ことに注意してください！
 
 ```{r}
 str_detect(string = "primary school teacher", pattern = "teach")
 ```
 
-The argument `negate = ` can be included and set to `TRUE` if you want to know if the pattern is NOT present.  
+引数 `negate = `を `TRUE` に設定することで、パターンが存在 "しない" かどうかを判定できます。
  
 ```{r}
 str_detect(string = "primary school teacher", pattern = "teach", negate = TRUE)
 ```
 
-To ignore case/capitalization, wrap the pattern within `regex()`, and *within* `regex()` add the argument `ignore_case = TRUE` (or `T` as shorthand).  
+大文字小文字を無視したい場合は、パターンを `regex()` で包み、`regex()` *中に* `ignore_case = TRUE`（もしくは短く `T`）と指定します。 
 
 ```{r}
 str_detect(string = "Teacher", pattern = regex("teach", ignore_case = T))
 ```
 
-When `str_detect()` is applied to a character vector or a data frame column, it will return TRUE or FALSE for each of the values. 
+`str_detect()` で検索する文字列が文字ベクターやデータフレームの列である場合は、各要素に関して `TRUE` または `FALSE` を返します。
 
 ```{r}
-# a vector/column of occupations 
+# 職業のベクター/列
 occupations <- c("field laborer",
                  "university professor",
                  "primary school teacher & tutor",
@@ -690,26 +690,26 @@ occupations <- c("field laborer",
                  "office worker",
                  "food service")
 
-# Detect presence of pattern "teach" in each string - output is vector of TRUE/FALSE
+# 各文字列中に "teach" が含まれるかを判別する - TRUE/FALSE が出力される
 str_detect(occupations, "teach")
 ```
 
-If you need to count the `TRUE`s, simply `sum()` the output. This counts the number `TRUE`.  
+`TRUE` がいくつあるかを数えたい場合は、出力された値を `sum()` に入力します。
 
 ```{r}
 sum(str_detect(occupations, "teach"))
 ```
 
-To search inclusive of multiple terms, include them separated by OR bars (`|`) within the `pattern = ` argument, as shown below:  
+複数のパターンを探したい時は、以下のように各パターンを OR 記号で区切り（`|`）、`pattern = `で指定します：
 
 ```{r}
 sum(str_detect(string = occupations, pattern = "teach|professor|tutor"))
 ```
 
-If you need to build a long list of search terms, you can combine them using `str_c()` and `sep = |`, then define this is a character object, and then reference the vector later more succinctly. The example below includes possible occupation search terms for front-line medical providers.     
+より多くのパターンを同時に探したいときは、 `str_c()` と `sep = |` を組み合わせた出力を文字オブジェクトとして定義し用いることで、コードをより簡潔にすることができます。以下の例では、医療従事者の職業リストをパターンとして検索します。
 
 ```{r}
-# search terms
+# 検索するパターン
 occupation_med_frontline <- str_c("medical", "medicine", "hcw", "healthcare", "home care", "home health",
                                 "surgeon", "doctor", "doc", "physician", "surgery", "peds", "pediatrician",
                                "intensivist", "cardiologist", "coroner", "nurse", "nursing", "rn", "lpn",
@@ -723,7 +723,7 @@ occupation_med_frontline <- str_c("medical", "medicine", "hcw", "healthcare", "h
 occupation_med_frontline
 ```
 
-This command returns the number of occupations which contain any one of the search terms for front-line medical providers (`occupation_med_frontline`):  
+以下の例では、先に定義した職業リストの中に含まれる医療職（`occupation_med_frontline`）の数を返します：
 
 ```{r}
 sum(str_detect(string = occupations, pattern = occupation_med_frontline))
@@ -731,36 +731,36 @@ sum(str_detect(string = occupations, pattern = occupation_med_frontline))
 
 
 
-**Base R string search functions**  
+**文字列検索のための基本 R 関数**  
 
-The **base** function `grepl()` works similarly to `str_detect()`, in that it searches for matches to a pattern and returns a logical vector. The basic syntax is `grepl(pattern, strings_to_search, ignore.case = FALSE, ...)`. One advantage is that the `ignore.case` argument is easier to write (there is no need to involve the `regex()` function).  
+**base** 関数 `grepl()` は `str_detect()` と同様、パターンの有無を判定し論理ベクターを返します。, 基本構文は `grepl(pattern, strings_to_search, ignore.case = FALSE, ...)` です。利点の１つとして、`regex()` を使う代わりに `ignore.case = `を指定するだけで大文字小文字を区別するかを変更することができます。
 
-Likewise, the **base** functions `sub()` and `gsub()` act similarly to `str_replace()`. Their basic syntax is: `gsub(pattern, replacement, strings_to_search, ignore.case = FALSE)`. `sub()` will replace the first instance of the pattern, whereas `gsub()` will replace all instances of the pattern.  
+同様に、**base** 関数 `sub()` と `gsub()` は `str_replace()` に近い働きをします。 基本構文は `gsub(pattern, replacement, strings_to_search, ignore.case = FALSE)` です。`sub()` は一致したパターンのうち最初に現れるものだけを、`gsub()` は一致したパターンの全てを入れ替えます。
 
 
-#### Convert commas to periods {.unnumbered}  
+#### カンマをピリオドに入れ替える {.unnumbered}  
 
-Here is an example of using `gsub()` to convert commas to periods in a vector of numbers. This could be useful if your data come from parts of the world other than the United States or Great Britain.  
+以下に `gsub()` を用いてカンマをピリオドに入れ替える例を示します。これは米国や英国以外で得られたデータを扱う際に役に立つかもしれません。
 
-The inner `gsub()` which acts first on `lengths` is converting any periods to no space "". The period character  "." has to be "escaped" with two slashes to actually signify a period, because "." in regex means "any character". Then, the result (with only commas) is passed to the outer `gsub()` in which commas are replaced by periods.   
+内部の `gsub()` は `lengths` 内のピリオドを "" に入れ替えます。ピリオド "." をパターンとして指定する際は、その前に2つバックスラッシュを置くことで "エスケープ" する必要があります。これは正規表現において "." が "全ての文字" を意味するためです。 ここで得られた出力（ピリオドは削除されカンマのみを含む）は外側の `gsub()` に渡され、カンマがピリオドに置き換わります。   
 
 ```{r, eval=F}
 lengths <- c("2.454,56", "1,2", "6.096,5")
 
-as.numeric(gsub(pattern = ",",                # find commas     
-                replacement = ".",            # replace with periods
-                x = gsub("\\.", "", lengths)  # vector with other periods removed (periods escaped)
+as.numeric(gsub(pattern = ",",                # カンマを見つける
+                replacement = ".",            # ピリオドに入れ替える
+                x = gsub("\\.", "", lengths)  # ピリオド（エスケープして指定）を削除する
                 )
-           )                                  # convert outcome to numeric
+           )                                  # 出力を数字ベクターに変更
 ```
 
 
 
 
 
-### Replace all {.unnumbered}  
+### 全て入れ替える {.unnumbered}  
 
-Use `str_replace_all()` as a "find and replace" tool. First, provide the strings to be evaluated to `string = `, then the pattern to be replaced to `pattern = `, and then the replacement value to `replacement = `. The example below replaces all instances of "dead" with "deceased". Note, this IS case sensitive.  
+`str_replace_all()` は "検索と置換" ツールとして使用できます。検索する文字列、パターン、置き換える値をそれぞれ `string = `、`pattern = `、`replacement = `で指定します。 以下の例では全ての "dead" を "deceased" に入れ替えます。大文字小文字が区別されることに注意してください。
 
 ```{r}
 outcome <- c("Karl: dead",
@@ -770,55 +770,55 @@ outcome <- c("Karl: dead",
 str_replace_all(string = outcome, pattern = "dead", replacement = "deceased")
 ```
 
-Notes:  
+注：  
 
-* To replace a pattern with `NA`, use `str_replace_na()`.  
-* The function `str_replace()` replaces only the first instance of the pattern within each evaluated string.  
+* パターンを `NA` で置き換えるには `str_replace_na()` を用います。
+* `str_replace()` は与えられた各文字列中に現れる最初のパターンだけを入れ替えます。
 
 
 
 
 
 <!-- ======================================================= -->
-### Detect within logic {.unnumbered}
+### パターンの有無による条件分岐 {.unnumbered}
 
 
-**Within `case_when()`**  
+**`case_when()` との組み合わせ**  
 
-`str_detect()` is often used within `case_when()` (from **dplyr**). Let's say `occupations` is a column in the linelist. The `mutate()` below creates a new column called `is_educator` by using conditional logic via `case_when()`. See the page on data cleaning to learn more about `case_when()`.  
+`str_detect()` はしばしば **dplyr** パッケージの `case_when()` と組み合わせて用いられます。例として、`occupations` がラインリスト内の列であるとします。以下の `mutate()` は `case_when()` による条件分岐に従って新しい列 `is_educator` を作ります。`case_when()` についての詳細はデータクリーニングのページを参照してください。
 
 
 ```{r, eval=F}
 df <- df %>% 
   mutate(is_educator = case_when(
-    # term search within occupation, not case sensitive
+    # occupation内でパターン検索。大文字小文字は区別しない。
     str_detect(occupations,
                regex("teach|prof|tutor|university",
                      ignore_case = TRUE))              ~ "Educator",
-    # all others
+    # その他全て
     TRUE                                               ~ "Not an educator"))
 ```
 
-As a reminder, it may be important to add exclusion criteria to the conditional logic (`negate = F`):  
+`negate = F` を用いて除外したいパターンを指定できることも覚えておきましょう： 
 
 ```{r, eval=F}
 df <- df %>% 
-  # value in new column is_educator is based on conditional logic
+  # 新しい列 is_educator の値を条件分岐により決定する
   mutate(is_educator = case_when(
     
-    # occupation column must meet 2 criteria to be assigned "Educator":
-    # it must have a search term AND NOT any exclusion term
-    
-    # Must have a search term
+    # "Educator"の値を取るためには 2 つの基準を満たす必要がある：
+    # 指定されたパターンを持ち、かつ除外されたパターンを持たない
+
+    # 指定されたパターンを持つ
     str_detect(occupations,
-               regex("teach|prof|tutor|university", ignore_case = T)) &              
+               regex("teach|prof|tutor|university", ignore_case = T)) &
     
-    # AND must NOT have an exclusion term
+    # 除外されたパターンを持たない
     str_detect(occupations,
                regex("admin", ignore_case = T),
                negate = TRUE                        ~ "Educator"
     
-    # All rows not meeting above criteria
+    # 上記の条件を満たさない全ての行
     TRUE                                            ~ "Not an educator"))
 ```
 
@@ -827,21 +827,21 @@ df <- df %>%
 
 
 <!-- ======================================================= -->
-### Locate pattern position {.unnumbered}  
+### パターンの位置を特定する {.unnumbered}  
 
-To locate the *first* position of a pattern, use `str_locate()`. It outputs a start and end position.   
+指定したパターンが与えられた文字列中に*最初に*現れる位置を特定するためには、`str_locate()` を用います。パターンの最初と最後の文字の位置を返します。
 
 ```{r}
 str_locate("I wish", "sh")
 ```
 
-Like other `str` functions, there is an "_all" version (`str_locate_all()`) which will return the positions of *all* instances of the pattern within each string. This outputs as a `list`.  
+その他の `str` 関数と同様、`str_locate()` にも "_all" バージョンが存在します（`str_locate_all()`）。与えられた各文字列中に現れるパターンの全ての位置を `list` 形式で返します。
 
 ```{r}
 phrases <- c("I wish", "I hope", "he hopes", "He hopes")
 
-str_locate(phrases, "h" )     # position of *first* instance of the pattern
-str_locate_all(phrases, "h" ) # position of *every* instance of the pattern
+str_locate(phrases, "h" )     # *最初に*現れるパターンの位置
+str_locate_all(phrases, "h" ) # *全ての*パターンの位置
 ```
 
 
@@ -849,35 +849,35 @@ str_locate_all(phrases, "h" ) # position of *every* instance of the pattern
 
 
 <!-- ======================================================= -->
-### Extract a match {.unnumbered}  
+### 一致したパターンを抽出する {.unnumbered}  
 
-`str_extract_all()` returns the matching patterns themselves, which is most useful when you have offered several patterns via "OR" conditions. For example, looking in the string vector of occupations (see previous tab) for *either* "teach", "prof", or "tutor".
+`str_extract_all()` はマッチしたパターンそのものを返します。これは "OR" を用いて複数のパターンを検索したときに特に有用です。例えば、職業の文字列リスト（前節を参照）内に "teach"、"prof"、"tutor" の*いずれか*のパターンを探すことを考えます。
 
-`str_extract_all()` returns a `list` which contains *all matches* for each evaluated string. See below how occupation 3 has two pattern matches within it.  
+`str_extract_all()` 与えられた文字列内の一致するパターン全ての `list` を返します。以下の例で 3 つ目の文字列において 2 つのパターンが一致していることに注目してください。
 
 ```{r}
 str_extract_all(occupations, "teach|prof|tutor")
 ```
 
 
-`str_extract()` extracts *only the first match* in each evaluated string, producing a character vector with one element for each evaluated string. It returns `NA` where there was no match. The `NA`s can be removed by wrapping the returned vector with `na.exclude()`. Note how the second of occupation 3's matches is not shown.  
+`str_extract()` は*最初に一致したパターンのみ*を返します。従って、出力は与えられた各文字列に対して 1 つのパターンを文字ベクターで返します。 一致するパターンがない場合は `NA` を返します。この `NA` は `str_extract` を `na.exclude()` で包むことで消去できます。3 つ目の文字列の 2 つ目の一致パターンが表示されないことに注意してください。 
 
 ```{r}
 str_extract(occupations, "teach|prof|tutor")
 ```
 
 <!-- ======================================================= -->
-### Subset and count {.unnumbered}  
+### サブセットと数え上げ {.unnumbered}  
 
-Aligned functions include `str_subset()` and `str_count()`.  
+ここでは `str_subset()` と `str_count()` を扱います。
 
-`str_subset()` returns the actual values which contained the pattern: 
+`str_subset()` は一致したパターンだけでなく、そのパターンを含む文字列全体を返します：
 
 ```{r}
 str_subset(occupations, "teach|prof|tutor")
 ```
 
-`str_count()` returns a vector of numbers: the **number of times** a search term appears in each evaluated value.  
+`str_count()` は検索した文字列中に指定したパターンが現れる**合計回数**をベクターで返します。  
 
 ```{r}
 str_count(occupations, regex("teach|prof|tutor", ignore_case = TRUE))
@@ -895,136 +895,136 @@ str_count(occupations, regex("teach|prof|tutor", ignore_case = TRUE))
 
 
 <!-- ======================================================= -->
-### Regex groups {.unnumbered}
+### 正規表現グループ {.unnumbered}
 
-UNDER CONSTRUCTION
-
-
+作成中
 
 
 
-
-<!-- ======================================================= -->
-## Special characters  
-
-**Backslash `\` as escape**  
-
-The backslash `\` is used to "escape" the meaning of the next character. This way, a backslash can be used to have a quote mark display *within* other quote marks (`\"`) - the middle quote mark will not "break" the surrounding quote marks.  
-
-Note - thus, if you want to *display* a backslash, you must escape it's meaning with *another* backslash. So you must write two backslashes `\\` to display one.  
-
-**Special characters**  
-
-Special character | Represents  
------------------ | --------------------------------------------------------------    
-`"\\"` | backslash  
-`"\n"` | a new line (newline)   
-`"\""` | double-quote *within* double quotes  
-`'\''` | single-quote *within* single quotes  
-`"\`"` | grave accent  
-`"\r"` | carriage return  
-`"\t"` | tab  
-`"\v"` | vertical tab 
-`"\b"` | backspace  
-
-
-Run `?"'"` in the R Console to display a complete list of these special characters (it will appear in the RStudio Help pane). 
 
 
 
 <!-- ======================================================= -->
-## Regular expressions (regex) 
+## 特殊文字
+
+**バックスラッシュ `\` によるエスケープ**  
+
+バックスラッシュ `\` はその直後に現れる文字の意味を "エスケープ" するために使われます。例えば、引用符の前にバックスラッシュを置くことで（`\"`）引用符を別の 2 つの引用符の*間に*表示することができます。その際、間に挟まれる引用符はそれを囲む引用符とは干渉しません。
+
+注: バックスラッシュを*文字として表示したい*場合は、その前に*もう 1 つの*バックスラッシュを置いて、エスケープ記号としての役割を回避する必要があります。つまり、`\\` と書くことでバックスラッシュ 1 つを表示できます。
+
+**特殊文字の例**  
+
+特殊文字 | 意味  
+----------------- | --------------------------------------------------------------    
+`"\\"` | バックスラッシュ  
+`"\n"` | 改行 
+`"\""` | *二重引用符中での*二重引用符の表示  
+`'\''` | *一重引用符中での*一重引用符の表示  
+`"\`"` | アクサングラーヴ  
+`"\r"` | キャリッジリターン
+`"\t"` | タブ  
+`"\v"` | バーティカルタブ
+`"\b"` | バックスペース  
+
+
+`?"'"` コマンドを R コンソール中で使うと、これらの特殊文字の一覧が表示できます（RStudio ではヘルプ画面に表示されます）。
+
 
 
 <!-- ======================================================= -->
-## Regex and special characters { } 
-
-Regular expressions, or "regex", is a concise language for describing patterns in strings. If you are not familiar with it, a regular expression can look like an alien language. Here we try to de-mystify this language a little bit.  
-
-*Much of this section is adapted from [this tutorial](https://towardsdatascience.com/a-gentle-introduction-to-regular-expressions-with-r-df5e897ca432) and [this cheatsheet](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)*. We selectively adapt here knowing that this handbook might be viewed by people without internet access to view the other tutorials.    
+## 正規表現 (regex) 
 
 
-A regular expression is often applied to extract specific patterns from "unstructured" text - for example medical notes, chief complaints, patient history, or other free text columns in a data frame  
+<!-- ======================================================= -->
+## 正規表現と特殊文字 { } 
 
-There are four basic tools one can use to create a basic regular expression:  
+正規表現（または regex）とは、文字列パターンを記述するために用いられる言語規則のことです。馴染みがない人にとっては、まるで他の星の言葉のように映るかもしれません。ここでは、その正規表現に対するハードルを少し下げることを目標にします。
 
-1) Character sets  
-2) Meta characters  
-3) Quantifiers  
-4) Groups  
+*この節で扱う内容の大部分は[こちらのチュートリアル](https://towardsdatascience.com/a-gentle-introduction-to-regular-expressions-with-r-df5e897ca432)と[こちらのチートシート](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)から取られています。*ここでは、このハンドブックがインターネットへのアクセスが無く他のチュートリアルを見れない方からも利用されうることを念頭に、これら参考文献から内容を選んで参考にしています。
 
 
-**Character sets**  
+正規表現は*決まった構造を持たない*文章 - たとえば診療録、主訴、既往歴やデータフレーム中の文字列など - から特定のパターンを抜き出すためにしばしば使われます。
 
-Character sets, are a way of expressing listing options for a character match, within brackets. So any a match will be triggered if any of the characters within the brackets are found in the string. For example, to look for vowels one could use this character set: "[aeiou]". Some other common character sets are:  
+正規表現を構築するために使われる基本ツールが 4 つあります：
 
-Character set | Matches for  
+1) 文字セット
+2) メタ文字
+3) 数量詞  
+4) グループ  
+
+
+**文字セット**  
+
+文字セットは大括弧を用いて文字のリストを表現します。大括弧中に含まれる文字のいずれかが対象の文字列中に含まれる場合、一致パターンとして扱われます。例えば、母音のいずれかを検索したい場合 "[aeiou]" と表現できます。以下にその他のしばしば使われる文字セットを示します： 
+
+文字セット | 検索される文字
 ----------------- | --------------------------------------------------------------    
-`"[A-Z]"` | any single capital letter  
-`"[a-z]"` | any single lowercase letter  
-`"[0-9]"` | any digit  
-`[:alnum:]` | any alphanumeric character  
-`[:digit:]` | any numeric digit  
-`[:alpha:]` | any letter (upper or lowercase)  
-`[:upper:]` | any uppercase letter  
-`[:lower:]` | any lowercase letter  
+`"[A-Z]"` | 全ての大文字アルファベット
+`"[a-z]"` | 全ての小文字アルファベット 
+`"[0-9]"` | 全ての数字 
+`[:alnum:]` | 全てのアルファベットおよび数字
+`[:digit:]` | 全ての数字
+`[:alpha:]` | 全ての大文字および小文字アルファベット
+`[:upper:]` | 全ての大文字アルファベット
+`[:lower:]` | 全ての小文字アルファベット
 
 
-Character sets can be combined within one bracket (no spaces!), such as `"[A-Za-z]"` (any upper or lowercase letter), or another example `"[t-z0-5]"` (lowercase t through z OR number 0 through 5).  
+複数の文字セットを 1 つの大括弧中に（空白なしで！）組み合わせることができます。例えば `"[A-Za-z]"` は全ての大文字および小文字アルファベットを、`"[t-z0-5]"` は t から z までの小文字アルファベットと 0 から 5 までの数字を表します。
 
 
 
-**Meta characters**  
+**メタ文字**  
 
-Meta characters are shorthand for character sets. Some of the important ones are listed below:  
+メタ文字は文字セットの省略表記です。以下にいくつかの重要な例を示します：
 
-Meta character | Represents  
+メタ文字 | 検索される文字  
 ----------------- | --------------------------------------------------------------    
-`"\\s"` | a single space  
-`"\\w"` | any single alphanumeric character (A-Z, a-z, or 0-9)  
-`"\\d"` | any single numeric digit (0-9)  
+`"\\s"` | 1 つの空白  
+`"\\w"` | 全てのアルファベットおよび数字（A-Z、a-z、または 0-9）  
+`"\\d"` | 全ての数字（0-9）  
 
 
-**Quantifiers**  
+**数量詞**  
 
-Typically you do not want to search for a match on only one character. Quantifiers allow you to designate the length of letters/numbers to allow for the match.  
+多くの場合、検索したいパターンは 2 つ以上の文字を含みます。数量詞により一致を探す文字や数字の長さを規定できます。
 
-Quantifiers are numbers written within curly brackets `{ }` *after* the character they are quantifying, for example,  
+数量詞は数を指定したいパターンの*後に*中括弧 `{ }` を置き、その中に数字を書くことで定義されます。 例えば、
 
-* `"A{2}"` will return instances of **two** capital A letters.  
-* `"A{2,4}"` will return instances of **between two and four** capital A letters *(do not put spaces!)*.  
-* `"A{2,}"` will return instances of **two or more** capital A letters.  
-* `"A+"` will return instances of **one or more** capital A letters (group extended until a different character is encountered).  
-* Precede with an `*` asterisk to return **zero or more** matches (useful if you are not sure the pattern is present)  
+* `"A{2}"` は大文字 A **2 つ**を示します。  
+* `"A{2,4}"` は **2 から 4 つの**大文字 A を示します（中括弧中に空白は置かれません！）。  
+* `"A{2,}"` は **2 つ以上の**大文字Aを示します。
+* `"A+"` は **1 つ以上の**大文字 A を示します（他の文字が現れるまで、連続した A は全てグループに含まれます）。
+* アスタリスク `*` を前におくと **0 個以上の**という意味が付加されます（そのパターンが存在するか不確かなときに有用です）。
 
 
-Using the `+` plus symbol as a quantifier, the match will occur until a different character is encountered. For example, this expression will return all *words* (alpha characters: `"[A-Za-z]+"`  
+`+` シンボルを使うと、他の文字が出てくるまでの連続した同一の文字が全て一致するパターンとして扱われます。例えば、`"[A-Za-z]+"` という表現は全ての単語（アルファベットのみでできた文字列）に対応します。 
 
 
 ```{r}
-# test string for quantifiers
+# 数量詞をテストするための文字列
 test <- "A-AA-AAA-AAAA"
 ```
 
-When a quantifier of {2} is used, only pairs of consecutive A's are returned. Two pairs are identified within `AAAA`.  
+数量詞 {2} を用いた場合、2 つ続きの A のみがマッチとして扱われます。`AAAA` からは 2 つのマッチが返されます。
 
 ```{r}
 str_extract_all(test, "A{2}")
 ```
 
-When a quantifier of {2,4} is used, groups of consecutive A's that are two to four in length are returned.  
+数量詞 {2,4} を用いた場合、2 つから 4 つ続きの A がマッチとして扱われます。
 
 ```{r}
 str_extract_all(test, "A{2,4}")
 ```
 
-With the quantifier `+`, groups of **one or more** are returned:  
+数量詞 `+` を用いた場合、**1 つ以上の**連続した A がマッチとして扱われます：
 
 ```{r}
 str_extract_all(test, "A+")
 ```
 
-**Relative position**  
+**相対的位置**  
 
 These express requirements for what precedes or follows a pattern. For example, to extract sentences, "two numbers that are followed by a period" (`""`).  (?<=\\.)\\s(?=[A-Z]) 
 
