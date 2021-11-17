@@ -1706,6 +1706,7 @@ model_metrics
 
 <!-- ======================================================= -->
 ### **surveillance** package {.unnumbered}
+### **surveillance** パッケージ {.unnumbered}
 
 In this section we use the **surveillance** package to create alert thresholds 
 based on outbreak detection algorithms. There are several different methods 
@@ -1713,10 +1714,14 @@ available in the package, however we will focus on two options here.
 For details, see these papers on the [application](https://cran.r-project.org/web/packages/surveillance/vignettes/monitoringCounts.pdf)
 and [theory](https://cran.r-project.org/web/packages/surveillance/vignettes/glrnb.pdf)
 of the alogirthms used. 
+このセクションでは、アウトブレイク検出アルゴリズムに基づいて警告のしきい値を作成するために**surveillance**パッケージを使用します。このパッケージにはいくつかの異なる手法がありますが、ここでは2つのオプションに焦点を当てます。
+
+詳細については、使用したアルゴリズムの[application](https://cran.r-project.org/web/packages/surveillance/vignettes/monitoringCounts.pdf)と[theory](https://cran.r-project.org/web/packages/surveillance/vignettes/glrnb.pdf)に関するこれらの論文を参照してください。
 
 The first option uses the improved Farrington method. This fits a negative 
 binomial glm (including trend) and down-weights past outbreaks (outliers) to 
-create a threshold level. 
+create a threshold level.
+最初のオプションでは、改良型のFarrington法を使用します。これは、負の二項一般化線形モデル（トレンドを含む）に適合し、過去の発生（外れ値）をダウンウェイトして、閾値を作成します。
 
 The second option use the glrnb method. This also fits a negative binomial glm 
 but includes trend and fourier terms (so is favoured here). The regression is used
@@ -1725,27 +1730,37 @@ generalized likelihood ratio statistic to assess if there is shift in the mean
 for each week. Note that the threshold for each week takes in to account previous
 weeks so if there is a sustained shift an alarm will be triggered. 
 (Also note that after each alarm the algorithm is reset)
+2つ目のオプションはglrnbメソッドを使用します。これも負の二項GLMにフィットしますが、トレンドとフーリエ項を含んでいますので、ここでは好まれます。この回帰は、「対照平均」（～適合値）を計算するために使用されます。そして、各週の平均にシフトがあるかどうかを評価するために、計算された一般化された尤度比統計を使用します。各週のしきい値は、前の週を考慮していることに注意してください。各週の閾値は過去の週を考慮しているため、持続的なシフトがある場合はアラームが作動します。 (また、各アラームの後、アルゴリズムはリセットされることにも注意してください。）
 
 In order to work with the **surveillance** package, we first need to define a 
 "surveillance time series" object (using the `sts()` function) to fit within the 
 framework. 
+ **surveillance** パッケージを使用するためには、まず、フレームワークに適合する "surveillance time series" オブジェクトを定義する必要があります（`sts()`関数を使用）。
 
 ```{r surveillance_obj}
 
 ## define surveillance time series object
+## surveillance time series オブジェクトを定義します。
 ## nb. you can include a denominator with the population object (see ?sts)
+## nb. 母集団オブジェクトに分母を含めることができます。（?stsを参照ください。）
 counts_sts <- sts(observed = counts$case_int[!is.na(counts$case_int)],
                   start = c(
                     ## subset to only keep the year from start_date 
+                    ## start_date から年のみを保持するサブセット
                     as.numeric(str_sub(start_date, 1, 4)), 
                     ## subset to only keep the week from start_date
+                    ## start_date から週のみを保持するサブセット
                     as.numeric(str_sub(start_date, 7, 8))), 
                   ## define the type of data (in this case weekly)
+                  ## データの種類を定義します。（このケースでは週次）
                   freq = 52)
 
 ## define the week range that you want to include (ie. prediction period)
+## 含めたい週の範囲を定義します（例：予測期間）
 ## nb. the sts object only counts observations without assigning a week or 
+## nb. sts オブジェクトは、週を指定せずにオブザベーションをカウントするだけです。
 ## year identifier to them - so we use our data to define the appropriate observations
+## sts オブジェクトは、週や ## 年の識別子を割り当てずに観測値をカウントしているだけなので、我々のデータを使って適切な観測値を定義します。
 weekrange <- cut_off - start_date
 
 ```
