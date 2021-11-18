@@ -1026,45 +1026,44 @@ str_extract_all(test, "A+")
 
 **相対的位置**  
 
-These express requirements for what precedes or follows a pattern. For example, to extract sentences, "two numbers that are followed by a period" (`""`).  (?<=\\.)\\s(?=[A-Z]) 
+ここで紹介する構文を用いることで、探したいパターンの直前または直後に来る文字ないしはパターンを指定することができます。例えば、"ピリオドが直後に来る2続きの数字" というパターンを表現したいときは (?<=\\.)\\s(?=[A-Z]) 
 
 ```{r}
 str_extract_all(test, "")
 ```
 
-Position statement | Matches to  
+位置構文 | マッチするパターン
 ----------------- | --------------------------------------------------------------    
-`"(?<=b)a"` | "a" that **is preceded** by a "b"  
-`"(?<!b)a"` | "a" that **is NOT preceded** by a "b"  
-`"a(?=b)"` | "a" that **is followed** by a "b"  
-`"a(?!b)"` | "a" that **is NOT followed** by a "b"  
+`"(?<=b)a"` | "b" が**直前に来る** "a"  
+`"(?<!b)a"` | "b" が**直前に来ない** "a"   
+`"a(?=b)"` | "b" が**直後に来る** "a"  
+`"a(?!b)"` | "b" が**直後に来ない** "a"   
 
 
 
 
 
-**Groups**  
+**グループ**  
 
-Capturing groups in your regular expression is a way to have a more organized output upon extraction.  
-
-
+正規表現の中でグループを用いることで、パターン検索をより整理された形で行うことができます。
 
 
-**Regex examples**  
 
-Below is a free text for the examples. We will try to extract useful information from it using a regular expression search term.  
+**正規表現の例**  
+
+ここでは、以下の文章から正規表現を用いて有用な情報を抽出する例を示します。
 
 ```{r}
 pt_note <- "Patient arrived at Broward Hospital emergency ward at 18:00 on 6/12/2005. Patient presented with radiating abdominal pain from LR quadrant. Patient skin was pale, cool, and clammy. Patient temperature was 99.8 degrees farinheit. Patient pulse rate was 100 bpm and thready. Respiratory rate was 29 per minute."
 ```
 
-This expression matches to all words (any character until hitting non-character such as a space):  
+以下の正規表現は全ての単語（連続したアルファベットのみからなるまとまり）を抽出します：
 
 ```{r}
 str_extract_all(pt_note, "[A-Za-z]+")
 ```
 
-The expression `"[0-9]{1,2}"` matches to consecutive numbers that are 1 or 2 digits in length. It could also be written `"\\d{1,2}"`, or `"[:digit:]{1,2}"`.  
+正規表現 `"[0-9]{1,2}"` は 1 つのみもしくは 2 つ続きの数字にマッチします。`"\\d{1,2}"` もしくは `"[:digit:]{1,2}"` と書くこともできます。 
 
 ```{r}
 str_extract_all(pt_note, "[0-9]{1,2}")
@@ -1077,21 +1076,21 @@ str_extract_all(pt_note, "[0-9]{1,2}")
 <!-- ``` -->
 
 
-You can view a useful list of regex expressions and tips on page 2 of [this cheatsheet](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)  
+[こちらのチートシート](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)の 2 ページ目に、有用な正規表現のリストやヒントを参照することができます。 
 
-Also see this [tutorial](https://towardsdatascience.com/a-gentle-introduction-to-regular-expressions-with-r-df5e897ca432).  
+[こちらのチュートリアル](https://towardsdatascience.com/a-gentle-introduction-to-regular-expressions-with-r-df5e897ca432)も参考にしてください。
 
 
 
 
 <!-- ======================================================= -->
-## Resources { }
+## その他の参考文献 { }
 
-A reference sheet for **stringr** functions can be found [here](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)
+**stringr** にふくまれる関数の詳細は[こちら](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_strings.pdf)を参照してください。
 
 
-A vignette on **stringr** can be found [here](
-https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html)
+**stringr** のビネットは[こちら](
+https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html)から見ることができます。
 
 
 
