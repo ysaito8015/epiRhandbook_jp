@@ -1767,72 +1767,90 @@ weekrange <- cut_off - start_date
 
 <!-- ======================================================= -->
 #### Farrington method {.unnumbered}
+#### Farrington 法 {.unnumbered}
 
 We then define each of our parameters for the Farrington method in a `list`. 
 Then we run the algorithm using `farringtonFlexible()` and then we can extract the 
 threshold for an alert using `farringtonmethod@upperbound`to include this in our 
 dataset. It is also possible to extract a TRUE/FALSE for each week if it triggered 
 an alert (was above the threshold) using `farringtonmethod@alarm`. 
+次に、Farringtonメソッドの各パラメータを `list` で定義します。
+そして、`farringtonFlexible()`を使ってアルゴリズムを実行し、`farringtonmethod@upperbound`を使ってアラートの閾値を抽出し、データセットに含めることができます。また、`farringtonmethod@alarm`を使って、各週にアラートが発生した(閾値を超えた)場合のTRUE / FALSEを抽出することもできます。
 
 ```{r farrington}
 
 ## define control
+## コントロール群を定義します。
 ctrl <- list(
   ## define what time period that want threshold for (i.e. 2011)
+  ## 閾値が必要な期間を定義します。（例： 2011年）
   range = which(counts_sts@epoch > weekrange),
-  b = 9, ## how many years backwards for baseline
-  w = 2, ## rolling window size in weeks
-  weightsThreshold = 2.58, ## reweighting past outbreaks (improved noufaily method - original suggests 1)
-  ## pastWeeksNotIncluded = 3, ## use all weeks available (noufaily suggests drop 26)
+  b = 9, ## how many years backwards for baseline ## ベースラインを何年前にするか。
+  w = 2, ## rolling window size in weeks ## ローリングウィンドウのサイズ
+  weightsThreshold = 2.58, ## reweighting past outbreaks (improved noufaily methodi - original suggests 1) ## 過去の発生事例への再重みづけ（改良型のNoufaily法 - オリジナルの提案1）
+  ## pastWeeksNotIncluded = 3, ## use all weeks available (noufaily suggests drop 26) ## pastWeeksNotIncluded = 3, ## 利用可能なすべての週を使う (Noufaily は 26 を落とすことを提案)
   trend = TRUE,
-  pThresholdTrend = 1, ## 0.05 normally, however 1 is advised in the improved method (i.e. always keep)
+  pThresholdTrend = 1, ## 0.05 normally, however 1 is advised in the improved method (i.e. always keep) ## 通常は0.05ですが、改良された方法では1が推奨されます（つまり、常にキープされます）。
   thresholdMethod = "nbPlugin",
   populationOffset = TRUE
   )
 
 ## apply farrington flexible method
+## farrington の柔軟な方法を適用します。
 farringtonmethod <- farringtonFlexible(counts_sts, ctrl)
 
 ## create a new variable in the original dataset called threshold
+## オリジナルのデータセットに閾値という新たな変数を作成します。
 ## containing the upper bound from farrington 
+## farringtonからの上界を含みます。
 ## nb. this is only for the weeks in 2011 (so need to subset rows)
+## nb. これは2011年の週のみを対象としています（そのため、行をサブセット化する必要があります）。
 counts[which(counts$epiweek >= cut_off & 
                !is.na(counts$case_int)),
               "threshold"] <- farringtonmethod@upperbound
 ```
 
 We can then visualise the results in ggplot as done previously. 
+前に実施したように、結果をggplotによって可視化できます。
 
 ```{r plot_farrington, warning=F, message=F}
 
 ggplot(counts, aes(x = epiweek)) + 
   ## add in observed case counts as a line
+  ## 観測されたケースを線として追加します。
   geom_line(aes(y = case_int, colour = "Observed")) + 
   ## add in upper bound of aberration algorithm
+  ## 収差アルゴリズムの上界を追加します。
   geom_line(aes(y = threshold, colour = "Alert threshold"), 
             linetype = "dashed", 
             size = 1.5) +
   ## define colours
+  ## 色を定義します。
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Alert threshold" = "red")) + 
   ## make a traditional plot (with black axes and white background)
   ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic() + 
   ## remove title of legend 
+  ## legendのタイトルを除外します。
   theme(legend.title = element_blank())
 
 ```
 
 <!-- ======================================================= -->
 #### GLRNB method {.unnumbered}
+#### GLRNB 法 {.unnumbered}
 
 Similarly for the GLRNB method we define each of our parameters for the in a `list`, 
 then fit the algorithm and extract the upper bounds.
+GLRNB法の場合も同様に，各パラメータを「リスト」で定義します。そして，アルゴリズムをフィットさせ，上界を抽出します．
 
 <span style="color: orange;">**_CAUTION:_** This method uses "brute force" (similar to bootstrapping) for calculating thresholds, so can take a long time!</span>
+<span style="color: orange;">**_CAUTION:_** この方法は、閾値の計算に「ブルートフォース」（ブートストラップ法に似た方法）を使用するため、長い時間がかかることがあります！</span>。
 
 See the [GLRNB vignette](https://cran.r-project.org/web/packages/surveillance/vignettes/glrnb.pdf) 
 for details. 
+詳細は[GLRNB vignette](https://cran.r-project.org/web/packages/surveillance/vignettes/glrnb.pdf) を参照してください。
 
 ```{r glrnb, warning = FALSE, message = FALSE}
 
