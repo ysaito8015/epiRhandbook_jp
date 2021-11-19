@@ -1825,7 +1825,7 @@ Alternatively, instead of `breakers =`, you can provide all of `lower =`, `upper
 
 -   `lower =`考慮したい最低の数値 - デフォルトは0
 
--    `upper =`考慮したい最も高い数値
+-   `upper =`考慮したい最も高い数値
 
 -   `by =`グループ間の年の数
 
@@ -2178,6 +2178,12 @@ linelist <- linelist_raw %>%
 
 Adding rows one-by-one manually is tedious but can be done with `add_row()` from **dplyr**. Remember that each column must contain values of only one class (either character, numeric, logical, etc.). So adding a row requires nuance to maintain this.
 
+**列の追加**
+
+**一行ずつ**
+
+手作業で一行ずつ追加するのは面倒ですが、**dplyr**の`add_row()`を使えば可能です。各列は1つのクラス（文字、数値、論理など）の値のみを含む必要があることを覚えておいてください。そのため、行の追加にはこれを維持するためのニュアンスが必要です。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   add_row(row_num = 666,
@@ -2197,9 +2203,23 @@ If a class you provide is off you will see an error like this:
 
 (when inserting a row with a date value, remember to wrap the date in the function `as.Date()` like `as.Date("2020-10-10")`).
 
+`.before`と`.after.`を使って、追加したい行の配置を指定します。`.before = 3`は、新しい行を現在の3行目の前に配置します。デフォルトの動作では、行を最後に追加します。指定されていない列は空欄（NA）になります。
+
+新しい行番号は奇妙に見えるかもしれませんが（「...23」）、既存の行の行番号は変更されています。そのため、このコマンドを2回使用する場合は、挿入を慎重に検討/テストしてください。
+
+用意したクラスが外れている場合は、以下のようなエラーが表示されます。
+
+Error: Can't combine ..1\$infection date \<date\> and ..2\$infection date \<character\>.
+
+(日付の値を持つ行を挿入する際には、as.Date("2020-10-10")のようにas.Date()という関数で日付をラップすることを忘れないでください)。
+
 ### Bind rows {.unnumbered}
 
 To combine datasets together by binding the rows of one dataframe to the bottom of another data frame, you can use `bind_rows()` from **dplyr**. This is explained in more detail in the page [Joining data].
+
+**行の結合**
+
+あるデータフレームの行を別のデータフレームの下部に結合してデータセットを結合するには、**dplyr**の`bind_rows()`を使用します。これについては、[「データの結合」](https://epirhandbook.com/en/joining-data.html#joining-data)のページで詳しく説明しています。
 
 <!-- ======================================================= -->
 
@@ -2213,6 +2233,12 @@ A typical cleaning step after you have cleaned the columns and re-coded values i
 
 Within `filter()`, specify the logic that must be `TRUE` for a row in the dataset to be kept. Below we show how to filter rows based on simple and complex logical conditions.
 
+**行のフィルタリング**
+
+列を整理し、値を再コード化した後の典型的なクリーニングステップは、**dplyr**の動詞`filter()`を使ってデータフレームの特定の行をフィルタリングすることです。
+
+`filter()`では、データセット内のある行を保持するために`TRUE`でなければならない論理を指定します。以下では、単純な論理条件と複雑な論理条件に基づいて行をフィルタリングする方法を示します。
+
 <!-- ======================================================= -->
 
 ### Simple filter {.unnumbered}
@@ -2223,6 +2249,14 @@ In this example, the logical statement is `gender == "f"`, which is asking wheth
 
 Before the filter is applied, the number of rows in `linelist` is `nrow(linelist)`.
 
+**単純なフィルタ**
+
+この単純な例では、論理的な条件を満たすように行をフィルタリングした上で、データフレームのラインリストを自分自身として再定義します。括弧内の論理文が評価されて`TRUE`となる行のみが保持されます。
+
+この例では、論理文は`gender == "f "`で、列`gender`の値が`"f "`に等しいかどうかを問うています（大文字小文字を区別します）。
+
+フィルタを適用する前の `linelist`の行数は `nrow(linelist)`です。
+
 ```{r, eval=F}
 linelist <- linelist %>% 
   filter(gender == "f")   # keep only rows where gender is equal to "f"
@@ -2230,16 +2264,25 @@ linelist <- linelist %>%
 
 After the filter is applied, the number of rows in `linelist` is `linelist %>% filter(gender == "f") %>% nrow()`.
 
+フィルタを適用した後の `linelist`の行数は`linelist %>% filter(gender == "f") %>% nrow()` となります。
+
 ### Filter out missing values {.unnumbered}
 
 It is fairly common to want to filter out rows that have missing values. Resist the urge to write `filter(!is.na(column) & !is.na(column))` and instead use the **tidyr** function that is custom-built for this purpose: `drop_na()`. If run with empty parentheses, it removes rows with *any* missing values. Alternatively, you can provide names of specific columns to be evaluated for missingness, or use the "tidyselect" helper functions described [above](#clean_tidyselect).
 
+**欠損値のフィルタリング**
+
+欠損値のある行をフィルタリングしたいというのはよくあることです。`filter(!is.na(column) & !is.na(column))`と書きたい気持ちを抑えて、代わりにこの目的のためにカスタマイズされた**tidyr**の関数、`drop_na()`を使いましょう。空の括弧をつけて実行すると、欠損値のある行を削除します。あるいは、欠落を評価する特定の列の名前を指定したり、[上述の](https://epirhandbook.com/en/cleaning-data-and-core-functions.html#clean_tidyselect)"tidyselect "ヘルパー関数を使用することもできます。
+
 ```{r, eval=F}
 linelist %>% 
-  drop_na(case_id, age_years)  # drop rows with missing values for case_id or age_years
+  drop_na(case_id, age_years)  # drop rows with missing values for case_id or age_year
+# case_idやage_yearsの値が欠損している行を削除する
 ```
 
 See the page on [Missing data] for many techniques to analyse and manage missingness in your data.
+
+データの欠落を分析・管理するための多くのテクニックについては、[「欠損データ」](https://epirhandbook.com/en/missing-data.html#missing-data)のページをご覧ください。
 
 ### Filter by row number {.unnumbered}
 
@@ -2247,18 +2290,30 @@ In a data frame or tibble, each row will usually have a "row number" that (when 
 
 To filter based on "row number", you can use the **dplyr** function `row_number()` with open parentheses as part of a logical filtering statement. Often you will use the `%in%` operator and a range of numbers as part of that logical statement, as shown below. To see the *first* N rows, you can also use the special **dplyr** function `head()`.
 
+**行番号によるフィルタリング**
+
+データフレームやTibbleでは、各行には通常「行番号」があり、R Viewerで見ると最初の列の左側に表示されます。これは、それ自体はデータの真の列ではありませんが、`filter()`ステートメントで使用することができます。
+
+「行番号」に基づいてフィルタリングするには、論理的なフィルタリング文の一部として、**dplyr**の関数`row_number()`を開いた括弧で囲んで使用します。多くの場合、以下のように、論理的なステートメントの一部として、`%in%`演算子と数値の範囲を使用します。最初のN行を表示するには、特別な**dplyr**関数`head()`を使用することもできます。
+
 ```{r, eval=F}
 # View first 100 rows
+# 最初の100行を表示
 linelist %>% head(100)     # or use tail() to see the n last rows
+# またはtail()を使って最後のn行を見る
 
 # Show row 5 only
+# 5列目のみ表示
 linelist %>% filter(row_number() == 5)
 
 # View rows 2 through 20, and three specific columns
+# 2行目から20行目までと、3つの特定の列を見る
 linelist %>% filter(row_number() %in% 2:20) %>% select(date_onset, outcome, age)
 ```
 
 You can also convert the row numbers to a true column by piping your data frame to the **tibble** function `rownames_to_column()` (do not put anything in the parentheses).
+
+また、データフレームをtibble関数`rownames_to_column()`にパイプすることで、行番号を真の列に変換することができます（括弧の中には何も入れないでください）。
 
 <!-- ======================================================= -->
 
