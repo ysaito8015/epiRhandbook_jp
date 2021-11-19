@@ -1533,6 +1533,20 @@ Use the R package **linelist** and it's function `clean_variable_spelling()` to 
 
 Note: .global dictionary entries will be overridden by column-specific dictionary entries.
 
+**クリーニング辞書**
+
+Rパッケージ**linelist**とその関数`clean_variable_spelling()`を使って、データフレームをクリーニング辞書でクリーニングします。 **linelis**tは[RECON](https://github.com/reconhub/linelist) - the R Epidemics Consortiumによって開発されたパッケージです。
+
+3つの列でクリーニング辞書を作成します。
+
+-   from "カラム（不正な値）
+
+-   to "カラム（正しい値）
+
+-   変更を適用する列を指定する列（または、すべての列に適用する場合は「.global」）。
+
+注意：.globalの辞書項目は、列固有の辞書項目によって上書きされます。
+
 ```{r, fig.align = "center", out.width = "100%", echo=F}
 knitr::include_graphics(here::here("images", "cleaning_dict.png"))
 ```
@@ -1551,66 +1565,88 @@ cleaning_dict <- import("cleaning_dict.csv")
 
 3)  Pass the raw linelist to `clean_variable_spelling()`, specifying to `wordlists =` the cleaning dictionary data frame. The `spelling_vars =` argument can be used to specify which column in the dictionary refers to the columns (3rd by default), or can be set to `NULL` to have the dictionary apply to all character and factor columns. Note this function can take a long time to run.
 
+    生のラインリストを`clean_variable_spelling()`に渡し、wordlists = クリーニング辞書データフレームに指定します。spelling_vars = 引数は、辞書のどの列を参照するかを指定するために使用することができます（デフォルトでは3番目）。また、辞書をすべての文字列と因子列に適用するためにNULLを設定することもできます。この関数の実行には時間がかかることに注意してください。
+
 ```{r}
 linelist <- linelist %>% 
   linelist::clean_variable_spelling(
     wordlists = cleaning_dict,
     spelling_vars = "col",        # dict column containing column names, defaults to 3rd column in dict
-    
+     #列名を含むdict列、デフォルトではdictの3番目の列になる
   )
 ```
 
 Now scroll to the right to see how values have changed - particularly `gender` (lowercase to uppercase), and all the symptoms columns have been transformed from yes/no to 1/0.
 
+右側にスクロールすると、値がどのように変化したかがわかります。特に性別（小文字→大文字）や、すべての症状の列がYes/noから1/0に変化しています。
+
 ```{r message=FALSE, echo=F}
 # display the linelist data as a table
+# ラインリストのデータを表として表示する
 DT::datatable(head(linelist,50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
 Note that your column names in the cleaning dictionary must correspond to the names *at this point* in your cleaning script. See this [online reference for the linelist package](https://www.repidemicsconsortium.org/linelist/reference/clean_data.html) for more details.
 
+クリーニング辞書の列名は、クリーニングスクリプトのこの時点での名前に対応していなければならないことに注意してください。詳細については、linelistパッケージの[online reference for the linelist package](https://www.repidemicsconsortium.org/linelist/reference/clean_data.html)を参照してください。
+
 #### Add to pipe chain {.unnumbered}
 
 **Below, some new columns and column transformations are added to the pipe chain.**
 
+パイプチェーンへの追加
+
+以下では、いくつかの新しい列と列変換がパイプチェーンに追加されています。
+
 ```{r}
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+# CLEANING 'PIPE' CHAIN (生データから始まり、クリーニングを経てパイプに送られる)
 ##################################################################################
 
 # begin cleaning pipe chain
+＃パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
     # standardize column name syntax
+     # 列名の構文の標準化
     janitor::clean_names() %>% 
     
     # manually re-name columns
+     # 手動で列名を変更
            # NEW name             # OLD name
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
     # remove column
+     # 列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
     # de-duplicate
+　　#　重複除去
     distinct() %>% 
   
     # add column
+　　#　列を追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>%     
 
     # convert class of columns
+      # 列のクラスを変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) %>% 
     
     # add column: delay to hospitalisation
+     # 列の追加: 入院の遅れ
     mutate(days_onset_hosp = as.numeric(date_hospitalisation - date_onset)) %>% 
     
    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+     # 上記は、すでに説明した上流側のクリーニング方法です。
    ###################################################
 
     # clean values of hospital column
+　　# 病院の列の値をきれいにする
     mutate(hospital = recode(hospital,
                       # OLD = NEW
                       "Mitylira Hopital"  = "Military Hospital",
@@ -1625,6 +1661,7 @@ linelist <- linelist_raw %>%
     mutate(hospital = replace_na(hospital, "Missing")) %>% 
 
     # create age_years column (from age and age_unit)
+       # age_yearsカラムの作成(from age and age_unit)
     mutate(age_years = case_when(
           age_unit == "years" ~ age,
           age_unit == "months" ~ age/12,
@@ -1651,15 +1688,35 @@ Here we describe some special approaches for creating categories from numerical 
 
 For this example we will create an `age_cat` column using the `age_years` column.
 
+**数値カテゴリー**
+
+ここでは、数値列からカテゴリを作成するための特別なアプローチを説明します。一般的な例としては、年齢のカテゴリー、検査値のグループなどがあります。ここでは、以下について説明します。
+
+-   `age_categories()`(**epikit** パッケージより)
+
+-   `cut()`, base Rより
+
+-   `case_when(`)
+
+-   `quantile()`と`ntile()`を使った分位値ブレーク
+
+**レビュー分布**
+
+この例では、`age_years`列を使って`age_cat`列を作成します。
+
 ```{r}
 #check the class of the linelist variable age
+#linelist変数ageの列をチェックする
 class(linelist$age_years)
 ```
 
 First, examine the distribution of your data, to make appropriate cut-points. See the page on [ggplot basics].
 
+まず、データの分布を調べて、適切なカットポイントを作ります。[ggplot basics](https://epirhandbook.com/en/ggplot-basics.html#ggplot-basics).のページをご覧ください。
+
 ```{r, out.height='50%'}
 # examine the distribution
+# 分布を調べる
 hist(linelist$age_years)
 ```
 
@@ -1668,6 +1725,8 @@ summary(linelist$age_years, na.rm=T)
 ```
 
 [***CAUTION:*** Sometimes, numeric variables will import as class "character". This occurs if there are non-numeric characters in some of the values, for example an entry of "2 months" for age, or (depending on your R locale settings) if a comma is used in the decimals place (e.g. "4,5" to mean four and one half years)..]{style="color: orange;"}
+
+[**注意**：数値の変数がクラス「character」としてインポートされることがあります。これは、値の一部に数字以外の文字が含まれている場合に発生します。例えば、年齢を「2ヶ月」と入力した場合や、（Rのロケール設定にもよりますが）小数点以下の位置にコンマが使用されている場合などです（例：「4,5」は4年半の意味）。]{style="color: orange;"}
 
 <!-- ======================================================= -->
 
@@ -1682,26 +1741,44 @@ Here are the required inputs:
 
 First, the simplest example:
 
+**`age_categories()`**
+
+**epikit**パッケージでは、`age_categories()`関数を使って、数値列の分類やラベル付けを簡単に行うことができます（注：この関数は、年齢以外の数値変数にも適用できます）。その結果、出力される列は自動的に順序付けられた因子となります。
+
+必要な入力は以下の通りです。
+
+-   数字のベクトル（列）
+
+-   `breakers =` 引数 - 新しいグループのブレークポイントの数値ベクトルを提供する。
+
+まず、最も簡単な例を示します
+
 ```{r}
 # Simple example
+# 簡単な例
 ################
-pacman::p_load(epikit)                    # load package
+pacman::p_load(epikit)                    # load package　#パッケージのロード
 
 linelist <- linelist %>% 
   mutate(
-    age_cat = age_categories(             # create new column
-      age_years,                            # numeric column to make groups from
-      breakers = c(0, 5, 10, 15, 20,        # break points
+    age_cat = age_categories(             # create new column　
+         　　　　　　　　　　　　　　　　　# 新しい列の作成
+      age_years,                            # グループを作るための数値列
+      breakers = c(0, 5, 10, 15, 20,        # ブレークポイント
                    30, 40, 50, 60, 70)))
 
 # show table
+# テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
 The break values you specify are by default the lower bounds - that is, they are included in the "higher" group / the groups are "open" on the lower/left side. As shown below, you can add 1 to each break value to achieve groups that are open at the top/right.
 
+指定したブレーク値は、デフォルトでは下限含めます。つまり、「上位」のグループに含まれ、グループが下/左に「開いて」いる状態になります。下図のように、各ブレーク値に1を加えることで、上/右で開いたグループにすることができます。
+
 ```{r}
 # Include upper ends for the same categories
+# 同じカテゴリーの上端を含める
 ############################################
 linelist <- linelist %>% 
   mutate(
@@ -1710,6 +1787,7 @@ linelist <- linelist %>%
       breakers = c(0, 6, 11, 16, 21, 31, 41, 51, 61, 71)))
 
 # show table
+#　テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
@@ -1717,8 +1795,13 @@ You can adjust how the labels are displayed with `separator =`. The default is "
 
 You can adjust how the top numbers are handled, with the `ceiling =` arguemnt. To set an upper cut-off set `ceiling = TRUE`. In this use, the highest break value provided is a "ceiling" and a category "XX+" is not created. Any values above highest break value (or to `upper =`, if defined) are categorized as `NA`. Below is an example with `ceiling = TRUE`, so that there is no category of XX+ and values above 70 (the highest break value) are assigned as NA.
 
+`separator =` で、ラベルの表示方法を調整できます。 デフォルトは "-" です。
+
+`ceiling =`で、上位の数字の扱い方を調整できます。上限値を設定するには `ceiling = TRUE` とします。この使用方法では、提供された最も高いブレーク値は「上限」であり、カテゴリー「XX+」は作成されません。ブレーク値の上限（または定義されている場合は上限＝）を超える値は、`NA`に分類されます。以下は、`ceiling = TRUE`の例で、XX+のカテゴリーはなく、70（最も高いブレーク値）を超える値は`NA`として割り当てられます。
+
 ```{r}
 # With ceiling set to TRUE
+# 上限をTRUEに設定した場合
 ##########################
 linelist <- linelist %>% 
   mutate(
@@ -1728,6 +1811,7 @@ linelist <- linelist %>%
       ceiling = TRUE)) # 70 is ceiling, all above become NA
 
 # show table
+# テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
@@ -1736,6 +1820,14 @@ Alternatively, instead of `breakers =`, you can provide all of `lower =`, `upper
 -   `lower =` The lowest number you want considered - default is 0\
 -   `upper =` The highest number you want considered\
 -   `by =` The number of years between groups
+
+また、ブレーカー＝の代わりに、`lower＝`、`upper＝`、`by＝`のすべてを指定することもできます。
+
+-   `lower =`考慮したい最低の数値 - デフォルトは0
+
+-    `upper =`考慮したい最も高い数値
+
+-   `by =`グループ間の年の数
 
 ```{r}
 linelist <- linelist %>% 
@@ -1747,10 +1839,13 @@ linelist <- linelist %>%
       by = 10))
 
 # show table
+# テーブルの表示
 table(linelist$age_cat, useNA = "always")
 ```
 
 See the function's Help page for more details (enter `?age_categories` in the R console).
+
+詳細は、この関数のヘルプページをご覧ください（Rコンソールで`?age_categories`と入力してください）。
 
 <!-- ======================================================= -->
 
@@ -1773,9 +1868,33 @@ You can provide a vector of customized labels using the `labels =` argument. As 
 
 An example of `cut()` applied to `age_years` to make the new variable `age_cat` is below:
 
+**`cut()`**
+
+`cut()`は`age_categories()`に代わる R のベースとなるものですが、この処理を簡単にするために `age_categories()`が開発された理由がわかると思います。`age_categories()`との注目すべき違いは以下のとおりです。
+
+-   別のパッケージをインストール/ロードする必要がない
+
+-   グループが右か左に開いているか閉じているかを指定できる
+
+-   正確なラベルを自分で用意する必要がある
+
+-   一番下のグループに「0」を入れたい場合は、このように指定する必要がある
+
+`cut()`の基本的な構文は、まずカットしたい数値列`(age_years)`を指定し、次にbreaksの引数としてブレークポイントの数値ベクトル`c()`を指定します。`cut()`を使用すると、結果として列は順序付けられた因子となります。
+
+デフォルトでは、右/上側が「オープン」で包括的（左/下側が「クローズ」で排他的）になるように分類されます。これは、`age_categories()`関数とは逆の動作です。デフォルトのラベルでは「(A, B] 」という表記が使われていますが、これは「Aは含まれないがBは含まれる」という意味です。`right = TRUE`という引数を与えることで、この動作を逆にします。
+
+したがって、デフォルトでは、"0 "の値は低いグループから除外され、`NA`に分類されます。"0 "の値は、乳幼児が0歳としてコード化される可能性があるので、注意が必要です。これを変更するには、引数`include.latest = TRUE`を追加して、"0 "の値が最低グループに含まれるようにします。この場合、自動的に生成される低いカテゴリーのラベルは「[A],B]」となります。なお、`include.latest = TRUE`を指定し、かつ`right = TRUE`を指定した場合、含まれるのは最低値ではなく最高値のブレイクポイント値とカテゴリーに適用されます。
+
+`labels =` 引数を使って、カスタマイズされたラベルのベクトルを提供することができます。これらは手作業で書かれているので、正確さには十分注意してください。後述するように、クロス集計を用いて作業を確認してください。
+
+age_yearsにcut()を適用して、新しい変数`age_cat`を作成した例を以下に示します。
+
 ```{r}
 # Create new variable, by cutting the numeric age variable
 # lower break is excluded but upper break is included in each category
+# 年齢という数字の変数を切り取って新しい変数を作る
+# 下限値のブレイクは除外されるが、上限のブレイクは各カテゴリーに含まれる
 linelist <- linelist %>% 
   mutate(
     age_cat = cut(
@@ -1783,29 +1902,39 @@ linelist <- linelist %>%
       breaks = c(0, 5, 10, 15, 20,
                  30, 50, 70, 100),
       include.lowest = TRUE         # include 0 in lowest group
-      ))
+      ))　　　　　　　　　　　　　　# 一番下のグループに0を入れる
 
 # tabulate the number of observations per group
+# グループごとの観測値の数を集計
 table(linelist$age_cat, useNA = "always")
 ```
 
 **Check your work!!!** Verify that each age value was assigned to the correct category by cross-tabulating the numeric and category columns. Examine assignment of boundary values (e.g. 15, if neighboring categories are 10-15 and 16-20).
 
+作業を確認してください!!! 数値列とカテゴリー列をクロス集計して、各年齢値が正しいカテゴリーに割り当てられていることを確認します。境界値の割り当てを検証します（例：隣接するカテゴリーが 10-15 と 16-20 の場合、15）。
+
 ```{r}
 # Cross tabulation of the numeric and category columns. 
-table("Numeric Values" = linelist$age_years,   # names specified in table for clarity.
+# 数値列とカテゴリー列のクロス集計。
+table("Numeric Values" = linelist$age_years,   # names specified in table for clarity.　　　　　　　# 分かりやすくするために、表の中に名前を入れています。
       "Categories"     = linelist$age_cat,
       useNA = "always")                        # don't forget to examine NA values
+　　　　　　　　　　　　　　　　　　　　　　　　# NA値の検証を忘れずに
 ```
 
 **Re-labeling `NA` values**
 
 You may want to assign `NA` values a label such as "Missing". Because the new column is class Factor (restricted values), you cannot simply mutate it with `replace_na()`, as this value will be rejected. Instead, use `fct_explicit_na()` from **forcats** as explained in the [Factors] page.
 
+[NA]{.ul}値の再ラベル付け
+
+`NA`値に "Missing "などのラベルを付けたい場合があります。新しい列はFactorクラス(制限付き値)なので、この値は拒否されるので、単純に`replace_na()`で変異させることはできません。代わりに、[Factors](https://epirhandbook.com/en/factors.html#factors) ページで説明されているように、`forcats`の `fct_explicit_na()`を使用してください。
+
 ```{r}
 linelist <- linelist %>% 
   
-  # cut() creates age_cat, automatically of class Factor      
+  # cut() creates age_cat, automatically of class Factor   
+   # cut()すると、Factorクラスのage_catが自動的に作成される。 
   mutate(age_cat = cut(
     age_years,
     breaks = c(0, 5, 10, 15, 20, 30, 50, 70, 100),          
@@ -1814,12 +1943,14 @@ linelist <- linelist %>%
     labels = c("0-4", "5-9", "10-14", "15-19", "20-29", "30-49", "50-69", "70-100")),
          
     # make missing values explicit
+    # 欠損値を明示する
     age_cat = fct_explicit_na(
       age_cat,
       na_level = "Missing age")  # you can specify the label
-  )    
+  )    # ラベルを指定することができます
 
 # table to view counts
+# テーブルからビューカウント
 table(linelist$age_cat, useNA = "always")
 ```
 
@@ -1827,16 +1958,23 @@ table(linelist$age_cat, useNA = "always")
 
 For a fast way to make breaks and label vectors, use something like below. See the [R basics] page for references on `seq()` and `rep()`.
 
+**切れ目やラベルを素早く作る**
+
+ベクトルの改行やラベルを素早く作成するには、以下のような方法があります。`seq()`や`rep()`については、[basics](https://epirhandbook.com/en/r-basics.html#r-basics)のページを参照してください。
+
 ```{r, eval=F}
 # Make break points from 0 to 90 by 5
+# 0から90までのブレークポイントを5で割る
 age_seq = seq(from = 0, to = 90, by = 5)
 age_seq
 
 # Make labels for the above categories, assuming default cut() settings
+# デフォルトのcut()の設定を前提に、上記のカテゴリのラベルを作成する
 age_labels = paste0(age_seq + 1, "-", age_seq + 5)
 age_labels
 
 # check that both vectors are the same length
+# 両方のベクトルが同じ長さであることを確認する
 length(age_seq) == length(age_labels)
 ```
 
@@ -1853,39 +1991,72 @@ To get quantile break points, you can use `quantile()` from the **stats** packag
 -   If your input numeric vector has any missing values it is best to set `na.rm = TRUE`\
 -   Set `names = FALSE` to get an un-named numeric vector
 
+`cut()`の詳細については、Rコンソールで`?cut`と入力して、ヘルプページを参照してください。
+
+**分位値ブレーク**
+
+一般的な理解では、「クォンタイル」または「パーセンタイル」は、通常、値の割合が下になる値を指します。例えば、`linelist`の年齢の95パーセンタイルは、年齢の95%が該当する年齢になります。
+
+しかし、一般的には、「4分位値」や「10分位値」は、データのグループを4つまたは10のグループに均等に分けたものを指すことがあります（グループよりもブレークポイントが1つ多いことに注意してください）。
+
+分位点を取得するには、Rの基本パッケージである**stats**の`quantile()`を使用します。データセットの列などの数値ベクトルと、0から1.0までの確率の数値ベクトルを指定します。ブレークポイントは、数値ベクトルとして返されます。`?quantile`を入力すると、統計的手法の詳細を調べることができます。
+
+入力された数値ベクトルに欠損値がある場合は、`na.rm = TRUE` を設定することをお勧めします。
+
+`names = FALSE`を設定すると、名前のない数値ベクトルが得られます。
+
 ```{r}
 quantile(linelist$age_years,               # specify numeric vector to work on
+         　　　　　　　　　　　　　　　　　# 演算する数値ベクトルを指定
   probs = c(0, .25, .50, .75, .90, .95),   # specify the percentiles you want
+  　　　　　　　　　　　　　　　　　　　　# 欲しいパーセンタイルを指定する
   na.rm = TRUE)                            # ignore missing values 
+　　　　　　　　　　　　　　　　　　　　　# 欠損値を無視する 
 ```
 
 You can use the results of `quantile()` as break points in `age_categories()` or `cut()`. Below we create a new column `deciles` using `cut()` where the breaks are defined using `quantiles()` on `age_years`. Below, we display the results using `tabyl()` from **janitor** so you can see the percentages (see the [Descriptive tables] page). Note how they are not exactly 10% in each group.
 
+`quantile()`の結果は、`age_categories()`や`cut()`のブレークポイントとして使用できます。以下では、`cut()`を使って新しい列`deciles`を作成し、`age_years`に対して`quantiles()`を使って区切りを定義しています。以下では、**janitor**の`tabyl()`を使って結果を表示し、パーセンテージを見ることができます（[Descriptive tables](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables) ページを参照）。各グループで正確に10%ではないことに注意してください。
+
 ```{r}
 linelist %>%                                # begin with linelist
-  mutate(deciles = cut(age_years,           # create new column decile as cut() on column age_years
+      #linelistから開始
+  mutate(deciles = cut(age_years,           # create new column decile as cut() on column age_years　　　　　　　　　　　　　　# 新しい列を作る。 age_years列をcut()でdecileに格納
     breaks = quantile(                      # define cut breaks using quantile()
+        　　　　　　　　　　　　　　 # quantile()を使ってカットオフを定義する
       age_years,                               # operate on age_years
+      # age_yearsの操作
       probs = seq(0, 1, by = 0.1),             # 0.0 to 1.0 by 0.1
+      　　　　　　　　　　　　　　　　　　　　　# 0.0から1.0へ0.1倍
       na.rm = TRUE),                           # ignore missing values
+    # 欠損値を無視する
     include.lowest = TRUE)) %>%             # for cut() include age 0
+      #  cut()でage 0を含む
   janitor::tabyl(deciles)                   # pipe to table to display
+# 表示するテーブルへのパイプ
 ```
 
 ### Evenly-sized groups {.unnumbered}
 
 Another tool to make numeric groups is the the **dplyr** function `ntile()`, which attempts to break your data into n *evenly-sized groups* - *but be aware that unlike with `quantile()` the same value could appear in more than one group.* Provide the numeric vector and then the number of groups. The values in the new column created is just group "numbers" (e.g. 1 to 10), not the range of values themselves as when using `cut()`.
 
+**均等な大きさのグループ**
+
+数値グループを作成するもう1つのツールは、**dplyr**の関数`ntile()`で、データをn個の均等な大きさのグループに分けようとします。数値ベクトルとグループの数を指定します。作成される新しい列の値は、グループの「番号」（例：1から10）だけで、`cut()`を使ったときのように値の範囲そのものではありません。
+
 ```{r}
 # make groups with ntile()
+# ntile()でグループを作る
 ntile_data <- linelist %>% 
   mutate(even_groups = ntile(age_years, 10))
 
 # make table of counts and proportions by group
+# グループ別の数と割合の表を作る
 ntile_table <- ntile_data %>% 
   janitor::tabyl(even_groups)
   
 # attach min/max values to demonstrate ranges
+# 範囲を示すために最小値と最大値を添付する
 ntile_ranges <- ntile_data %>% 
   group_by(even_groups) %>% 
   summarise(
@@ -1894,6 +2065,7 @@ ntile_ranges <- ntile_data %>%
   )
 
 # combine and print - note that values are present in multiple groups
+# 結合して表示 - 値が複数のグループに存在することに注意
 left_join(ntile_table, ntile_ranges, by = "even_groups")
 ```
 
@@ -1909,41 +2081,61 @@ If using `case_when()`, please review the proper use as described earlier in the
 
 Below, code to create two categorical age columns is added to the cleaning pipe chain:
 
+**`case_when()`**
+
+**dplyr**の関数`case_when()`を使って数値列からカテゴリを作成することは可能ですが、**epikit**の`age_categories()`や`cut()`を使った方が、自動的に順序付けられた要素を作成してくれるので、より簡単です。
+
+`case_when()`を使用する場合は、このページの「値の再コード化」で前述した適切な使用方法を確認してください。また、すべての右辺の値は同じクラスでなければならないことに注意してください。したがって、右辺の値を`NA`にしたい場合は、"Missing "と書くか、特別な`NA`値`NA_character_`を使用する必要があります。
+
+**パイプチェーンへの追加**
+
+以下では、2つのカテゴリー化された年齢列を作成するコードを、クリーニング・パイプ・チェーンに追加しています。
+
 ```{r}
 # CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+# パイプチェーン処理 (生データから始まり、クリーニングステップを経てパイプへ)
 ##################################################################################
 
 # begin cleaning pipe chain
+# パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
     # standardize column name syntax
+      列名の構文の標準化
     janitor::clean_names() %>% 
     
     # manually re-name columns
+     # 手動で列名を変更
            # NEW name             # OLD name
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
     # remove column
+     # 列を削除
     select(-c(row_num, merged_header, x28)) %>% 
   
     # de-duplicate
+     # 重複除去
     distinct() %>% 
 
     # add column
+     # 列の追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>%     
 
     # convert class of columns
+     # 列のクラスを変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) %>% 
     
     # add column: delay to hospitalisation
+     # 列の追加:入院の遅延
     mutate(days_onset_hosp = as.numeric(date_hospitalisation - date_onset)) %>% 
     
     # clean values of hospital column
+     # 病院の列の値をきれいにする
     mutate(hospital = recode(hospital,
                       # OLD = NEW
                       "Mitylira Hopital"  = "Military Hospital",
@@ -1958,6 +2150,7 @@ linelist <- linelist_raw %>%
     mutate(hospital = replace_na(hospital, "Missing")) %>% 
 
     # create age_years column (from age and age_unit)
+     # age_yearsカラムの作成（from age and age_unit）
     mutate(age_years = case_when(
           age_unit == "years" ~ age,
           age_unit == "months" ~ age/12,
@@ -1965,12 +2158,15 @@ linelist <- linelist_raw %>%
           TRUE ~ NA_real_)) %>% 
   
     # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+     # 上記は、すでに説明した上流側のクリーニング方法です
     ###################################################   
     mutate(
           # age categories: custom
+         # 年齢別カテゴリー: カスタム
           age_cat = epikit::age_categories(age_years, breakers = c(0, 5, 10, 15, 20, 30, 50, 70)),
         
           # age categories: 0 to 85 by 5s
+          # 年齢カテゴリー 0～85歳までの5段階
           age_cat5 = epikit::age_categories(age_years, breakers = seq(0, 85, 5)))
 ```
 
