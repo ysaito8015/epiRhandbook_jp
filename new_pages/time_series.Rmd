@@ -1855,26 +1855,36 @@ for details.
 ```{r glrnb, warning = FALSE, message = FALSE}
 
 ## define control options
+## 統制するオプションを定義します。
 ctrl <- list(
   ## define what time period that want threshold for (i.e. 2011)
+  ## 閾値が必要な期間を定義します。 (例：2011年)
   range = which(counts_sts@epoch > weekrange),
-  mu0 = list(S = 1,    ## number of fourier terms (harmonics) to include
-  trend = TRUE,   ## whether to include trend or not
-  refit = FALSE), ## whether to refit model after each alarm
+  mu0 = list(S = 1,    ## number of fourier terms (harmonics) to include ## ## 含めるフーリエ項（ハーモニクス）の数
+  trend = TRUE,   ## whether to include trend or not ## トレンドを含めるかどうか
+  refit = FALSE), ## whether to refit model after each alarm ## それぞれの警告の後、モデルを再度当てはめるかどうか
   ## cARL = threshold for GLR statistic (arbitrary)
+  ## cARL = GLR 統計の閾値（任意）
      ## 3 ~ middle ground for minimising false positives
+     ## ## 3 ~ 偽陽性を最小限に抑えるための中間地点
      ## 1 fits to the 99%PI of glm.nb - with changes after peaks (threshold lowered for alert)
+     ## ## 1 glm.nbの99%PIにフィット - ピーク後の変化あり（警告のために閾値を下げます）
    c.ARL = 2,
    # theta = log(1.5), ## equates to a 50% increase in cases in an outbreak
-   ret = "cases"     ## return threshold upperbound as case counts
+   # theta = log(1.5), ## アウトブレイクにおける症例数の50%増加に等しい
+   ret = "cases"     ## return threshold upperbound as case counts ## ケースの数として閾値の上界を返します。
   )
 
 ## apply the glrnb method
+## glrnb法を適用します。
 glrnbmethod <- glrnb(counts_sts, control = ctrl, verbose = FALSE)
 
 ## create a new variable in the original dataset called threshold
+## 元のデータセットに閾値と名付けた新たな変数をセットします。
 ## containing the upper bound from glrnb 
+## glrnbの上界を含みます。
 ## nb. this is only for the weeks in 2011 (so need to subset rows)
+## nb. これは2011年の週のみを対象としています（そのため、行をサブセット化する必要があります）。
 counts[which(counts$epiweek >= cut_off & 
                !is.na(counts$case_int)),
               "threshold_glrnb"] <- glrnbmethod@upperbound
@@ -1887,24 +1897,29 @@ Visualise the outputs as previously.
 
 ggplot(counts, aes(x = epiweek)) + 
   ## add in observed case counts as a line
+  ## 観測されたケースの数を線として追加します。
   geom_line(aes(y = case_int, colour = "Observed")) + 
   ## add in upper bound of aberration algorithm
+  ## aberration アルゴリズムの上界を追加します。
   geom_line(aes(y = threshold_glrnb, colour = "Alert threshold"), 
             linetype = "dashed", 
             size = 1.5) +
   ## define colours
+  ## 色を定義します。
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Alert threshold" = "red")) + 
   ## make a traditional plot (with black axes and white background)
   ## 伝統的なプロット（軸が黒で背景が白）を作成します。
   theme_classic() + 
   ## remove title of legend 
+  ## タイトルのレジェンドを除外します。
   theme(legend.title = element_blank())
 
 ```
 
 <!-- ======================================================= -->
 ## Interrupted timeseries {  }
+## 中断された時系列 {  }
 
 Interrupted timeseries (also called segmented regression or intervention analysis), 
 is often used in assessing the impact of vaccines on the incidence of disease. 
@@ -1919,7 +1934,13 @@ and one after (the pre and post-periods). This allows us to calculate an inciden
 two time periods. Explaining the equation might make this clearer (if not then just
 ignore!). 
 
+中断された時系列（セグメント回帰や介入分析とも呼ばれる。） は、病気の発生率に対するワクチンの影響を評価する際によく使用されます。 しかし、これは広範囲の介入や導入の影響を評価するために使用することができます。
+例えば、病院の手順の変更や、集団への新しい病気の導入などです。
+今回の例では、2008年末にドイツでカンピロバクターの新しい株が導入されたと仮定して、それが患者数に影響を与えるかどうかを調べます。
+今回も負の二項回帰を使用します。今回の回帰では、介入前（または新菌株の導入）と介入後（前後の期間）の2つの部分に分けます。これにより、2つの期間を比較した罹患率比を算出することができます。式を説明するとわかりやすいかもしれません（そうでなければ無視してください！）。
+
 The negative binomial regression can be defined as follows: 
+負の2項回帰は次の通り定義できます。
 
 $$\log(Y_t)= β_0 + β_1 \times t+ β_2 \times δ(t-t_0) + β_3\times(t-t_0 )^+ + log(pop_t) + e_t$$
 
@@ -1932,36 +1953,59 @@ $(x)^+$ is the cut off operator (it is x if x>0 and 0 otherwise)
 $e_t$ denotes the residual 
 Additional terms trend and season can be added as needed. 
 
+ここで
+$Y_t$ は $t$ 時点で観測された症例数  
+$pop_t$ は、 $t$ 時点での10万人単位の人口規模（ここでは使用しません）。 
+$t_0$ は前期間の最後の年（移行期間がある場合はその期間も含みます）。 
+$δ(x)$ は指標関数（x≤0なら0、x>0なら1）。 
+$(x)^+$ はカットオフ演算子（x>0ならx、それ以外は0）。 
+$e_t$ は残差を表します。
+必要に応じてトレンドや季節などの項を追加することができます。
+
 $β_2 \times δ(t-t_0) + β_3\times(t-t_0 )^+$ is the generalised linear 
 part of the post-period and is zero in the pre-period. 
-This means that the $β_2$ and $β_3$ estimates are the effects of the intervention. 
+This means that the $β_2$ and $β_3$ estimates are the effects of the intervention.
+
+$β_2 \times δ(t-t_0) + β_3 \times(t-t_0 )^+$ は、後の期間の一般化された線形部分であり、前期はゼロです。これは、 $β_2$ と $β_3$ の推定値は介入の効果であることを意味します。
 
 We need to re-calculate the fourier terms without forecasting here, as we will use
 all the data available to us (i.e. retrospectively). Additionally we need to calculate
-the extra terms needed for the regression. 
+the extra terms needed for the regression.
+ここでは、利用可能なすべてのデータを使用するため、予測を行わずにフーリエ項を再計算する必要があります（つまり、過去にさかのぼって計算することになります）。さらに、回帰に必要な追加の項を計算する必要があります。
 
 ```{r define_terms_interrupted}
 
 ## add in fourier terms using the epiweek and case_int variabless
+## epiweek と case_int variabless を使用してフーリエ項を追加します。
 counts$fourier <- select(counts, epiweek, case_int) %>% 
   as_tsibble(index = epiweek) %>% 
   fourier(K = 1)
 
 ## define intervention week 
+## 介入の州を定義します。
 intervention_week <- yearweek("2008-12-31")
 
 ## define variables for regression 
+## 回帰分析のための変数を定義します。
 counts <- counts %>% 
   mutate(
     ## corresponds to t in the formula
+    ## 公式における t に対応させます。
       ## count of weeks (could probably also just use straight epiweeks var)
+      ## 週数 (epiweeksをそのまま使うこともできるでしょう)
     # linear = row_number(epiweek), 
+    # 線形 = 行の数（epiweek）
     ## corresponds to delta(t-t0) in the formula
+    ## 公式におけるデルタ（t-t0）に対応させます。
       ## pre or post intervention period
+      ## 前と後の介入期間
     intervention = as.numeric(epiweek >= intervention_week), 
     ## corresponds to (t-t0)^+ in the formula
+    ## 公式に置ける（(t-t0)^+ に対応させます。
       ## count of weeks post intervention
+      ## 介入後の週の数
       ## (choose the larger number between 0 and whatever comes from calculation)
+      ## ## (0から計算で出てくる数字のうち、大きい方を選びます。)
     time_post = pmax(0, epiweek - intervention_week + 1))
 
 ```
@@ -1969,58 +2013,78 @@ counts <- counts %>%
 We then use these terms to fit a negative binomial regression, and produce a 
 table with percentage change. What this example shows is that there was no 
 significant change. 
+次に、これらの項を使って負の二項回帰をあてはめ、変化率の表を作成します。この例では、有意な変化はありませんでした。
 
 <span style="color: orange;">**_CAUTION:_** Note the use of `simulate_pi = FALSE`
 within the `predict()` argument. This is because the default behaviour of **trending** 
 is to use the **ciTools** package to estimate a prediction interval. This does not 
 work if there are `NA` counts, and also produces more granular intervals. 
 See `?trending::predict.trending_model_fit` for details. </span>  
+<span style="color: orange;">**_CAUTION:_** `predict()` の引数で `simulate_pi = FALSE` を使用していることに注意してください。これは **trending** のデフォルトの動作が **ciTools** パッケージを使用して予測区間を推定することだからです。
+これは これは`NA`カウントがある場合には機能せず、また、より細かい間隔を生成します。詳細は `?trending::predict.trending_model_fit` を参照してください。</span>
 
 ```{r interrupted_regression, warning = FALSE}
 
 
 ## define the model you want to fit (negative binomial) 
+## 当てはめたいモデル（負の二項回帰）を定義します。
 model <- glm_nb_model(
   ## set number of cases as outcome of interest
+  ## 関心のあるアウトカムとしてのケースの数をセットします。
   case_int ~
     ## use epiweek to account for the trend
+    ## トレンドの説明のためにepiwreekを使用します。
     epiweek +
     ## use the furier terms to account for seasonality
+    ## 季節性の説明のためにフーリエ項を使用します。
     fourier + 
     ## add in whether in the pre- or post-period 
+    ## 前あるいは後ろの期間であるかを追加します。
     intervention + 
     ## add in the time post intervention 
+    ## 介入後の期間を追加します。
     time_post
     )
 
 ## fit your model using the counts dataset
+## countsデータセットを使用して、モデルを当てはめます。
 fitted_model <- trending::fit(model, counts)
 
-## calculate confidence intervals and prediction intervals 
+## calculate confidence intervals and prediction intervals
+## 信頼区間と予測区間を算出します。
 observed <- predict(fitted_model, simulate_pi = FALSE)
 
 
 
 ## show estimates and percentage change in a table
+## 推定値と変化率をテーブル内に表示します。
 fitted_model %>% 
   ## extract original negative binomial regression
+  ## 元の負の二項回帰を抽出します。
   get_model() %>% 
   ## get a tidy dataframe of results
+  ## 結果についてのtidy なデータフレームを取得します。
   tidy(exponentiate = TRUE, 
        conf.int = TRUE) %>% 
   ## only keep the intervention value 
+  ## 介入の値のみを保持します。
   filter(term == "intervention") %>% 
   ## change the IRR to percentage change for estimate and CIs 
+  ## 推定値とCIsについて、IRRを変化率に変換します。
   mutate(
     ## for each of the columns of interest - create a new column
+    ## 関心のあるそれぞれの列 - 新しい列を作成します。
     across(
       all_of(c("estimate", "conf.low", "conf.high")), 
       ## apply the formula to calculate percentage change
+      ## 変化率を算出する公式を適用します。
             .f = function(i) 100 * (i - 1), 
       ## add a suffix to new column names with "_perc"
+      ## "_perc" という名前の設備後を新たな列に追加します。
       .names = "{.col}_perc")
     ) %>% 
   ## only keep (and rename) certain columns 
+  ## 特定の列のみを保持します（そして列名を変更します）。
   select("IRR" = estimate, 
          "95%CI low" = conf.low, 
          "95%CI high" = conf.high,
@@ -2031,19 +2095,24 @@ fitted_model %>%
 ```
 
 As previously we can visualise the outputs of the regression. 
+前述のように、回帰の出力を視覚化できます。
 
 ```{r plot_interrupted}
 
 ggplot(observed, aes(x = epiweek)) + 
   ## add in observed case counts as a line
+  ## 観測されたケースの数を追加します。
   geom_line(aes(y = case_int, colour = "Observed")) + 
   ## add in a line for the model estimate
+  ## モデル推定値についての線を追加します。
   geom_line(aes(y = estimate, col = "Estimate")) + 
   ## add in a band for the prediction intervals 
+  ## 予測区間のバンドを追加します。
   geom_ribbon(aes(ymin = lower_pi, 
                   ymax = upper_pi), 
               alpha = 0.25) + 
   ## add vertical line and label to show where forecasting started
+  ## 予測開始の場所を示すため、垂直線とラベルを追加します。
   geom_vline(
            xintercept = as.Date(intervention_week), 
            linetype = "dashed") + 
@@ -2055,6 +2124,7 @@ ggplot(observed, aes(x = epiweek)) +
            vjust = 1
            ) + 
   ## define colours
+  ## 色を定義します。
   scale_colour_manual(values = c("Observed" = "black", 
                                  "Estimate" = "red")) + 
   ## make a traditional plot (with black axes and white background)
@@ -2066,6 +2136,7 @@ ggplot(observed, aes(x = epiweek)) +
 
 <!-- ======================================================= -->
 ## Resources {  }
+## 資料
 
 [forecasting: principles and practice textbook](https://otexts.com/fpp3/)  
 [EPIET timeseries analysis case studies](https://github.com/EPIET/TimeSeriesAnalysis)  
