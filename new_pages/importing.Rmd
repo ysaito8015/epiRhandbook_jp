@@ -4,11 +4,11 @@
 knitr::include_graphics(here::here("images", "Import_Export_1500x500.png"))
 ```
 
-このページでは、ファイルの検索、インポート、エクスポートの方法について説明します。:
+このページでは、ファイルを検索、インポート、およびエクスポートする方法について説明します。
 
--   **rio**パッケージを使用して、様々な種類のファイルを柔軟に`import()` および`export()` することができます。\
+-   **rio** パッケージを使用して、さまざまな種類のファイルを柔軟に`import()` および`export()` します。\
 
--   **here**パッケージを使用して、Rプロジェクトのルートからの相対的なファイル検索を行うことで、1台のコンピュータに固有のファイルパスによる混乱を防ぐことができます。[Use of the **here** package to locate files relative to an R project root - to prevent complications from file paths that are specific to one computer]{.ul}\
+-   **here** パッケージを使用して、Rプロジェクトルートに関連するファイルを検索する - これにより1台のコンピューターに固有のファイルパスによる複雑化を防ぎます。\
 
 -   以下のような具体的なインポートのシナリオがあります。
 
@@ -16,20 +16,20 @@ knitr::include_graphics(here::here("images", "Import_Export_1500x500.png"))
     -   煩雑なヘッダーと行のスキップ\
     -   グーグルシートからのインポート\
     -   ウェブサイト上のデータから\
-    -   APIを用いて\
+    -   API を用いて\
     -   [最新の]{.ul}ファイルの読み込み\
 
 -   手動でのデータ入力\
 
--   RDSやRDataなどのR特有のファイルタイプ\
+-   RDS や RDataなどの R 特有のファイルタイプ\
 
 -   ファイルやプロットのエクスポート/保存
 
 <!-- ======================================================= -->
 
-## 概要
+## **概要**
 
-Rに"データセット"をインポートする場合、一般的には、R環境に新しい[データフレーム]{.ul}オブジェクトを作成し、フォルダディレクトリ内の特定のファイルパス/アドレスにあるインポートファイル（Excel、CSV、TSV、RDSなど）として定義します。
+R に"データセット"をインポートする場合、一般的には、R 環境に新しい[データフレーム]{.ul}オブジェクトを作成し、フォルダディレクトリ内の特定のファイルパス/アドレスにあるインポートファイル（Excel、CSV、TSV、RDS など）として定義します。
 
 他の統計プログラム（SAS、STATA、SPSS）で作成されたファイルを含め、多くの種類のファイルをインポート／エクスポートすることができます。また、関係データベースへの接続も可能です。
 
@@ -40,32 +40,35 @@ Rには独自のデータフォーマットもあります。
 
 <!-- ======================================================= -->
 
-## rioパッケージ
+## rio パッケージ
 
-パッケージ**rio**を推奨しています。"rio" は"R I/O"（Input/Output）の略語です。
+本書ではパッケージ **rio** を推奨しています。"rio" は"R I/O"（Input/Output）の略語です。
 
-関数`import()`および`export()`は、様々な種類のファイルを扱うことができます（例：.xlsx、.csv、.rds、.tsv）。これらの関数にファイルパス（".csv"のような拡張子を含む）を指定すると、rioは拡張子を読み取り、正しいツールを使用してファイルをインポートまたはエクスポートします。
+関数`import()` および`export()` は、様々な種類のファイルを扱うことができます（例: .xlsx、.csv、.rds、.tsv）。これらの関数にファイルパス（".csv"のような拡張子を含む）を指定すると、**rio** は拡張子を読み取り、正しいツールを使用してファイルをインポートまたはエクスポートします。
 
-**rio**を使う代わりに、他の多くのパッケージの関数を使うことができます。それぞれのパッケージは、ファイルの種類に特化しています。例えば、read.csv() (**base** R)、read.xlsx() (**openxlsx**パッケージ)、write_csv() (**readr** pacakge)などです。これらの選択肢を覚えるのは大変ですが、**rio**のimport()やexport()を使うのは簡単です。
+**rio** を使う代わりに、他の多くのパッケージの関数を使うことができます。それぞれのパッケージは、ファイルの種類に特化しています。例えば、 `read.csv()` (**base** R)、`read.xlsx()` (**openxlsx** パッケージ)、`write_csv()` (**readr** パッケージ)などです。これらの選択肢を覚えるのは大変ですが、**rio** の `import()` や `export()` を使うのは簡単です。
 
-**rio**の関数`import()`と`export()`は、ファイルの拡張子に基づいて、与えられたファイルに適切なパッケージと関数を使用します。**rio**がバックグラウンドで使用するパッケージや関数の完全な表は、このページの最後をご覧ください。**rio**は、STATA、SAS、SPSSのファイルをはじめ、さまざまな種類のファイルのインポートにも使用することができます。
+**rio**'s functions `import()` and `export()` use the appropriate package and function for a given file, based on its file extension. See the end of this page for a complete table of which packages/functions **rio** uses in the background. It can also be used to import STATA, SAS, and SPSS files, among dozens of other file types.rio\*\*の関数\`import()\`と\`export()\`は、ファイルの拡張子に基づいて、与えられたファイルに適切なパッケージと関数を使用します。\*\*rio\*\*がバックグラウンドで使用するパッケージや関数の完全な表は、このページの最後をご覧ください。\*\*rio\*\*は、STATA、SAS、SPSSのファイルをはじめ、さまざまな種類のファイルのインポートにも使用することができます。
 
-シェープファイルのインポート／エクスポートには、\[GIS basics\]のページで紹介した他のパッケージが必要です。
+Import/export of shapefiles requires other packages, as detailed in the page on \[GIS basics\].シェープファイルのインポート／エクスポートには、\\\[GIS basics\\\]のページで紹介した他のパッケージが必要です。
 
 ## hereパッケージ {#here}
 
-**here**パッケージとその関数`here()`を用いて、ファイルの場所と保存場所をRに簡単に指示することができます。つまり、ファイルパスを作成します。
+The package **here** and its function `here()` make it easy to tell R where to find and to save your files - in essence, it builds file paths.ere\*\*パッケージとその関数\`here()\`を用いて、ファイルの場所と保存場所をRに簡単に指示することができます。つまり、ファイルパスを作成します。
 
-**here**パッケージは、Rプロジェクトと組み合わせて使用することで、Rプロジェクトのルートディレクトリ（トップレベルのフォルダ）に対するRプロジェクト内のファイルの場所を記述することができます。これは、Rプロジェクトを複数の人やコンピュータで共有したり、アクセスしたりする場合に便利です。これは、すべてのユーザーに共通の場所（Rプロジェクトのルート）からファイルパスを「開始」することで、異なるコンピュータ上のユニークなファイルパス（例："C:/Users/Laura/Documents..."）による煩雑さを防ぎます。This is useful when the R project may be shared or accessed by multiple people/computers. It prevents complications due to the unique file paths on different computers (e.g. `"C:/Users/Laura/Documents..."` by "starting" the file path in a place common to all users (the R project root).
+Used in conjunction with an R project, **here** allows you to describe the location of files in your R project in relation to the R project's *root directory* (the top-level folder). This is useful when the R project may be shared or accessed by multiple people/computers. It prevents complications due to the unique file paths on different computers (e.g. `"C:/Users/Laura/Documents..."` by "starting" the file path in a place common to all users (the R project root).here\*\*パッケージは、Rプロジェクトと組み合わせて使用することで、Rプロジェクトのルートディレクトリ（トップレベルのフォルダ）に対するRプロジェクト内のファイルの場所を記述することができます。これは、Rプロジェクトを複数の人やコンピュータで共有したり、アクセスしたりする場合に便利です。これは、すべてのユーザーに共通の場所（Rプロジェクトのルート）からファイルパスを「開始」することで、異なるコンピュータ上のユニークなファイルパス（例："C:/Users/Laura/Documents..."）による煩雑さを防ぎます。
 
-Rプロジェクトでの`here()`はこのように機能します。
+This is how `here()` works within an R project:Rプロジェクトでの\`here()\`はこのように機能します。
 
--   **here**パッケージがRプロジェクト内で最初に読み込まれると、"ベンチマーク "または "アンカー "として、Rプロジェクトのルートフォルダに".here "という小さなファイルが置かれます。\
--   In your scripts, to reference a file in the R project's sub-folders, you use the function `here()` to build the file path *in relation to that anchor　スクリプトでは、Rプロジェクトのサブフォルダ内のファイルを参照するために、関数here()を使用して、そのアンカーに基づいたファイルパスを作成します。[check which sentences are italic]{.ul}*
--   ファイルパスを作成するには、以下のように、ルート以降のフォルダ名を引用符で囲み、カンマで区切り、最後にファイル名とファイル拡張子を記述します。\
--   `here()`のファイルパスは、インポートとエクスポートの両方に使用できます。
+-   When the **here** package is first loaded within the R project, it places a small file called ".here" in the root folder of your R project as a "benchmark" or "anchor"\*\*here\*\*パッケージがRプロジェクト内で最初に読み込まれると、"ベンチマーク "または "アンカー "として、Rプロジェクトのルートフォルダに".here "という小さなファイルが置かれます。\\\
 
-たとえば、以下では、関数`import()`に、`here()`で構築されたファイルパスが提供されています。
+-   In your scripts, to reference a file in the R project's sub-folders, you use the function `here()` to build the file path *in relation to that anchorスクリプトでは、Rプロジェクトのサブフォルダ内のファイルを参照するために、関数here()を使用して、そのアンカーに基づいたファイルパスを作成します。*
+
+-   To build the file path, write the names of folders beyond the root, within quotes, separated by commas, finally ending with the file name and file extension as shown belowファイルパスを作成するには、以下のように、ルート以降のフォルダ名を引用符で囲み、カンマで区切り、最後にファイル名とファイル拡張子を記述します。\\\
+
+-   `here()` file paths can be used for both importing and exporting\`here()\`のファイルパスは、インポートとエクスポートの両方に使用できます。
+
+For example, below, the function `import()` is being provided a file path constructed with `here()`.たとえば、以下では、関数\`import()\`に、\`here()\`で構築されたファイルパスが提供されています。
 
 ```{r, eval=F}
 linelist <- import(here("data", "linelists", "ebola_linelist.xlsx"))
@@ -365,7 +368,7 @@ See the page on \[Iteration, loops, and lists\] for examples of how to import an
 
 Importing data directly from Github into R can be very easy or can require a few steps - depending on the file type. Below are some approaches:
 
-### CSVファイル {.unnumbered}
+### CSV ファイル {.unnumbered}
 
 It can be easy to import a .csv file directly from Github into R with an R command.
 
@@ -378,7 +381,7 @@ It can be easy to import a .csv file directly from Github into R with an R comma
 knitr::include_graphics(here::here("images", "download_csv_raw.png"))
 ```
 
-### XLSXファイル {.unnumbered}
+### XLSX ファイル {.unnumbered}
 
 You may not be able to view the "Raw" data for some files (e.g. .xlsx, .rds, .nwk, .shp)
 
@@ -456,7 +459,7 @@ And now we display the new dataset:
 DT::datatable(manual_entry_cols)
 ```
 
-### クリップボードからの読み込み {.unnumbered}
+### クリップボードをインポート {.unnumbered}
 
 If you copy data from elsewhere and have it on your clipboard, you can try one of the two ways below:
 
@@ -478,7 +481,7 @@ df_from_clipboard <- read.table(
   header=TRUE)         # if there is a header row
 ```
 
-## 最新のファイルを取り込む
+## 最新のファイルをインポート
 
 Often you may receive daily updates to your datasets. In this case you will want to write code that imports the most recent file. Below we present two ways to approach this:
 
@@ -712,7 +715,7 @@ This section was also informed by [this tutorial](https://www.dataquest.io/blog/
 
 ## エクスポート
 
-### rioパッケージを使って {.unnumbered}
+### rio パッケージを使って {.unnumbered}
 
 With **rio**, you can use the `export()` function in a very similar way to `import()`. First give the name of the R object you want to save (e.g. `linelist`) and then in quotes put the file path where you want to save the file, including the desired file name and file extension. For example:
 
@@ -737,7 +740,7 @@ To export a data frame to your computer's "clipboard" (to then paste into anothe
 clipr::write_clip(linelist)
 ```
 
-## RDSファイル {#import_rds}
+## RDS ファイル {#import_rds}
 
 Along with .csv, .xlsx, etc, you can also export/save R data frames as .rds files. This is a file format specific to R, and is very useful if you know you will work with the exported data again in R.
 
@@ -751,7 +754,7 @@ export(linelist, here("data", "clean", "my_linelist.rds"))
 
 <!-- ======================================================= -->
 
-## Rdataファイルとリスト {#import_rdata}
+## Rdata ファイルとリスト {#import_rdata}
 
 `.Rdata` files can store multiple R objects - for example multiple data frames, model results, lists, etc. This can be very useful to consolidate or share a lot of your data for a given project.
 
