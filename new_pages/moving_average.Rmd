@@ -205,66 +205,66 @@ ggplot(data = rolling)+
 
 ### グループ別のローリング {#roll_slider_group .unnumbered}
 
-If you group your data prior to using a **slider** function, the sliding windows will be applied by group. Be careful to arrange your rows in the desired order *by group*.
+**slider** 関数を使う前にデータをグループ化した場合、スライドウィンドウはグループごとに適用されます。*by group* で必要な順序で行をアレンジするように注意してください。
 
-Each time a new group begins, the sliding window will re-start. Therefore, one nuance to be aware of is that if your data are grouped *and* you have set `.complete = TRUE`, you will have empty values at each transition between groups. As the function moved downward through the rows, every transition in the grouping column will re-start the accrual of the minimum window size to allow a calculation.
+スライディングウィンドウは新しいグループが始まるたびに再スタートします。したがって、注意しなくてはならないのは、データがグループ化されていて、`.complete = TRUE` を設定している場合、グループ間の移動のたびに空の値が発生するということです。関数が行を下方に移動すると、グループ化された列を移動するたびに計算を可能にする最小のウィンドウサイズが生じ、再スタートします。
 
-See handbook page on [Grouping data] for details on grouping data.
+データのグループ化に関する詳細は、[Grouping data] のページを参照してください。
 
-Below, we count linelist cases by date *and* by hospital. Then we arrange the rows in ascending order, first ordering by hospital and then within that by date. Next we set `group_by()`. Then we can create our new rolling average.
+以下では、病院別かつ日付別にラインリストの症例をカウントしています。次に、行を昇順に並べます。まず病院別に並べ、その中で日付別に並べます。続いて、`group_by()` を設定します。そして、新しい移動平均を作ることができます。
 
 ```{r}
 grouped_roll <- linelist %>%
 
   count(hospital, date_hospitalisation, name = "new_cases") %>% 
 
-  arrange(hospital, date_hospitalisation) %>%   # arrange rows by hospital and then by date
+  arrange(hospital, date_hospitalisation) %>%   # 病院別、続いて日付別に行を並べる
   
-  group_by(hospital) %>%              # group by hospital 
+  group_by(hospital) %>%              # 病院でグループ化
     
-  mutate(                             # rolling average  
+  mutate(                             # 移動平均  
     mean_7day_hosp = slide_index_dbl(
-      .x = new_cases,                 # the count of cases per hospital-day
-      .i = date_hospitalisation,      # index on date of admission
-      .f = mean,                      # use mean()                   
-      .before = days(6)               # use the day and the 6 days prior
+      .x = new_cases,                 # ケース/病院-日のカウント
+      .i = date_hospitalisation,      # 入院日のインデックス
+      .f = mean,                      # mean() を使う                  
+      .before = days(6)               # 当日と6日前までの使用
       )
   )
 
 ```
 
-Here is the new dataset:
+こちらが、新しいデータセットです：
 
 ```{r, echo=F}
 DT::datatable(grouped_roll, rownames = FALSE, options = list(pageLength = 12, scrollX=T) )
 ```
 
-We can now plot the moving averages, displaying the data by group by specifying `~ hospital` to `facet_wrap()` in `ggplot()`. For fun, we plot two geometries - a `geom_col()` showing the daily case counts and a `geom_line()` showing the 7-day moving average.
+`ggplot()` の `facet_wrap()` に `~ hospital` と指定することで、データをグループ別（ここでは病院別）に表示し、移動平均をプロットすることができます。楽しいのでここでは、毎日の症例数を示す `geom_col()` と、7日間の移動平均を示す `geom_line()` という2つの幾何学図形をプロットしてみます。
 
 ```{r, warning=F, message=F}
 ggplot(data = grouped_roll)+
-  geom_col(                       # plot daly case counts as grey bars
+  geom_col(                       # 日ごとのケースカウントを灰色のバーで表示
     mapping = aes(
       x = date_hospitalisation,
       y = new_cases),
     fill = "grey",
     width = 1)+
-  geom_line(                      # plot rolling average as line colored by hospital
+  geom_line(                      # 病院ごとに色分けして移動平均を表示
     mapping = aes(
       x = date_hospitalisation,
       y = mean_7day_hosp,
       color = hospital),
     size = 1)+
-  facet_wrap(~hospital, ncol = 2)+ # create mini-plots per hospital
-  theme_classic()+                 # simplify background  
-  theme(legend.position = "none")+ # remove legend
-  labs(                            # add plot labels
+  facet_wrap(~hospital, ncol = 2)+ # 病院ごとにミニプロットを作成
+  theme_classic()+                 # 背景をシンプルに 
+  theme(legend.position = "none")+ # 凡例を非表示にする
+  labs(                            # プロットのラベルを追加する
     title = "7-day rolling average of daily case incidence",
     x = "Date of admission",
     y = "Case incidence")
 ```
 
-[***DANGER:*** If you get an error saying *"slide() was deprecated in tsibble 0.9.0 and is now defunct. Please use slider::slide() instead."*, it means that the `slide()` function from the **tsibble** package is masking the `slide()` function from **slider** package. Fix this by specifying the package in the command, such as `slider::slide_dbl()`.]{style="color: red;"}
+[***注意：*** *"slide() was deprecated in tsibble 0.9.0 and is now defunct. Please use slider::slide() instead."* というエラーが出た場合、**tsibble** パッケージの `slide()` 関数をマスクしていることを意味します。 `slider::slide_dbl()` のように、コマンドパッケージを指定して修正してください。]{style="color: red;"}
 
 <!-- You can group the data prior to using a **slider** function. For example, if you want to calculate the same 7-day rolling sum as above, but by hospital. above rolling mean delay from symptom onset to hospital admission (column `days_onset_hosp`).   -->
 
@@ -318,35 +318,35 @@ ggplot(data = grouped_roll)+
 
 <!-- ======================================================= -->
 
-## Calculate with **tidyquant** within `ggplot()`
+## `ggplot()` 内の **tidyquant** による計算
 
-The package **tidyquant** offers another approach to calculating moving averages - this time from *within* a `ggplot()` command itself.
+**tidyquant** パッケージは、移動平均を異なるアプローチで計算します - 今回は `ggplot()` のコマンド内の例です。
 
-Below the `linelist` data are counted by date of onset, and this is plotted as a faded line (`alpha` \< 1). Overlaid on top is a line created with `geom_ma()` from the package **tidyquant**, with a set window of 7 days (`n = 7`) with specified color and thickness.
+`linelist` では、データは発症日別にカウントされ、色あせた線としてプロットされています（`alpha` \< 1）。上に重ねているのは、 **tidyquant** パッケージの `geom_ma()` で作成された選で、7日間（`n = 7`）のウィンドウが設定され、色と太さが指定されています。
 
-By default `geom_ma()` uses a simple moving average (`ma_fun = "SMA"`), but other types can be specified, such as:
+`geom_ma()` はデフォルトでは、単純移動平均（`ma_fun = "SMA"`）を使用しますが、以下のようなほかのタイプを指定することもできます：
 
--   "EMA" - exponential moving average (more weight to recent observations)\
--   "WMA" - weighted moving average (`wts` are used to weight observations in the moving average)\
--   Others can be found in the function documentation
+-   "EMA" - 指数移動平均（最近の観測値に重きを置く）\
+-   "WMA" - 加重移動平均（`wts` は移動平均における観測値の重みづけに使用される）
+-   その他の機能については、関数の説明を参照してください
 
 ```{r}
 linelist %>% 
-  count(date_onset) %>%                 # count cases per day
-  drop_na(date_onset) %>%               # remove cases missing onset date
-  ggplot(aes(x = date_onset, y = n))+   # start ggplot
-    geom_line(                          # plot raw values
+  count(date_onset) %>%                 # 日ごとのケースをカウントする
+  drop_na(date_onset) %>%               # 発症日がないケースを除外する
+  ggplot(aes(x = date_onset, y = n))+   # ggplot を始める
+    geom_line(                          # そのままの数値をプロットする
       size = 1,
-      alpha = 0.2                       # semi-transparent line
+      alpha = 0.2                       # 半透明の線
       )+             
     tidyquant::geom_ma(                 # plot moving average
       n = 7,           
       size = 1,
       color = "blue")+ 
-  theme_minimal()                       # simple background
+  theme_minimal()                       # 移動平均の表示
 ```
 
-See this [vignette](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) for more details on the options available within **tidyquant**.
+**tidyquant** で利用できるオプションの更なる詳細については、[vignette](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html) を参照してください。
 
 <!-- ## Rolling regression  -->
 
@@ -380,14 +380,14 @@ See this [vignette](https://cran.r-project.org/web/packages/tidyquant/vignettes/
 
 <!-- ======================================================= -->
 
-## Resources
+## 資料
 
-See the helpful online [vignette for the **slider** package](https://cran.r-project.org/web/packages/slider/vignettes/slider.html)
+[**slider** パッケージの参考になるオンライン vignette はこちらをご覧ください](https://cran.r-project.org/web/packages/slider/vignettes/slider.html)
 
-The **slider** [github page](https://github.com/DavisVaughan/slider)
+**slider** の[github ](https://github.com/DavisVaughan/slider)ページ
 
-A **slider** [vignette](https://davisvaughan.github.io/slider/articles/slider.html)
+**slider** の [vignette](https://davisvaughan.github.io/slider/articles/slider.html)
 
 [tidyquant vignette](https://cran.r-project.org/web/packages/tidyquant/vignettes/TQ04-charting-with-tidyquant.html)
 
-If your use case requires that you "skip over" weekends and even holidays, you might like **almanac** package.
+週末や祝日を「スキップ」する必要がある場合は、**almanac** パッケージがおすすめです。
