@@ -550,33 +550,30 @@ epiestim_res_emp <- estimate_R(
 plot(epiestim_res_emp)
 ```
 
-#### 推定時間枠の設定 {.unnumbered}
+#### 推定時間枠（ウィンドウ）の設定 {.unnumbered}
 
-These default options will provide a weekly sliding estimate and might
-act as a warning that you are estimating R<sub>t</sub> too early in the
-outbreak for a precise estimate. You can change this by setting a later
-start date for the estimation as shown below. Unfortunately,
-**EpiEstim** only provides a very clunky way of specifying these
-estimations times, in that you have to provide a vector of **integers**
-referring to the start and end dates for each time window.
+デフォルトのオプションでは週単位の平滑化された推定値を提供していますが、正確な推定値を得るために、アウトブレイク初期に
+R<sub>t</sub>
+を推定していることを警告する機能もあります。以下に示すように、推定の開始日を遅く設定することで、変更できます。残念ながら、**EpiEstim**
+はこれらの推定時間を指定するのに非常に面倒な方法しか提供しておらず、そのためには各時間ウィンドウの開始日と終了日を参照する整数のベクトルを提供しなければなりません。
 
 ```{r epidemic_models_epiestim_config_late,}
 
-## define a vector of dates starting on June 1st
+## 6月1日から始まる日付のベクターを定義する
 start_dates <- seq.Date(
   as.Date("2014-06-01"),
   max(cases$dates) - 7,
   by = 1
 ) %>%
-  ## subtract the starting date to convert to numeric
+  ## 数値型に変換するために開始日を引く
   `-`(min(cases$dates)) %>%
   ## convert to integer
   as.integer()
 
-## add six days for a one week sliding window
+## 1週間の平滑化ウィンドウに6日分を追加する
 end_dates <- start_dates + 6
   
-## make config
+## config を作成する
 config_partial <- make_config(
   mean_si = 12.0,
   std_si = 5.2,
@@ -585,34 +582,32 @@ config_partial <- make_config(
 )
 ```
 
-Now we re-run **EpiEstim** and can see that the estimates only start
-from June:
+ここで、**EpiEstim**
+を再び実行してみると、推定値は6月からしか出ないことがわかります：
 
 ```{r epidemic_models_epiestim_config_late_run,}
 
-## run epiestim
+## epiestim を走らせる
 epiestim_res_partial <- estimate_R(
   incid = cases,
   method = "parametric_si",
   config = config_partial
 )
 
-## plot outputs
+## アウトプットをプロットする
 plot(epiestim_res_partial)
 
 ```
 
-#### Analysing outputs {.unnumbered}
+#### アウトプットの分析 {.unnumbered}
 
-The main outputs can be accessed via `$R`. As an example, we will create
-a plot of R<sub>t</sub> and a measure of "transmission potential" given
-by the product of R<sub>t</sub> and the number of cases reported on that
-day; this represents the expected number of cases in the next generation
-of infection.
+主なアウトプットは `$R` でアクセスできます。R<sub>t</sub> のプロットと
+R<sub>t</sub>
+とその日に報告された症例数で与えられた「伝播能力」の指標を作成します（これは次世代の感染者数の期待値として表されます）。
 
 ```{r epidemic_models_epiestim_plot_full, out.width=c('100%', '100%'), fig.show='hold', fig.width = 12, fig.height = 9, message=F, warning=F}
 
-## make wide dataframe for median
+## 中央値のために横型のデータフレームを作成します
 df_wide <- epiestim_res_lit$R %>%
   rename_all(clean_labels) %>%
   rename(
@@ -624,13 +619,13 @@ df_wide <- epiestim_res_lit$R %>%
     upper_95_r = quantile_0_975_r,
     ) %>%
   mutate(
-    ## extract the median date from t_start and t_end
+    ## t_start から t_end までの日付の中央値を抽出する
     dates = epiestim_res_emp$dates[round(map2_dbl(t_start, t_end, median))],
     var = "R[t]"
   ) %>%
-  ## merge in daily incidence data
+  ## 日々の発生データを統合する
   left_join(cases, "dates") %>%
-  ## calculate risk across all r estimates
+  ## すべての r 推定値のリスクを計算する
   mutate(
     across(
       lower_95_r:upper_95_r,
@@ -638,19 +633,19 @@ df_wide <- epiestim_res_lit$R %>%
       .names = "{str_replace(.col, '_r', '_risk')}"
     )
   ) %>%
-  ## seperate r estimates and risk estimates
+  ## r 推定値とリスク推定値を分離する
   pivot_longer(
     contains("median"),
     names_to = c(".value", "variable"),
     names_pattern = "(.+)_(.+)"
   ) %>%
-  ## assign factor levels
+  ## 因子（ファクター）レベルを割り当てる
   mutate(variable = factor(variable, c("risk", "r")))
 
-## make long dataframe from quantiles
+## クォンタイル（分位値）から縦型のデータフレームを作成する
 df_long <- df_wide %>%
   select(-variable, -median) %>%
-  ## seperate r/risk estimates and quantile levels
+  ## r / risk の推定値と分位値を分離する
   pivot_longer(
     contains(c("lower", "upper")),
     names_to = c(".value", "quantile", "variable"),
@@ -658,7 +653,7 @@ df_long <- df_wide %>%
   ) %>%
   mutate(variable = factor(variable, c("risk", "r")))
 
-## make plot
+## プロットを作成する
 ggplot() +
   geom_ribbon(
     data = df_long,
@@ -670,7 +665,7 @@ ggplot() +
     aes(x = dates, y = median),
     alpha = 0.2
   ) +
-  ## use label_parsed to allow subscript label
+  ## label_parsed を使用して、添え字ラベルを許可する
   facet_wrap(
     ~ variable,
     ncol = 1,
@@ -678,7 +673,7 @@ ggplot() +
     labeller = as_labeller(c(r = "R[t]", risk = "Transmission~potential"), label_parsed),
     strip.position = 'left'
   ) +
-  ## manually define quantile transparency
+  ## 分位値の透明度を手動で定義する
   scale_alpha_manual(
     values = c(`50` = 0.7, `90` = 0.4, `95` = 0.2),
     labels = function(x) paste0(x, "%")
@@ -702,32 +697,30 @@ ggplot() +
 
 <!-- ======================================================= -->
 
-## Projecting incidence
+## インシデンス（発生数）の予測（プロジェクション）
 
 ### EpiNow2 {.unnumbered}
 
-Besides estimating R<sub>t</sub>, **EpiNow2** also supports forecasting
-of R<sub>t</sub> and projections of case numbers by integration with the
-**EpiSoon** package under the hood. All you need to do is specify the
-`horizon` argument in your `epinow` function call, indicating how many
-days you want to project into the future; see the **EpiNow2** section
-under the "Estimating R<sub>t</sub>" for details on how to get
-**EpiNow2** up and running. In this section, we will just plot the
-outputs from that analysis, stored in the `epinow_res` object.
+R<sub>t</sub> の推定に加えて、**EpiNow2** は **EpiSoon**
+パッケージとの統合により、R<sub>t</sub>
+のプロジェクションや症例数のプロジェクションもサポートします。必要なのは、`epinow`
+関数の呼び出しで `horizon`
+引数を指定して、何日先までプロジェクションしたいかを示すことだけです。このセクションでは、`epinow_res`
+オブジェクトに格納されている分析のアウトプットをプロットします。
 
 ```{r epidemic_models_episoon, out.width=c('100%', '100%'), fig.show='hold', fig.width = 12, fig.height = 9, message=F, warning=F}
 
-## define minimum date for plot
+## プロットの一番小さい日付を設定する
 min_date <- as.Date("2015-03-01")
 
-## extract summarised estimates
+## 要約された推定値を抽出する
 estimates <-  as_tibble(epinow_res$estimates$summarised)
 
-## extract raw data on case incidence
+## 発生症例数の生データを抽出する
 observations <- as_tibble(epinow_res$estimates$observations) %>%
   filter(date > min_date)
 
-## extract forecasted estimates of case numbers
+## 症例数の予測値を抽出する
 df_wide <- estimates %>%
   filter(
     variable == "reported_cases",
@@ -735,16 +728,16 @@ df_wide <- estimates %>%
     date > min_date
   )
 
-## convert to even longer format for quantile plotting
+## 分位値プロットのためにさらに横型のフォーマットに変換する
 df_long <- df_wide %>%
-  ## here we match matching quantiles (e.g. lower_90 to upper_90)
+  ## ここで、分位値を一致させる（たとえば lower_90 から upper_90）
   pivot_longer(
     lower_90:upper_90,
     names_to = c(".value", "quantile"),
     names_pattern = "(.+)_(.+)"
   )
 
-## make plot
+## プロットする
 ggplot() +
   geom_histogram(
     data = observations,
@@ -762,7 +755,7 @@ ggplot() +
     aes(x = date, y = median)
   ) +
   geom_vline(xintercept = min(df_long$date), linetype = 2) +
-  ## manually define quantile transparency
+  ## 分位値の透明度を手動で定義する
   scale_alpha_manual(
     values = c(`20` = 0.7, `50` = 0.4, `90` = 0.2),
     labels = function(x) paste0(x, "%")
@@ -780,32 +773,26 @@ ggplot() +
 
 ```
 
-### projections {.unnumbered}
+### 予測（プロジェクション） {.unnumbered}
 
-The **projections** package developed by RECON makes it very easy to
-make short term incidence forecasts, requiring only knowledge of the
-effective reproduction number R<sub>t</sub> and the serial interval.
-Here we will cover how to use serial interval estimates from the
-literature and how to use our own estimates from the linelist.
+RECON が開発した **projections** パッケージでは、実効再生産数
+R<sub>t</sub>
+と発症間隔の知識だけで非常に簡単に短期的なインシデンスの予測を行うことができます。ここでは、文献から得られた発症間隔の推定値を使用する方法と、ラインリストから得られた独自の推定値を使用する方法について説明します。
 
-#### Using serial interval estimates from the literature {.unnumbered}
+#### 文献での発症間隔の推定値を利用 {.unnumbered}
 
-**projections** requires a discretised serial interval distribution of
-the class `distcrete` from the package **distcrete**. We will use a
-gamma distribution with a mean of 12.0 and and standard deviation of 5.2
-defined in [this
-paper](https://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-014-0196-0).
-To convert these values into the shape and scale parameters required for
-a gamma distribution, we will use the function `gamma_mucv2shapescale`
-from the **epitrix** package.
+**projections** には、**distcrete** パッケージに含まれる `distcrete`
+クラスの離散化された発症間隔の分布が必要です。ここでは、[この論文](https://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-014-0196-0)
+で定義された平均12.0、標準偏差5.2のガンマ分布を使用します。これらの値をガンマ分布に必要な
+shape（形状）および scale（尺度）パラメータに変換するために、**epitrix**
+パッケージの関数である `gamma_mucv2shapescale` を使用します。
 
 ```{r epidemic_models_projections_distcrete,}
 
-## get shape and scale parameters from the mean mu and the coefficient of
-## variation (e.g. the ratio of the standard deviation to the mean)
+## 変動係数から形状と尺度パラメータを得ることができます（例：平均値に対する標準偏差の比）
 shapescale <- epitrix::gamma_mucv2shapescale(mu = 12.0, cv = 5.2/12)
 
-## make distcrete object
+## distcrete オブジェクトを作成する
 serial_interval_lit <- distcrete::distcrete(
   name = "gamma",
   interval = 1,
@@ -815,13 +802,12 @@ serial_interval_lit <- distcrete::distcrete(
 
 ```
 
-Here is a quick check to make sure the serial interval looks correct. We
-access the density of the gamma distribution we have just defined by
-`$d`, which is equivalent to calling `dgamma`:
+ここでは、発症間隔が正しいことを確認するために簡単なチェックを行います。先ほど定義したガンマ分布の確率密度に
+`$d` でアクセスしますが、これは `dgamma` を呼び出した時と同じです。
 
 ```{r epidemic_models_projections_distcrete_plot,}
 
-## check to make sure the serial interval looks correct
+## 発症間隔が正しいことを確認する
 qplot(
   x = 0:50, y = serial_interval_lit$d(0:50), geom = "area",
   xlab = "Serial interval", ylab = "Density"
@@ -829,19 +815,18 @@ qplot(
 
 ```
 
-#### Using serial interval estimates from the data {.unnumbered}
+#### データによる発症間隔の推定値を利用 {.unnumbered}
 
-As we have data on dates of symptom onset *and* transmission links, we
-can also estimate the serial interval from the linelist by calculating
-the delay between onset dates of infector-infectee pairs. As we did in
-the **EpiNow2** section, we will use the `get_pairwise` function from
-the **epicontacts** package, which allows us to calculate pairwise
-differences of linelist properties between transmission pairs. We first
-create an epicontacts object (see [Transmission chains] page for further
-details):
+我々は症状の発症日と感染リンク（transmission
+links）のデータがあるので、感染者と被感染者のペアの発症日の遅れを計算することで、ラインリストから発症間隔を推定することもできます。**EpiNow2**
+のセクションで行ったように、**epicontacts** パッケージの `get_pairwise`
+関数を用います。この関数によって、感染ペア（transmission
+pairs）間のラインリスト上の2組の特性の違いを計算することができます。まず
+epicontacts オブジェクトを作成します（[Transmission chains]
+のページを参照）：
 
 ```{r epidemic_models_epicontacts_projections, eval=F}
-## generate contacts
+## コンタクトの作成
 contacts <- linelist %>%
   transmute(
     from = infector,
@@ -849,7 +834,7 @@ contacts <- linelist %>%
   ) %>%
   drop_na()
 
-## generate epicontacts object
+## epicontacts オブジェクトの作成
 epic <- make_epicontacts(
   linelist = linelist,
   contacts = contacts, 
@@ -857,56 +842,55 @@ epic <- make_epicontacts(
 )
 ```
 
-We then fit the difference in onset dates between transmission pairs,
-calculated using `get_pairwise`, to a gamma distribution. We use the
-handy `fit_disc_gamma` from the **epitrix** package for this fitting
-procedure, as we require a *discretised* distribution.
+次に、`get_pairwise`
+を用いて、計算した感染ペアの発症日の差をガンマ分布にあてはめます。*離散化された*分布が必要なため、この適合（fitting）手順には
+**epitrix** パッケージの便利な `fit_disc_gamma` in onset を使います。
 
 ```{r epidemic_models_incubation_estimate_projections,  warning = FALSE}
-## estimate gamma serial interval
+## ガンマ分布に従う発症間隔の分布を推定する
 serial_interval <- fit_disc_gamma(get_pairwise(epic, "date_onset"))
 
-## inspect estimate
+## 推定値
 serial_interval[c("mu", "sd")]
 ```
 
-#### Projecting incidence {.unnumbered}
+#### 発生数（インシデンス）の予測（プロジェクション） {.unnumbered}
 
-To project future incidence, we still need to provide historical
-incidence in the form of an `incidence` object, as well as a sample of
-plausible R<sub>t</sub> values. We will generate these values using the
-R<sub>t</sub> estimates generated by **EpiEstim** in the previous
-section (under "Estimating R<sub>t</sub>") and stored in the
-`epiestim_res_emp` object. In the code below, we extract the mean and
-standard deviation estimates of R<sub>t</sub> for the last time window
-of the outbreak (using the `tail` function to access the last element in
-a vector), and simulate 1000 values from a gamma distribution using
-`rgamma`. You can also provide your own vector of R<sub>t</sub> values
-that you want to use for forward projections.
+将来のインシデンスをプロジェクションするためには、過去の発生数を
+`incidence` オブジェクトの形で値供することに加えて、妥当な R<sub>t</sub>
+値のサンプルを与える必要があります。前のセクション（R<sub>t</sub>
+推定）で **EpiEstim** によって作成され、`epiestim_res_emp`
+オブジェクトに格納された R<sub>t</sub>
+の推定値を使用して、インシデンスの予測値を作成します。以下のコードでは、アウトブレイクの最後の時間ウィンドウの
+R<sub>t</sub>
+の平均値と標準偏差の推定値を抜き出し（ベクトルの最後の要素にアクセスするために
+`tail` 関数を使用）、`rgamma`
+を使用してガンマ関数から10000の値をシミュレーションします。また、事前予測に使用したい
+R<sub>t</sub> 値の独自のベクトルを提供することもできます。
 
 ```{r epidemic_models_projection_setup,  warning = FALSE}
 
-## create incidence object from dates of onset
+## 発症日からincidenceオブジェクトを作成
 inc <- incidence::incidence(linelist$date_onset)
 
-## extract plausible r values from most recent estimate
+## 最新の推定値から妥当な r 値を抽出する
 mean_r <- tail(epiestim_res_emp$R$`Mean(R)`, 1)
 sd_r <- tail(epiestim_res_emp$R$`Std(R)`, 1)
 shapescale <- gamma_mucv2shapescale(mu = mean_r, cv = sd_r/mean_r)
 plausible_r <- rgamma(1000, shape = shapescale$shape, scale = shapescale$scale)
 
-## check distribution
+## 分布をチェック
 qplot(x = plausible_r, geom = "histogram", xlab = expression(R[t]), ylab = "Counts")
 
 ```
 
-We then use the `project()` function to make the actual forecast. We
-specify how many days we want to project for via the `n_days` arguments,
-and specify the number of simulations using the `n_sim` argument.
+そして、`project()` 関数を使って、実際の予測を行います。`n_days`
+で何日間プロジェクションするかを指定し、`n_sim`
+引数でシミュレーション回数を指定します。
 
 ```{r epidemic_models_make_projection,}
 
-## make projection
+## プロジェクションの作成
 proj <- project(
   x = inc,
   R = plausible_r,
@@ -917,34 +901,33 @@ proj <- project(
 
 ```
 
-We can then handily plot the incidence and projections using the
-`plot()` and `add_projections()` functions. We can easily subset the
-`incidence` object to only show the most recent cases by using the
-square bracket operator.
+そして、`plot()` と `add_projections()`
+関数を使って、インシデンスとプロジェクションを簡単にプロットすることができます。各括弧演算子（[
+]）を使用すると、`incidence`
+オブジェクトを簡単に分けることができ、最近のケースのみを表示することができます。
 
 ```{r epidemic_models_plot_projection, out.width=c('100%', '100%'), fig.show='hold', fig.width = 12, fig.height = 9, message=F, warning=F}
 
-## plot incidence and projections
+## インシデンスとプロジェクションのプロット
 plot(inc[inc$dates > as.Date("2015-03-01")]) %>%
   add_projections(proj)
 
 ```
 
-You can also easily extract the raw estimates of daily case numbers by
-converting the output to a dataframe.
+また、アウトプットをデータフレームに変換することで、日々の症例数の生（raw）の推定値を簡単に取り出すことができます。
 
 ```{r epidemic_models_projection_df, eval=F, warning = FALSE}
-## convert to data frame for raw data
+## 生データをデータフレームに変換する
 proj_df <- as.data.frame(proj)
 proj_df
 ```
 
 ```{r epidemic_models_projection_dt,  echo = F}
 
-## convert to data frame for raw data
+## 生データをデータフレームに変換する
 proj_df <- as.data.frame(proj)
 
-## data table output
+## データテーブルのアウトプット
 DT::datatable(
   proj_df[1:11],
   rownames = FALSE,
@@ -956,15 +939,11 @@ DT::datatable(
 
 <!-- ======================================================= -->
 
-## Resources
+## 資料
 
--   [Here is the
-    paper](https://www.sciencedirect.com/science/article/pii/S1755436519300350)
-    describing the methodology implemented in **EpiEstim**.
--   [Here is the
-    paper](https://wellcomeopenresearch.org/articles/5-112/v1)
-    describing the methodology implemented in **EpiNow2**.
--   [Here is a
-    paper](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008409)
-    describing various methodological and practical considerations for
-    estimating R<sub>t</sub>.
+-   **EpiEstim**
+    に実装されている方法論を説明した論文は[ここです](https://www.sciencedirect.com/science/article/pii/S1755436519300350)。
+-   **EpiNow2**
+    に実装されている方法論を説明した論文は[ここです](https://wellcomeopenresearch.org/articles/5-112/v1)。
+-   R<sub>t</sub>
+    を推定するための様々な方法論と実用上の配慮すべき点を説明した論文は[ここです](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008409)。
