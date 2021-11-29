@@ -1,15 +1,16 @@
 # Time series and outbreak detection { }
-# 時系列とアウトブレイク検出{ }
+# 時系列とアウトブレイクの検出{# Time series and outbreak detection}
 
 <!-- ======================================================= -->
 ## Overview {  }
-## 概観
+## 概観{  }
 
 This tab demonstrates the use of several packages for time series analysis. 
 It primarily relies on packages from the [**tidyverts**](https://tidyverts.org/) 
 family, but will also use the RECON [**trending**](https://github.com/reconhub/trending) 
 package to fit models that are more appropriate for infectious disease epidemiology. 
 このタブでは、時系列分析のためのいくつかのパッケージの使用方法を示します。
+主に[**tidyverts**]（https://tidyverts.org/）ファミリーのパッケージを使用していますが、感染症疫学に適したモデルをフィットさせるために、RECON [**trending**]（https://github.com/reconhub/trending）パッケージも使用しています。
 
 主に[**tidyverts**](https://tidyverts.org/)ファミリーのパッケージを使用しますが、RECON [**trending**](https://tidyverts.org/)も使用します。
 ファミリーのパッケージに依存していますが、RECON [**trending**](https://github.com/reconhub/trending) 
