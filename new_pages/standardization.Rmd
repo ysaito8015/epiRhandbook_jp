@@ -25,16 +25,16 @@
 2. データの読み込み
 3. 二国の人口データと死亡データの結合
 4. 年齢性別層ごとに一列になっているデータを縦長に変換
-5. 参照人口（世界標準人口）データをクリーニングし、二国のデータと結合 
+5. 参照集団（世界標準人口）データをクリーニングし、二国のデータと結合 
 
-実際の状況では、あなたのデータはフォーマットが異なっていることもあります。県、市、または別の管轄区域で分けられているかもしれません。あるいは、一行が各死亡になっていて、それぞれの死亡者毎（または死亡者の大部分）で年齢と性別の情報が得られているかもしれません。この場合は、各年齢性別層の死亡数と人口のデータセットを作成するために、[データのグループ化](#grouping)、[Pivoting data](#pivoting)、[記述表](#tables-descriptive)のページを参照してください。
+実際の状況では、あなたのデータはフォーマットが異なっていることもあります。県、市、または別の管轄区域で分けられているかもしれません。あるいは、一行が各死亡になっていて、それぞれの死亡者毎（または死亡者の大部分）で年齢と性別の情報が得られているかもしれません。この場合は、各年齢性別層の死亡数と人口のデータセットを作成するために、[データのグループ化](#grouping)、[Pivoting data](#pivoting)、[記述表](#tables-descriptive)のページを確認してください。
 
-参照人口、標準人口のデータも必要です。この練習問題では `world_standard_population_by_sex` を使用します。世界標準人口は46ヶ国の人口に基づいており、1960年に作成されました。また、"標準"人口は沢山あります。例を挙げると、[NHS Scotland](https://www.opendata.nhs.scot/dataset/standard-populations) のウェブサイトはヨーロッパ標準人口、世界標準人口、スコットランド標準人口に関して非常に有益な情報源です。 
+参照集団、標準人口のデータも必要です。この練習問題では `world_standard_population_by_sex` を使用します。世界標準人口は46ヶ国の人口に基づいており、1960年に作成されました。また、"標準"人口は沢山あります。例を挙げると、[NHS Scotland](https://www.opendata.nhs.scot/dataset/standard-populations) のウェブサイトはヨーロッパ標準人口、世界標準人口、スコットランド標準人口に関して非常に有益な情報源です。 
 
 <!-- ======================================================= -->
 ### パッケージの読み込み {.unnumbered}
 
-このコードチャンクでは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を重視しています。この関数は必要な場合はパッケージをインストールして<u>かつ</u>読み込みも行ってくれます。パッケージのインストールは R **base** の `library()` でも行うことができます。R パッケージに関する詳細な情報については、[R の基礎](#basics) のページを参照してください。 
+このコードチャンクでは解析に必要なパッケージの読み込みを示しています。このハンドブックでは、**pacman** の `p_load()` を重視しています。この関数は必要な場合はパッケージをインストールして<u>かつ</u>読み込みも行ってくれます。パッケージのインストールは R **base** の `library()` でも行うことができます。R パッケージに関する詳細な情報については、[R の基礎](#basics) のページを確認してください。 
 
 ```{r}
 pacman::p_load(
@@ -75,7 +75,7 @@ devtools::install_version("dsr", version = "0.2.2", repos = "https://mac.R-proje
 
 ### データの読み込み {.unnumbered}  
 
-このハンドブックの全事例データのダウンロード方法については [Download handbook and data](#data-used) のページを参照してください。以下の `import()` コマンドを実行すると、標準化のページのデータを我々の Github リポジトリから直接 R に読み込むことができます。 
+このハンドブックの全事例データのダウンロード方法については [Download handbook and data](#data-used) のページを確認してください。以下の `import()` コマンドを実行すると、標準化のページのデータを我々の Github リポジトリから直接 R に読み込むことができます。 
 
 ```{r, eval=F}
 # Github から直接国 A の人口データをインポート
@@ -185,7 +185,7 @@ rio::export(B_deaths, here::here("data", "standardization", "deaths_countryB.csv
 * 二ヶ国の死亡データを一つのデータセットに結合し、各年齢性別層が一行になるように"縦長"に変形
 * 人口と死亡データを結合 
 
-最初に、二ヶ国の人口データを結合し、縦長変換して、軽微なクリーニングを行います。詳細については [Pivoting data](#pivoting) のページを参照してください。 
+最初に、二ヶ国の人口データを結合し、縦長変換して、軽微なクリーニングを行います。詳細については [Pivoting data](#pivoting) のページを確認してください。 
 
 ```{r}
 pop_countries <- A_demo %>%               # 国 A のデータセットから開始
@@ -260,18 +260,18 @@ DT::datatable(country_data, rownames = FALSE, options = list(pageLength = 5, scr
 
 
 
-### 参照人口データの読み込み {.unnumbered}
+### 参照集団データの読み込み {.unnumbered}
 
-最後に、直接標準化のために、参照人口（性別毎の世界"標準人口"）のデータを読み込みます。
+最後に、直接標準化のために、参照集団（性別毎の世界"標準人口"）のデータを読み込みます。
 
 ```{r, echo=F}
-# 参照人口
+# 参照集団
 standard_pop_data <- rio::import(here::here("data", "standardization", "world_standard_population_by_sex.csv")) %>% 
      rename(age_cat5 = AgeGroup)
 ```
 
 ```{r, eval=F}
-# 参照人口
+# 参照集団
 standard_pop_data <- import("world_standard_population_by_sex.csv")
 ```
 
@@ -282,7 +282,7 @@ DT::datatable(standard_pop_data, rownames = FALSE, options = list(pageLength = 5
 
 
 <!-- ======================================================= -->
-### 参照人口データのクリーニング {.unnumbered}
+### 参照集団データのクリーニング {.unnumbered}
 
 データフレーム `country_data` と `standard_pop_data` について、年齢カテゴリの値を揃える必要があります。 
 
@@ -303,7 +303,7 @@ standard_pop_clean <- standard_pop_data %>%
 
 <span style="color: orange;">**_注意：_** `str_replace_all()` を使用してプラス<u>記号</u>を削除しようとしても、プラス記号が特別な記号なためうまくいきません。特別な記号の前にバックスラッシュ（Windows では &yen; 記号）を2つ入れて"エスケープ"する必要があります。例：`str_replace_call(column, "\\+", "")`。</span>
 
-### 参照人口のデータセット作成 {#standard_all .unnumbered}  
+### 参照集団のデータセット作成 {#standard_all .unnumbered}  
 
 最後に、[以下](#standard_phe)で詳細を説明する **PHEindicatormethods** パッケージでは、標準人口と各国のイベント数と人口データが一つにまとまっている事を想定しています。これにしたがって、`all_data` という名前のデータセットを作成します。
 
@@ -327,7 +327,7 @@ DT::datatable(all_data, rownames = FALSE, options = list(pageLength = 5, scrollX
 データの準備の節では、各国と標準人口について別々のデータセットを作成しました。
 
 1) `country_data` オブジェクトは、国ごとの各層における人口と死亡数の人口統計表です
-2) `standard_pop_clean` オブジェクトは、ここで用いる参照人口である世界標準人口の各層における人口が含まれています
+2) `standard_pop_clean` オブジェクトは、ここで用いる参照集団である世界標準人口の各層における人口が含まれています
 
 **dsr** パッケージのために、これらの分かれているデータセットを使用します。
 
@@ -337,9 +337,9 @@ DT::datatable(all_data, rownames = FALSE, options = list(pageLength = 5, scrollX
 
 以下では、年齢と性別による各国の直接標準化率を計算します。計算には `dsr()` 関数を使用します。
 
-注意点：`dsr()` 関数は国の人口とイベント数（死亡数）のデータフレーム<u>と**別の**参照人口のデータフレーム</u>に分かれている事を想定しています。また、この参照人口データセットの単位時間あたりの人口の列の名前が "pop" になっている事（これについては、データの準備の節でも確認しました）も想定しています。
+注意点：`dsr()` 関数は国の人口とイベント数（死亡数）のデータフレーム<u>と**別の**参照集団のデータフレーム</u>に分かれている事を想定しています。また、この参照集団データセットの単位時間あたりの人口の列の名前が "pop" になっている事（これについては、データの準備の節でも確認しました）も想定しています。
 
-以下のコードに注釈を入れたように、この関数には沢山の引数があります。注目すべきところは、`event = ` は列 `Deaths` に設定され、`fu = ` ("follow-up") は列 `Population` に設定されていることです。また、比較したいサブグループは列 `Country` と設定し、`age_cat5` と `Sex` に基づいて標準化を行っています。この最後の2列には特に引数名が割り当てられていません。詳細は `?dsr` を参照してください。
+以下のコードに注釈を入れたように、この関数には沢山の引数があります。注目すべきところは、`event = ` は列 `Deaths` に設定され、`fu = ` ("follow-up") は列 `Population` に設定されていることです。また、比較したいサブグループは列 `Country` と設定し、`age_cat5` と `Sex` に基づいて標準化を行っています。この最後の2列には特に引数名が割り当てられていません。詳細は `?dsr` を確認してください。
 
 ```{r, warning=F, message=F}
 # 年齢と性別による各国の直接標準化率の計算
@@ -350,7 +350,7 @@ mortality_rate <- dsr::dsr(
      subgroup = Country,           # 比較の単位
      age_cat5,                     # 他の列：これらにより率を標準化
      Sex,
-     refdata = standard_pop_clean, # 人数の列 pop が含まれる参照人口データ
+     refdata = standard_pop_clean, # 人数の列 pop が含まれる参照集団データ
      method = "gamma",             # 95%信頼区間の計算方法
      sig = 0.95,                   # 有意水準
      mp = 100000,                  # 100,000人あたりの率を計算したい
@@ -377,7 +377,7 @@ mortality_rr <- dsr::dsrr(
      subgroup = Country,           # 比較の単位
      age_cat5,                     # 標準化したい特性変数
      Sex,                          
-     refdata = standard_pop_clean, # 人数の列 pop が含まれる参照人口データ
+     refdata = standard_pop_clean, # 人数の列 pop が含まれる参照集団データ
      refgroup = "B",               # 比較の参照水準
      estimate = "ratio",           # 推定値の種類
      sig = 0.95,                   # 有意水準
@@ -436,7 +436,7 @@ knitr::kable(mortality_rd)
 
 注意点：参照集団のデータは**国毎のデータフレーム内の列**または**別のベクトル型オブジェクト**として指定できます。国毎のデータフレーム内の列として与える場合、`stdpoptype = "field"` を指定する必要があります。ベクトルとして与える場合、`stdpoptype = "vector"` を指定する必要があります。後者の場合、レコードが位置でマッチングされるため、各層による行の順序が国毎のデータフレームと参照集団で同じになっていることを確認する必要があります。以下の例では、参照集団は国毎のデータフレーム内の列として与えています。
 
-詳しくは、ヘルプ `?phr_dsr` またはその他の資料の節のリンクを参照してください。
+詳しくは、ヘルプ `?phr_dsr` またはその他の資料の節のリンクを確認してください。
 
 ```{r}
 # 各国の年齢と性別による直接標準化率の計算
@@ -461,10 +461,10 @@ knitr::kable(mortality_ds_rate_phe)
 
 注意点：この例では、参照集団は別のデータフレームとして与えています。この場合、レコードが位置によってマッチングされるため、`x = `, `n = `, `x_ref = `, `n_ref = ` のベクトルがすべて国毎のデータフレームの標準化カテゴリ（層）の値と同じ順序になっていることを確認する必要があります。
 
-詳しくは、ヘルプ `?phr_isr` またはその他の資料の節のリンクを参照してください。 
+詳しくは、ヘルプ `?phr_isr` またはその他の資料の節のリンクを確認してください。 
 
 ```{r}
-# 参照人口データを作成
+# 参照集団データを作成
 refpopCountryB <- country_data %>% 
      filter(Country == "B") 
 
@@ -484,10 +484,10 @@ knitr::kable(mortality_is_rate_phe_A)
 <!-- ======================================================= -->
 ## その他の資料 {  }
 
-**dsr** を用いた他の再現可能なコードを参照したい場合は、[このvignette]( https://mran.microsoft.com/snapshot/2020-02-12/web/packages/dsr/vignettes/dsr.html) を参照してください。
+**dsr** を用いた他の再現可能なコードを参照したい場合は、[このvignette]( https://mran.microsoft.com/snapshot/2020-02-12/web/packages/dsr/vignettes/dsr.html) を確認してください。
 
 **PHEindicatormethods** を用いた別の例については、[このウェブサイト](https://mran.microsoft.com/snapshot/2018-10-22/web/packages/PHEindicatormethods/vignettes/IntroductiontoPHEindicatormethods.html)を見てください。
 
-また、**PHEindicatormethods** の[参照マニュアルの pdf](https://cran.r-project.org/web/packages/PHEindicatormethods/PHEindicatormethods.pdf) も参照してください。
+また、**PHEindicatormethods** の[参照マニュアルの pdf](https://cran.r-project.org/web/packages/PHEindicatormethods/PHEindicatormethods.pdf) も確認してください。
 
 
