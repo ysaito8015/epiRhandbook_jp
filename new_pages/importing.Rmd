@@ -122,16 +122,16 @@ linelist <- import("C:/Users/Laura/Documents/analysis/data/linelists/ebola_linel
 
 絶対ファイルパスが適切なシナリオの1つは、すべてのユーザーに対して同じフルファイルパスを持つ共有ドライブからファイルをインポートする場合です。
 
-[***TIP:*** To quickly convert all `\` to `/`, highlight the code of interest, use Ctrl+f (in Windows), check the option box for "In selection", and then use the replace functionality to convert them.]{style="color: darkgreen;"}
+[[**ヒント:**]{.ul}すべての\\を/にすばやく変換するには、目的のコードを選択し、Ctrl + f（Windowsの場合）を使用し、"選択中"のオプションボックスをオンにしてから、置換機能を使用して変換します。 ]{style="color: darkgreen;"}
 
 <!-- ======================================================= -->
 
-### Select file manually {.unnumbered}
+### 手動でのファイル選択 {.unnumbered}
 
-You can import data manually via one of these methods:
+次のいずれかの方法でデータを手動でインポートできます。
 
-1)  Environment RStudio Pane, click "Import Dataset", and select the type of data
-2)  Click File / Import Dataset / (select the type of data)\
+1)  RStudioのEnvironment Pane、"データセットのインポート"をクリックし、データの種類を選択します。
+2)  \[ファイル\] / \[データセットのインポート\] /（データの種類を選択）をクリックしますClick File / Import Dataset / (select the type of data)\
 3)  To hard-code manual selection, use the *base R* command `file.choose()` (leaving the parentheses empty) to trigger appearance of a **pop-up window** that allows the user to manually select the file from their computer. For example:
 
 ```{r import_choose, eval=F}
