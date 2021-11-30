@@ -26,10 +26,10 @@ tabを参照してください。ここで説明するツールを使用する�
 ## パッケージのインストールとロード
 pacman::p_load(tidyverse, EpiNow2, EpiEstim, here, incidence2, epicontacts, rio, projections)
 
-## load linelist
+## ラインリストのロード
 linelist <- import(here::here("data", "case_linelists", "linelist_cleaned.rds"))
 
-## generate contacts
+## コンタクトの作成
 contacts <- linelist %>%
   transmute(
     from = infector,
@@ -37,7 +37,7 @@ contacts <- linelist %>%
   ) %>%
   drop_na()
 
-## generate epicontacts
+## エピコンタクトの作成
 epic <- make_epicontacts(
   linelist = linelist,
   contacts = contacts, 
@@ -141,7 +141,7 @@ pacman::p_load(
 )
 ```
 
-このセクションのすべての分析において、前処理をされた症例のラインリストを使用します。引き続き分析を行いたい場合は、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>
+このセクションのすべての分析において、前処理をされた症例のラインリストを使用します。引き続き分析を行いたい場合は、<ahref='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>
 クリックして、「クリーンな」ラインリスト </a>（.rds
 ファイルとして)をダウンロードしてください。本ハンドブックで使用しているすべての例示データをダウンロードするには
 [Download handbook and data] ページをご覧ください。
@@ -902,8 +902,7 @@ proj <- project(
 ```
 
 そして、`plot()` と `add_projections()`
-関数を使って、インシデンスとプロジェクションを簡単にプロットすることができます。各括弧演算子（[
-]）を使用すると、`incidence`
+関数を使って、インシデンスとプロジェクションを簡単にプロットすることができます。各括弧演算子（[]）を使用すると、`incidence`
 オブジェクトを簡単に分けることができ、最近のケースのみを表示することができます。
 
 ```{r epidemic_models_plot_projection, out.width=c('100%', '100%'), fig.show='hold', fig.width = 12, fig.height = 9, message=F, warning=F}
