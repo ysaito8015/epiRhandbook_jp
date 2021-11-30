@@ -141,7 +141,7 @@ pacman::p_load(
 )
 ```
 
-このセクションのすべての分析において、前処理をされた症例のラインリストを使用します。引き続き分析を行いたい場合は、<ahref='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>
+このセクションのすべての分析において、前処理をされた症例のラインリストを使用します。引き続き分析を行いたい場合は、<a href='https://github.com/epirhandbook/Epi_R_handbook/raw/master/data/case_linelists/linelist_cleaned.rds' class='download-button'>
 クリックして、「クリーンな」ラインリスト </a>（.rds
 ファイルとして)をダウンロードしてください。本ハンドブックで使用しているすべての例示データをダウンロードするには
 [Download handbook and data] ページをご覧ください。
