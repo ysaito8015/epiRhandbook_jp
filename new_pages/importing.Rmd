@@ -122,7 +122,7 @@ linelist <- import("C:/Users/Laura/Documents/analysis/data/linelists/ebola_linel
 
 絶対ファイルパスが適切なシナリオの1つは、すべてのユーザーに対して同じフルファイルパスを持つ共有ドライブからファイルをインポートする場合です。
 
-[[**ヒント:**]{.ul}すべての\\を/にすばやく変換するには、目的のコードを選択し、Ctrl + f（Windowsの場合）を使用し、"選択中"のオプションボックスをオンにしてから、置換機能を使用して変換します。 ]{style="color: darkgreen;"}
+[[**ヒント:**]{.ul}すべての\\を/にすばやく変換するには、目的のコードを選択し、Ctrl + f（Windowsの場合）を使用し、"選択中"のオプションボックスをオンにしてから、置換機能を使用して変換します。]{style="color: darkgreen;"}
 
 <!-- ======================================================= -->
 
@@ -130,50 +130,50 @@ linelist <- import("C:/Users/Laura/Documents/analysis/data/linelists/ebola_linel
 
 次のいずれかの方法でデータを手動でインポートできます。
 
-1)  RStudioのEnvironment Pane、"データセットのインポート"をクリックし、データの種類を選択します。
-2)  \[ファイル\] / \[データセットのインポート\] /（データの種類を選択）をクリックしますClick File / Import Dataset / (select the type of data)\
-3)  To hard-code manual selection, use the *base R* command `file.choose()` (leaving the parentheses empty) to trigger appearance of a **pop-up window** that allows the user to manually select the file from their computer. For example:
+1)  RStudioのEnvironment Paneにて、"データセットのインポート"をクリックし、データの種類を選択します。
+2)  ファイル / データセットのインポート /（データの種類を選択）をクリックします\
+3)  手動選択をハードコーディングするには、ベースRコマンドの `file.choose()`（括弧を空のまま）を使用して、ユーザーがコンピューターからファイルを手動で選択できる**ポップアップウィンドウ**を表示します。以下に例を示します。
 
 ```{r import_choose, eval=F}
-# Manual selection of a file. When this command is run, a POP-UP window will appear. 
-# The file path selected will be supplied to the import() command.
+# ファイルの手動選択。このコマンドを実行すると、ポップアップウィンドウが表示される。
+# 選択したファイルパスがimport（）コマンドに提供される。
 
 my_data <- import(file.choose())
 ```
 
-[***TIP:*** The **pop-up window** may appear BEHIND your RStudio window.]{style="color: darkgreen;"}
+[[**ヒント**]{.ul}：**ポップアップウィンドウ**がRStudioウィンドウの後ろに表示される場合があります。]{style="color: darkgreen;"}
 
 ## データのインポート
 
-To use `import()` to import a dataset is quite simple. Simply provide the path to the file (including the file name and file extension) in quotes. If using `here()` to build the file path, follow the instructions above. Below are a few examples:
+`import()` を使用してデータセットをインポートするのは非常に簡単です。 ファイルパス（ファイル名とファイル拡張子を含む）を引用符で囲んで指定するだけです。 `here()` を使用してファイルパスを作成する場合は、上記の手順に従ってください。 以下にいくつかの例を示します。
 
-Importing a csv file that is located in your "working directory" or in the R project root folder:
+"作業ディレクトリ"またはRプロジェクトのルートフォルダにあるcsvファイルをインポートします。
 
 ```{r, eval=F}
 linelist <- import("linelist_cleaned.csv")
 ```
 
-Importing the first sheet of an Excel workbook that is located in "data" and "linelists" sub-folders of the R project (the file path built using `here()`):
+Rプロジェクトの"data"および"linelists"サブフォルダー（`here()` を使用して作成されたファイルパス）にあるExcelワークブックの最初のシートをインポートします。
 
 ```{r, eval=F}
 linelist <- import(here("data", "linelists", "linelist_cleaned.xlsx"))
 ```
 
-Importing a data frame (a .rds file) using an absolute file path:
+絶対ファイルパスを使用してデータフレーム（.rds ファイル）をインポートする。
 
 ```{r, eval=F}
 linelist <- import("C:/Users/Laura/Documents/tuberculosis/data/linelists/linelist_cleaned.rds")
 ```
 
-### Specific Excel sheets {.unnumbered}
+### 特定のエクセルシート {.unnumbered}
 
-By default, if you provide an Excel workbook (.xlsx) to `import()`, the workbook's first sheet will be imported. If you want to import a specific **sheet**, include the sheet name to the `which =` argument. For example:
+特定の**シート**をインポートする場合は、シート名を`which =`引数に含めます。 以下に例を示します。
 
 ```{r eval=F}
 my_data <- import("my_excel_file.xlsx", which = "Sheetname")
 ```
 
-If using the `here()` method to provide a relative pathway to `import()`, you can still indicate a specific sheet by adding the `which =` argument after the closing parentheses of the `here()` function.
+`here()` を使用して`import()` への相対パスを提供する場合でも、`here()` 関数の閉じ括弧の後に `which =` 引数を追加することで、特定のシートを指定することができます。
 
 ```{r import_sheet_here, eval=F}
 # Demonstration: importing a specific Excel sheet when using relative pathways with the 'here' package
