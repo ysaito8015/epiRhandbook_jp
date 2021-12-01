@@ -1,137 +1,74 @@
-\#データ前処理と主要関数　{\# Cleaning data and core functions}\
-\# Cleaning data and core functions
+\#データクリーニングと主要関数　{\# Cleaning data and core functions}
 
 ```{r, out.height = "10%", fig.align = "center", echo=F}
 knitr::include_graphics(here::here("images", "cleaning.png"))
 ```
 
-This page demonstrates common steps used in the process of "cleaning" a dataset, and also explains the use of many essential R data management functions.
+　このページでは、データセットのクリーニングで使用する一般的な手順を示し、Rのデータ管理に不可欠な多くの機能を説明します。
 
-To demonstrate data cleaning, this page begins by importing a raw case linelist dataset, and proceeds step-by-step through the cleaning process. In the R code, this manifests as a "pipe" chain, which references the "pipe" operator `%>%` that passes a dataset from one operation to the next.
+　データクリーニングを実演するために、このページでは未加工の症例ラインリスト データセットのインポートから開始し、クリーニングを段階的に進めていきます。Rコードでは上図の処理は"pipe"チェーンとして明示されます。"パイプ"　演算子 `%>%`を参照し、データセットをある操作から次の操作に渡すことが出来ます。
 
-このページでは、データセットの前処理で使用する一般的な手順を示し、Rのデータ管理に不可欠な多くの機能を説明します。
+### **主要関数** {.unnumbered}
 
-データクリーニングを実演するために、このページではraw case linelist データセットのインポートから開始し、前処理を段階的に進めていきます。Rコードでは上図の処理は"pipe"チェーンとして明示されます。"パイプ"演算子`%>%`を参照し、データセットをある操作から次の操作に渡すことが出来ます。
+　このハンドブックでは、Rパッケージの [tidyverse](https://www.tidyverse.org/)ファミリーの関数を使用することに重点を置いています。このページで紹介されている基本のR関数を以下に示します。
 
-### Core functions {.unnumbered}
+　関数の多くは、データ操作の課題を解決するための"動詞" 関数を提供するRパッケージ [dplyr](https://dplyr.tidyverse.org/) に属しています（名前は"data frame-[plier](https://www.thefreedictionary.com/plier#:~:text=also%20ply%C2%B7er%20(pl%C4%AB%E2%80%B2,holding%2C%20bending%2C%20or%20cutting.)%22)." にちなんでいます。 **dplyr** は、Rパッケージの**tidyverse**ファミリー（**ggplot2**、**tidyr**、**stringr**、**tibble**、**purrr**、**magrittr**、**forcats**なども含まれています）の一部です。)
 
-This handbook emphasizes use of the functions from the [**tidyverse**](https://www.tidyverse.org/) family of R packages. The essential R functions demonstrated in this page are listed below.
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| **関数**                                            | 効用                                           | パッケージ                |
++=====================================================+================================================+===========================+
+| `%>%`                                               | ある関数から次の関数へデータを"パイプ"（渡す） | **magrittr**              |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `mutate()`                                          | 列の作成、変換、再定義                         | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `select()`                                          | 列の保持、削除、選択、名前の変更               | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `rename()`                                          | 列名の変更                                     | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `clean_names()`                                     | 列名の構文を標準化                             | **janitor**               |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `as.character()`, `as.numeric()`, `as.Date()`, etc. | 列のクラスを変換                               | **base** R                |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `across()`                                          | 複数の列を一度に変換                           | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| **tidyselect** functions                            | 論理条件を使った列の選択                       | **tidyselect**            |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `filter()`                                          | 特定の行を選択                                 | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `distinct()`                                        | 重複する行の削除                               | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `rowwise()`                                         | 各行の中での操作                               | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `add_row()`                                         | 手動で行を追加                                 | **tibble**                |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `arrange()`                                         | 行の並べ替え                                   | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `recode()`                                          | 列の値を再定義                                 | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `case_when()`                                       | 複数の論理基準を使用し列値を再コーディング     | **dplyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `replace_na()`, `na_if()`, `coalesce()`             | 再コーティングのための専用関数                 | **tidyr**                 |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `age_categories()` and `cut()`                      | 数値列からカテゴリーグループを作成             | **epikit** and **base** R |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `clean_variable_spelling()`                         | データ辞書を使用した値の再定義/処理            | **linelist**              |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
+| `which()`                                           | 論理的基準を適用し、インデックスを抽出         | **base** R                |
++-----------------------------------------------------+------------------------------------------------+---------------------------+
 
-Many of these functions belong to the [**dplyr**](https://dplyr.tidyverse.org/) R package, which provides "verb" functions to solve data manipulation challenges (the name is a reference to a "data frame-[plier](https://www.thefreedictionary.com/plier#:~:text=also%20ply%C2%B7er%20(pl%C4%AB%E2%80%B2,holding%2C%20bending%2C%20or%20cutting.)%22). **dplyr** is part of the **tidyverse** family of R packages (which also includes **ggplot2**, **tidyr**, **stringr**, **tibble**, **purrr**, **magrittr**, and **forcats** among others).
+　これらの関数を Stata や SAS のコマンドと比較したい場合は、[[Transition to R]](https://epirhandbook.com/transition-to-r.html#transition-to-r) のページを参照してください。
 
-このハンドブックでは、Rパッケージの[tidyverse](https://www.tidyverse.org/)ファミリーの関数を使用することに重点を置いています。このページで紹介されている基本のR関数を以下に示します。
+　Rパッケージの **data.table** では、`:=`のような演算子や括弧`[ ]`が頻繁に使用されており、別のデータ管理フレームワークを目にすることがあるかもしれません。この手法と構文については、[[Data Table]](https://epirhandbook.com/data-table.html#data-table) のページで簡単に説明しています。
 
-これらの関数の多くは、データ操作の課題を解決するための"verb" 関数を提供するRパッケージ[dplyr](https://dplyr.tidyverse.org/) に属しています（名前は「data frame-[plier](https://www.thefreedictionary.com/plier#:~:text=also%20ply%C2%B7er%20(pl%C4%AB%E2%80%B2,holding%2C%20bending%2C%20or%20cutting.)%22).」にちなんでいます。 **dplyr** は、Rパッケージの**tidyverse**ファミリー（**ggplot2**、**tidyr**、**stringr**、**tibble**、**purrr**、**magrittr**、**forcats**なども含まれています）の一部です。)
+\#\#**用語体系**
 
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| Function                                            | Utility                                                        | Package                   |
-|                                                     |                                                                |                           |
-| **関数**                                            | 効用                                                           | パッケージ                |
-+=====================================================+================================================================+===========================+
-| `%>%`                                               | "pipe" (pass) data from one function to the next               | **magrittr**              |
-|                                                     |                                                                |                           |
-|                                                     | ある関数から次の関数へデータをパイプ（渡す）                   |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `mutate()`                                          | create, transform, and re-define columns                       | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 列の作成、変換、再定義                                         |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `select()`                                          | keep, remove, select, or re-name columns                       | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 列の保持、削除、選択、名前の変更                               |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `rename()`                                          | rename columns                                                 | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 列名の変更                                                     |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `clean_names()`                                     | standardize the syntax of column names                         | **janitor**               |
-|                                                     |                                                                |                           |
-|                                                     | 列名の構文を標準化                                             |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `as.character()`, `as.numeric()`, `as.Date()`, etc. | convert the class of a column                                  | **base** R                |
-|                                                     |                                                                |                           |
-|                                                     | 列のクラスを変換                                               |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `across()`                                          | transform multiple columns at one time                         | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 複数の列を一度に変換                                           |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| **tidyselect** functions                            | use logic to select columns                                    | **tidyselect**            |
-|                                                     |                                                                |                           |
-|                                                     | ロジックを使った列の選択                                       |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `filter()`                                          | keep certain rows                                              | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 特定の行を維持                                                 |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `distinct()`                                        | de-duplicate rows                                              | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 重複する行の削除                                               |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `rowwise()`                                         | operations by/within each row                                  | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 各行の中での操作                                               |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `add_row()`                                         | add rows manually                                              | **tibble**                |
-|                                                     |                                                                |                           |
-|                                                     | 手動で行を追加                                                 |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `arrange()`                                         | sort rows                                                      | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 行の並べ替え                                                   |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `recode()`                                          | re-code values in a column                                     | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 列の値を再コード化                                             |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `case_when()`                                       | re-code values in a column using more complex logical criteria | **dplyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 複数の論理基準を使用し列値を再コード化                         |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `replace_na()`, `na_if()`, `coalesce()`             | special functions for re-coding                                | **tidyr**                 |
-|                                                     |                                                                |                           |
-|                                                     | 再定義のための専用関数                                         |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `age_categories()` and `cut()`                      | create categorical groups from a numeric column                | **epikit** and **base** R |
-|                                                     |                                                                |                           |
-|                                                     | 数値列からカテゴリーグループを作成                             |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `clean_variable_spelling()`                         | re-code/clean values using a data dictionary                   | **linelist**              |
-|                                                     |                                                                |                           |
-|                                                     | データ辞書を使った値の再定義/処理                              |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
-| `which()`                                           | apply logical criteria; return indices                         | **base** R                |
-|                                                     |                                                                |                           |
-|                                                     | 論理的基準を適用し、インデックスを返す                         |                           |
-+-----------------------------------------------------+----------------------------------------------------------------+---------------------------+
+　このハンドブックでは、一般的に "変数" や"観測値" の代わりに"列" や"行"を使用します。["tidy data"](https://tidyr.tidyverse.org/articles/tidy-data.html) の入門で説明したように、ほとんどの疫学統計データセットは、行、列、値の構造で構成されています。
 
-If you want to see how these functions compare to Stata or SAS commands, see the page on [Transition to R].
+　"変数"は、同じ基本属性を測定する値（年齢層、転帰、発症日など）を示しています。"観測値"は、同じ単位（人、サイト、ラボのサンプルなど）で測定されたすべての値を示します。そのため、これら値を明確に定義することは困難です。
 
-You may encounter an alternative data management framework from the **data.table** R package with operators like `:=` and frequent use of brackets `[ ]`. This approach and syntax is briefly explained in the [Data Table] page.
+　"tidy" データセットでは、各列が変数、各行が観測値、そして各セルが1つの値です。しかし、データセットの中には、この型に当てはまらないものもあります。"wide" フォーマットのデータセットでは、変数が複数の列に分かれていることがあります（[Pivoting data](https://epirhandbook.com/pivoting-data.html#pivoting-data) ページの例を参照）。同様に、観測値が複数の行に分かれていることもあります。
 
-これらの関数をStataやSASのコマンドと比較したい場合は、[[Transition to R]](https://epirhandbook.com/transition-to-r.html#transition-to-r)のページを参照してください。
-
-Rパッケージの**data.table**では、`:=`のような演算子や括弧`[ ]`が頻繁に使用されており、別のデータ管理フレームワークを目にすることがあるかもしれません。この手法と構文については、[[Data Table]](https://epirhandbook.com/data-table.html#data-table)のページで簡単に説明しています。
-
-### Nomenclature {.unnumbered}
-
-In this handbook, we generally reference "columns" and "rows" instead of "variables" and "observations". As explained in this primer on ["tidy data"](https://tidyr.tidyverse.org/articles/tidy-data.html), most epidemiological statistical datasets consist structurally of rows, columns, and values.
-
-*Variables* contain the values that measure the same underlying attribute (like age group, outcome, or date of onset). *Observations* contain all values measured on the same unit (e.g. a person, site, or lab sample). So these aspects can be more difficult to tangibly define.
-
-In "tidy" datasets, each column is a variable, each row is an observation, and each cell is a single value. However some datasets you encounter will not fit this mold - a "wide" format dataset may have a variable split across several columns (see an example in the [Pivoting data] page). Likewise, observations could be split across several rows.
-
-Most of this handbook is about managing and transforming data, so referring to the concrete data structures of rows and columns is more relevant than the more abstract observations and variables. Exceptions occur primarily in pages on data analysis, where you will see more references to variables and observations.
-
-**用語体系**
-
-このハンドブックでは、一般的に「変数」や「観測値」の代わりに「列」や「行」を使用します。["tidy data"](https://tidyr.tidyverse.org/articles/tidy-data.html)の入門で説明したように、ほとんどの疫学統計データセットは、行、列、値の構造で構成されています。
-
-「変数」は、同じ基本属性を測定する値（年齢層、転帰、発症日など）を含みます。「観測値」は、同じ単位（人、サイト、ラボのサンプルなど）で測定されたすべての値を含みます。そのため、これらの側面を明確に定義することは困難です。
-
-"tidy" データセットでは、各列が変数、各行が観測値、そして各セルが1つの値です。しかし、データセットの中には、この型に当てはまらないものもあります。"wide" フォーマットのデータセットでは、変数が複数の列に分かれていることがあります（[Pivoting data](https://epirhandbook.com/pivoting-data.html#pivoting-data) ページの例を参照）。同様に、観測値が複数の行に分かれていることもあります。
-
-このハンドブックのほとんどがデータの管理と変換に関するものですので、抽象的な観測値や変数よりも、行や列といった具体的なデータ構造を示す方が適切です。例外として、データ分析のページでは、変数や観測値を取り上げることがあります。
+　このハンドブックのほとんどがデータの管理と変換に関するものですので、抽象的な観測値や変数よりも、行や列といった具体的なデータ構造を示す方が適切です。例外として、データ分析のページでは、変数や観測値を取り上げることがあります。
 
 <!-- ======================================================= -->
 
@@ -139,31 +76,15 @@ Most of this handbook is about managing and transforming data, so referring to t
 
 <!-- ======================================================= -->
 
-## Cleaning pipeline
+**パイプラインのデータクリーニング**
 
-**This page proceeds through typical cleaning steps, adding them sequentially to a cleaning pipe chain.**
+**このページでは、代表的なデータクリーニングの手順を実行し、パイプに処理を順次追加しながら進めていきます。**
 
-In epidemiological analysis and data processing, cleaning steps are often performed sequentially, linked together. In R, this often manifests as a cleaning "pipeline", where the raw dataset is passed or "piped" from one cleaning step to another.
+　疫学的な分析やデータ処理では、クリーニングの手順ががしばしば連続して実行され、互いに関連しています。Rでは、これは多くの場合、クリーニングのパイプラインとして示されます。このパイプラインでは、未加工のデータセットが1つのデータ処理ステップから別のデータ処理ステップに渡されます。
 
-Such chains utilize **dplyr** "verb" functions and the **magrittr** pipe operator `%>%`. This pipe begins with the "raw" data ("linelist_raw.xlsx") and ends with a "clean" R data frame (`linelist`) that can be used, saved, exported, etc.
+　このような連続処理は、**dplyr** の"動詞"関数と **magrittr** のパイプ演算子 `%>%`を利用します。このパイプ処理は未加工データ ( "linelist_raw.xlsx" )から開始し、使用、保存、エクスポートなどが行えるクリーニングされたRデータフレーム（`linelist`）を目標とします。
 
-In a cleaning pipeline the order of the steps is important. Cleaning steps might include:
-
--   Importing of data\
--   Column names cleaned or changed\
--   De-duplication\
--   Column creation and transformation (e.g. re-coding or standardising values)\
--   Rows filtered or added
-
-**パイプラインのデータ前処理**
-
-**このページでは、代表的なデータ前処理の手順を実行し、パイプ連鎖に順次追加しながら進めていきます。**
-
-疫学的な分析やデータ処理では、前処理の手順ががしばしば連続して実行され、互いに関連しています。Rでは、これは多くの場合、前処理のパイプラインとして示されます。このパイプラインでは、生のデータセットが1つのデータ処理ステップから別のデータ処理ステップに渡されます。
-
-このような連続処理は、**dplyr**の「動詞」関数と**magrittr**のパイプ演算子`%>%`を利用します。このパイプ処理は生データ ("linelist_raw.xlsx")から開始し、使用、保存、エクスポートなどが可能な整ったRデータフレーム（`linelist`）で終了します。
-
-パイプラインのデータ処理は、ステップの順番が重要です。前処理のステップには以下のようなものがあります。
+　パイプラインのデータ処理は、ステップの順番が重要です。クリーニングのステップには以下のようなものがあります。
 
 -   データのインポート\
 
@@ -171,7 +92,7 @@ In a cleaning pipeline the order of the steps is important. Cleaning steps might
 
 -   重複の排除\
 
--   列の作成と変換（例：値の再コード化または標準化）。\
+-   列の作成と変換（例：値の再定義または標準化）。\
 
 -   行のフィルタリングまたは追加\
 
@@ -181,23 +102,19 @@ In a cleaning pipeline the order of the steps is important. Cleaning steps might
 
 <!-- ======================================================= -->
 
-## Load packages
+**パッケージの読み込み**
 
-This code chunk shows the loading of packages required for the analyses. In this handbook we emphasize `p_load()` from **pacman**, which installs the package if necessary *and* loads it for use. You can also load installed packages with `library()` from **base** R. See the page on [R basics] for more information on R packages.
-
-パッケージの読み込み
-
-このコードブロックは、分析に必要なパッケージの読み込みを示しています。このハンドブックでは **pacman** の `p_load()` を重視しています。p_load() は必要に応じてパッケージをインストールし、使用するためにパッケージを読み込みます。インストールされたパッケージは**base** Rの`library()` で読み込むことができます。Rのパッケージに関する詳細は[R basics](https://epirhandbook.com/r-basics.html#r-basics)のページをご覧ください。
+　このコード群は、分析に必要なパッケージの読み込みを示しています。このハンドブックでは **pacman** の `p_load()` を重視しています。p_load() は必要に応じてパッケージをインストールし、ロードします。インストールされたパッケージは**base** Rの`library()` で読み込むことができます。Rのパッケージに関する詳細は [R basics](https://epirhandbook.com/r-basics.html#r-basics) のページをご覧ください。
 
 ```{r, message = F}
 pacman::p_load(
-  rio,        # importing data  
-  here,       # relative file pathways  
-  janitor,    # data cleaning and tables
-  lubridate,  # working with dates
-  epikit,     # age_categories() function
-  tidyverse   # data management and visualization
-)
+  rio,        # データの読み込みのパッケージ  
+  here,       # 相対ファイルパスウェイ のパッケージ  
+  janitor,    # データクリーニングとテーブルのパッケージ  
+  lubridate,  # 日付の操作のパッケージ  
+  epikit,     # age_categories() 関数のパッケージ  
+  tidyverse   # データ管理と可視化のパッケージ  
+  )
 ```
 
 <!-- ======================================================= -->
@@ -206,31 +123,19 @@ pacman::p_load(
 
 <!-- ======================================================= -->
 
-## Import data
-
-### Import {.unnumbered}
-
-Here we import the "raw" case linelist Excel file using the `import()` function from the package **rio**. The **rio** package flexibly handles many types of files (e.g. .xlsx, .csv, .tsv, .rds. See the page on [Import and export](https://epirhandbook.com/import-and-export.html#import-and-export) for more information and tips on unusual situations (e.g. skipping rows, setting missing values, importing Google sheets, etc).
-
-If you want to follow along, [click to download the "raw" linelist](https://github.com/appliedepi/epirhandbook_eng/raw/master/data/case_linelists/linelist_raw.xlsx) (as .xlsx file).
-
-If your dataset is large and takes a long time to import, it can be useful to have the import command be separate from the pipe chain and the "raw" saved as a distinct file. This also allows easy comparison between the original and cleaned versions.
-
-Below we import the raw Excel file and save it as the data frame `linelist_raw`. We assume the file is located in your working directory or R project root, and so no sub-folders are specified in the file path.
-
-インポートデータ
+**インポートデータ**
 
 インポート
 
-ここでは、**rio**パッケージの`import()`関数を使って、生の症例リストExcelファイルをインポートします。**rio**パッケージは、さまざまな種類のファイル（.xlsx、.csv、.tsv、.rdsなど）を柔軟に扱うことができます。詳しい情報や、通常とは異なる状況（行のスキップ、欠損値の設定、Googleシートのインポートなど）でのヒントについては、[Import and export](https://epirhandbook.com/import-and-export.html#import-and-export)のページをご覧ください。
+　ここでは、**rio** パッケージの `import()`関数を使って、未加工の症例リストExcelファイルをインポートします。**rio** パッケージは、さまざまな種類のファイル（.xlsx、.csv、.tsv、.rdsなど）を柔軟に扱うことができます。詳しい情報や、通常とは異なる状況（行のスキップ、欠損値の設定、Googleシートのインポートなど）でのヒントについては、[Import and export](https://epirhandbook.com/import-and-export.html#import-and-export) のページをご覧ください。
 
-ご覧になりたい方は、クリックして "生 "のラインリストをダウンロードしてください（.xlsxファイルとして出力）。
+　ご覧になりたい方は、クリックして ["未加工 "のラインリスト](https://github.com/appliedepi/epirhandbook_eng/raw/master/data/case_linelists/linelist_raw.xlsx)をダウンロードしてください（.xlsxファイルとして出力）。
 
-データセットが大きく、インポートに時間がかかる場合は、インポートコマンドをパイプチェーンとは別に用意し、生データを別のファイルとして保存すると便利です。これにより、オリジナルとクリーンアップしたバージョンの比較が容易になります。
+　データセットが大きく、インポートに時間がかかる場合は、インポートコマンドをパイプチェーンとは別に用意し、未加工データを別のファイルとして保存すると便利です。これにより、未加工データと前処理したデータの比較が容易になります。
 
 ```{r, echo=F, message=F}
 # HIDDEN FROM READER
-# actually load the data using here()
+# 実際にデータをロードするには here() を使用する。
 linelist_raw <- rio::import(here::here("data", "case_linelists", "linelist_raw.xlsx"))
 ```
 
@@ -238,24 +143,18 @@ linelist_raw <- rio::import(here::here("data", "case_linelists", "linelist_raw.x
 linelist_raw <- import("linelist_raw.xlsx")
 ```
 
-You can view the first 50 rows of the the data frame below. Note: the **base** R function `head(n)` allow you to view just the first `n` rows in the R console.
-
 以下に、データフレームの最初の50行を見ることができます。
 
 注：Rの基本関数である `head(n)` を使うと，Rコンソールで最初の`n`行だけを表示することができます．
 
 ```{r message=FALSE, echo=F}
-# display the linelist data as a table
+# ラインリストのデータを表形式で表示する。
 DT::datatable(head(linelist_raw,50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-### Review {.unnumbered}
+**レビュー**
 
-You can use the function `skim()` from the package **skimr** to get an overview of the entire dataframe (see page on [Descriptive tables] for more info). Columns are summarised by class/type such as character, numeric. Note: "POSIXct" is a type of raw date class (see [Working with dates].
-
-レビュー
-
-**skimr**パッケージの関数`skim()` を使うと、データフレーム全体の概要を把握することができます（詳しくは[Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables)のページを参照）。カラムは、character, numericなどのクラス/タイプ別にまとめられています。注："POSIXct "は生の日付クラスの一種です（[Working with dates](https://epirhandbook.com/working-with-dates.html#working-with-dates-1)を参照してください。
+**skimr** パッケージの関数`skim()` を使うと、データフレーム全体の概要を把握することができます（詳しくは [Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables) のページを参照）。カラムは、character, numeric などのクラス/タイプ別にまとめられています。注："POSIXct "は未加工の日付クラスの一種です（ [Working with dates](https://epirhandbook.com/working-with-dates.html#working-with-dates-1) を参照してください。
 
 ```{r, eval=F}
 skimr::skim(linelist_raw)
@@ -271,88 +170,58 @@ skimr::skim_without_charts(linelist_raw)
 
 <!-- ======================================================= -->
 
-## Column names
+## **列名**
 
-In R, column *names* are the "header" or "top" value of a column. They are used to refer to columns in the code, and serve as a default label in figures.
+　Rでは、列名は列の"ヘッダー"または"一番上"の値です。コード内では列を参照するために使用され、図ではデフォルトのラベルとして使用されます。
 
-Other statistical software such as SAS and STATA use *"labels"* that co-exist as longer printed versions of the shorter column names. While R does offer the possibility of adding column labels to the data, this is not emphasized in most practice. To make column names "printer-friendly" for figures, one typically adjusts their display within the plotting commands that create the outputs (e.g. axis or legend titles of a plot, or column headers in a printed table - see the [scales section of the ggplot tips page](#ggplot_tips_scales) and [Tables for presentation] pages). If you want to assign column labels in the data, read more online [here](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html) and [here](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html).
+　SASやSTATAなどの他の統計ソフトでは、短い列名を長く表示した"ラベル"が共存しています。Rではデータに列ラベルを追加することができますが、実際にはあまり重視されていません。列名を図の表示に適したものにするには、通常、出力を作成するプロットコマンドの中でその表示を調整します（例えば、プロットの軸や凡例のタイトル、表示される表の列ヘッダーなどです-[scales section of the ggplot tips](https://epirhandbook.com/ggplot-tips.html#ggplot_tips_scales)と[Tables for presentation](https://epirhandbook.com/tables-for-presentation.html#tables-for-presentation) のページを参照してください）。データに列ラベルを付けたい場合は、[こちら](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html)と[こちら](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html)をご覧ください。
 
-As R column names are used very often, so they must have "clean" syntax. We suggest the following:
-
--   Short names
--   No spaces (replace with underscores \_ )
--   No unusual characters (&, \#, \<, \>, ...)\
--   Similar style nomenclature (e.g. all date columns named like **date\_**onset, **date\_**report, **date\_**death...)
-
-The columns names of `linelist_raw` are printed below using `names()` from **base** R. We can see that initially:
-
--   Some names contain spaces (e.g. `infection date`)\
--   Different naming patterns are used for dates (`date onset` vs. `infection date`)\
--   There must have been a *merged header* across the two last columns in the .xlsx. We know this because the name of two merged columns ("merged_header") was assigned by R to the first column, and the second column was assigned a placeholder name "...28" (as it was then empty and is the 28th column).
-
-列名
-
-Rでは、列名は列の「ヘッダー」または「トップ」の値です。コード内では列を参照するために使用され、図ではデフォルトのラベルとして使用されます。
-
-SASやSTATAなどの他の統計ソフトでは、短いカラム名を長く表示した「ラベル」が共存しています。Rではデータに列ラベルを追加することができますが、実際にはあまり重視されていません。列名を図の表示に適したものにするには、通常、出力を作成するプロットコマンドの中でその表示を調整します（例えば、プロットの軸や凡例のタイトル、表示される表の列ヘッダーなどです-[scales section of the ggplot tips](https://epirhandbook.com/ggplot-tips.html#ggplot_tips_scales)と[Tables for presentation](https://epirhandbook.com/tables-for-presentation.html#tables-for-presentation)のページを参照してください）。データに列ラベルを付けたい場合は、[こちら](https://cran.r-project.org/web/packages/expss/vignettes/labels-support.html)と[こちら](https://cran.r-project.org/web/packages/labelled/vignettes/intro_labelled.html)をご覧ください。
-
-Rのカラム名は非常に頻繁に使用されるため、「きれいな」構文である必要があります。以下のように提案します：
+Rの列名は非常に頻繁に使用されるため、"きれいな"構文である必要があります。以下のように提案します：
 
 -   短い名前
+
 -   スペースを使わない（アンダースコア \_ に置き換えてください）
--   特殊な文字は使用しない (&, \#, \<, \>,など)\
+
+-   特殊な文字は使用しない (&, \#, \<, \>,など)
+
 -   似たようなスタイルの用語体系（例：すべての日付カラムの名前が date_onset, date_report, date_deathなど）
 
-`linelist_raw`の列名は、**base R**の`names()`を使って以下のように表示されています。
+`linelist_raw`の列名は、**base R**の `names()`を使って以下のように表示されています。
 
--   スペースを含む名前がある(例: `infection date`)\
--   日付には異なる命名パターンが使用されている(`date onset` と. `infection date`)\
--   .xlsxの最後の2列には、マージされたヘッダがあったはずです。これは、2つのマージされた列の名前（"merged_header"）がRによって最初の列に割り当てられ、2番目の列にはプレースホルダー名「...28」が割り当てられていることからわかります（当時は空欄であり、28番目の列であったため）。
+-   スペースを含む名前がある(例: `infection date`)
+
+-   日付には異なる命名パターンが使用されている(`date onset` と. `infection date`)
+
+-   .xlsxの最後の2列には、マージされたヘッダがあったはずです。これは、2つのマージされた列の名前（"merged_header"）がRによって最初の列に割り当てられ、2番目の列にはセルを保持するため"...28" が割り当てられていることが分かります（当初は空欄であり、28番目の列であったため）。
 
 ```{r}
 names(linelist_raw)
 ```
 
-[***NOTE:*** To reference a column name that includes spaces, surround the name with back-ticks, for example: linelist\$`` ` '\x60infection date\x60'` ``. note that on your keyboard, the back-tick (\`) is different from the single quotation mark (').]{style="color: black;"}
+[**注**：スペースを含む列名を参照するには、その名前をバックスティックで囲みます。例：linelist\$`` ` '\x60infection date\x60'` ``　キーボードでは、バックティック（\`）とシングルクォーテーションマーク（'）は異なりますのでご注意ください。]{style="color: black;"}
 
-注：スペースを含む列名を参照するには、その名前をバックスティックで囲みます。例：linelist\$`` ` '\x60infection date\x60'` ``　キーボードでは、バックティック（\`）とシングルクォーテーションマーク（'）は異なりますのでご注意ください。
+### ラベル {.unnumbered}
 
-### Labels {.unnumbered}
+　SASなどの他の統計ソフトでは、変数のラベルが付いています。
 
-Some other statistical software such as SAS have variable *labels*
+### 自動クリーニング {.unnumbered}
 
-ラベル
-
-SASなどの他の統計ソフトでは、変数のラベルが付いています。
-
-### Automatic cleaning {.unnumbered}
-
-The function `clean_names()` from the package **janitor** standardizes column names and makes them unique by doing the following:
-
--   Converts all names to consist of only underscores, numbers, and letters\
--   Accented characters are transliterated to ASCII (e.g. german o with umlaut becomes "o", spanish "enye" becomes "n")\
--   Capitalization preference for the new column names can be specified using the `case =` argument ("snake" is default, alternatives include "sentence", "title", "small_camel"...)\
--   You can specify specific name replacements by providing a vector to the `replace =` argument (e.g. `replace = c(onset = "date_of_onset")`)\
--   Here is an online [vignette](https://cran.r-project.org/web/packages/janitor/vignettes/janitor.html#cleaning)
-
-Below, the cleaning pipeline begins by using `clean_names()` on the raw linelist.
-
-自動クリーニング
-
-**janitor**パッケージの関数`clean_names()`は、以下のようにして列名を標準化し、ユニークにします：
+**janitor** パッケージの関数`clean_names()`は、以下のように列名を標準化し、ユニークにします：
 
 -   すべての名前をアンダーライン、数字、文字のみで構成されるように変換します。\
+
 -   アクセント記号付きの文字はASCIIに音訳されます（例：ドイツ語のoにウムラウト記号を付けると "o"、スペイン語の "enye "は "n "になります）。\
+
 -   新しい列名の大文字小文字の区別は、 `case =` 引数を使って指定できます（ "snake"がデフォルトで、他に "sentence"、"title"、"small_camel"などがあります）。\
+
 -   `replace =` 引数にベクトルを与えることで、特定の名前の置換を指定することができます（例：`replace = c(onset = "date_of_onset")`)
--   
+
 -   ここでは、 [vignette](https://cran.r-project.org/web/packages/janitor/vignettes/janitor.html#cleaning)を紹介します。
 
-以下では、クリーニングのパイプラインは、生のラインリストに対して`clean_names()`を使用することから始めます。
+　以下では、前処理のパイプラインは、未加工のラインリストに対して`clean_names()`を使用することから開始します。
 
 ```{r clean_names}
-# pipe the raw dataset through the function
-# 生のデータセットを関数にパイプする
+# 未加工のデータセットを関数にパイプする
 clean_names(), assign result as "linelist"  
 linelist <- linelist_raw %>% 
   janitor::clean_names()
@@ -363,36 +232,28 @@ names(linelist)
 
 [***NOTE:*** The last column name "...28" was changed to "x28".]{style="color: black;"}
 
-注：最後の列名「...28」を「x28」に変更しました。
+注：最後の列名"...28"を"x28" に変更しました。
 
-### Manual name cleaning {.unnumbered}
+### 手動による名前のクリーニング {.unnumbered}
 
-Re-naming columns manually is often necessary, even after the standardization step above. Below, re-naming is performed using the `rename()` function from the **dplyr** package, as part of a pipe chain. `rename()` uses the style `NEW = OLD` - the new column name is given before the old column name.
+　上記の標準化ステップの後でも、列の名前を手動で変更することはしばしば必要です。 `rename()`は `NEW = OLD` というスタイルを採用しており、新しい列名が既存の列名の前に与えられます。
 
-Below, a re-naming command is added to the cleaning pipeline. Spaces have been added strategically to align code for easier reading.
-
-手動による名前のクリーニング
-
-上記の標準化ステップの後でも、カラムの名前を手動で変更することはしばしば必要です。 `rename()`は `NEW = OLD` というスタイルを採用しており、新しい列名が古い列名の前に与えられます。
-
-以下では、クリーニング・パイプラインに名前変更コマンドを追加しています。読みやすいようにコードを並べるため、戦略的にスペースを追加しています。
+　以下では、クリーニング・パイプラインに名前変更コマンドを追加しています。読みやすいようにコードを並べるため、戦略的にスペースを追加しています。
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+# パイプチェーン処理 (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
+    # 列名構文の標準化
     janitor::clean_names() %>% 
     
-    # manually re-name columns
-           # NEW name             # OLD name
+    # 手動で列名を変更
+           # 新しい列名            # 既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome)
 ```
-
-Now you can see that the columns names have been changed:
 
 これで、列名が変更されていることがわかります。
 
@@ -400,11 +261,7 @@ Now you can see that the columns names have been changed:
 names(linelist)
 ```
 
-**Rename by column position**
-
-You can also rename by column position, instead of column name, for example:
-
-#### 列の位置による名前の変更 {.unnumbered}
+列の位置による名前の変更
 
 列名ではなく、列の位置で名前を変更することもできます。
 
@@ -413,58 +270,30 @@ rename(newNameForFirstColumn  = 1,
        newNameForSecondColumn = 2)
 ```
 
-#### Rename via `select()` and `summarise()` {.unnumbered}
-
-As a shortcut, you can also rename columns within the **dplyr** `select()` and `summarise()` functions. `select()` is used to keep only certain columns (and is covered later in this page). `summarise()` is covered in the [Grouping data] and [Descriptive tables] pages. These functions also uses the format `new_name = old_name`. Here is an example:
-
 #### `select()`および`summarise()`による名前の変更 {.unnumbered}
 
-ショートカットとして、**dplyr**の`select()`関数や `summarise()`関数でも列の名前を変更することができます。`select()`は特定の列だけを残すために使用します（このページで後述します）。`summarise()`については、[Grouping data](https://epirhandbook.com/grouping-data.html#grouping-data)や[Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables)のページで説明します。これらの関数は、`new_name = old_name` というフォーマットも使用します。以下はその例です。
+　ショートカットとして、**dplyr**の `select()`関数や `summarise()`関数でも列の名前を変更することができます。`select()`は特定の列だけを残すために使用します（このページで後述します）。`summarise()`については、[Grouping data](https://epirhandbook.com/grouping-data.html#grouping-data) や[Descriptive tables](https://epirhandbook.com/descriptive-tables.html#descriptive-tables) のページで説明します。これらの関数は、`new_name = old_name` というフォーマットも使用します。以下はその例です。
 
 ```{r, eval=F}
 linelist_raw %>% 
-  select(# NEW name             # OLD name
-         date_infection       = `infection date`,    # rename and KEEP ONLY these columns
+  select(#新しい列名             # 既存の列名
+         date_infection       = `infection date`,    # rename and KEEP ONLY these columns#列名を変更して変更した列だけを残す。
          date_hospitalisation = `hosp date`)
 ```
 
-### Other challenges {.unnumbered}
+### **その他の課題** {.unnumbered}
 
-#### Empty Excel column names {.unnumbered}
+#### 空白のExcelカラム名 {.unnumbered}
 
-R cannot have dataset columns that do not have column names (headers). So, if you import an Excel dataset with data but no column headers, R will fill-in the headers with names like "...1" or "...2". The number represents the column number (e.g. if the 4th column in the dataset has no header, then R will name it "...4").
+　Rは、列名（ヘッダー）のないデータセット列を持つことはできません。したがって、データはあるが列のヘッダーがないExcelデータセットをインポートした場合、Rは"...1"や"...2"といった名前でヘッダーを埋めることになります。数字は列番号を表します（例：データセットの4列目にヘッダーがない場合、Rはその列を"...4"と命名します）。
 
-You can clean these names manually by referencing their position number (see example above), or their assigned name (`linelist_raw$...1`).
+　付与された名前は、ポジション番号（上記の例を参照）または割り当てられた名前(`linelist_raw$...1`)を参照することで、手動でクリーニングすることができます。
 
-#### Merged Excel column names and cells {.unnumbered}
+#### **Excelの列名とセルの結合** {.unnumbered}
 
-Merged cells in an Excel file are a common occurrence when receiving data. As explained in [Transition to R], merged cells can be nice for human reading of data, but are not "tidy data" and cause many problems for machine reading of data. R cannot accommodate merged cells.
+　Excelファイル中のマージセルは、データを受け取る際によく見られます。[Transition to R](https://epirhandbook.com/transition-to-r.html#transition-to-r) で説明したように、マージされたセルは、人間がデータを読むときには良いのですが、 "整頓されたデータ" ではない場合、機械がデータを読むときに多くの問題が発生します。Rはマージされたセルに対応できないからです。
 
-Remind people doing data entry that human-readable data is not the same as machine-readable data. Strive to train users about the principles of tidy data. If at all possible, try to change procedures so that data arrive in a tidy format without merged cells.
-
--   Each variable must have its own column.\
--   Each observation must have its own row.\
--   Each value must have its own cell.
-
-When using **rio**'s `import()` function, the value in a merged cell will be assigned to the first cell and subsequent cells will be empty.
-
-One solution to deal with merged cells is to import the data with the function `readWorkbook()` from the package **openxlsx**. Set the argument `fillMergedCells = TRUE`. This gives the value in a merged cell to all cells within the merge range.
-
-**その他の課題**
-
-空白のExcelカラム名
-
-Rは、列名（ヘッダー）のないデータセット列を持つことはできません。したがって、データはあるが列のヘッダーがないExcelデータセットをインポートした場合、Rは「...1」や「...2」といった名前でヘッダーを埋めることになります。数字は列番号を表します（例：データセットの4列目にヘッダーがない場合、Rはその列を「...4」と命名します）。
-
-これらの名前は、ポジション番号（上記の例を参照）または割り当てられた名前(`linelist_raw$...1`)を参照することで、手動でクリーニングすることができます。
-
-**Excelの列名とセルの結合**
-
-Excelファイル中のマージセルは、データを受け取る際によく起きています。[Transition to R](https://epirhandbook.com/transition-to-r.html#transition-to-r)
-
-で説明したように、マージされたセルは、人間がデータを読むときには良いのですが、 "tidy data"ではなく、機械がデータを読むときには多くの問題を引き起こします。Rはマージされたセルに対応できません。
-
-人間が読めるデータと機械が読めるデータは別物であることをデータ入力担当者に伝えてください。整頓されたデータの原則をユーザーに教えるように努めてください。可能な限り、セルが結合されていない整頓されたフォーマットでデータが届くように手順を変更しましょう。
+　人間が読めるデータと機械が読めるデータは別物であることをデータ入力をした担当者に伝えてください。また、整頓されたデータの原則をユーザーに教えるよう努めてください。可能な限り、セルが結合されていない整頓されたフォーマットでデータが手元に届くように手順を変更しましょう。
 
 -   各変数はそれぞれの列を持たなければなりません。\
 -   各観測値は、それぞれの行を持つ必要があります。\
@@ -472,15 +301,13 @@ Excelファイル中のマージセルは、データを受け取る際によく
 
 **rio**の`import()`関数を使用した場合、マージされたセルの値は最初のセルに割り当てられ、それ以降のセルは空になります。
 
-併合されたセルを処理するための一つの解決策は、**openxlsx**パッケージの関数`readWorkbook()`でデータをインポートすることです。引数`fillMergedCells = TRUE`を設定します。これにより、マージされたセルの値を、マージ範囲内のすべてのセルに与えることができます。
+　結合されたセルを処理するための一つの解決策は、**openxlsx** パッケージの関数`readWorkbook()`でデータをインポートすることです。引数`fillMergedCells = TRUE`を設定します。これにより、マージされたセルの値を、マージ範囲内のすべてのセルに入れることができます。
 
 ```{r, eval=F}
 linelist_raw <- openxlsx::readWorkbook("linelist_raw.xlsx", fillMergedCells = TRUE)
 ```
 
-[***DANGER:*** If column names are merged with `readWorkbook()`, you will end up with duplicate column names, which you will need to fix manually - R does not work well with duplicate column names! You can re-name them by referencing their position (e.g. column 5), as explained in the section on manual column name cleaning.]{style="color: red;"}
-
-[***危険***`readWorkbook()`で列名をマージすると、列名が重複してしまうので、手動で修正する必要があります - Rは列名が重複するとうまく動作しません! 手動での列名のクリーニングのセクションで説明したように、その位置（例えば5列目）を参照して列名を再設定することができます。]{style="color: red;"}
+[要注意：`readWorkbook()`で列名をマージすると、列名が重複してしまうので、手動で修正する必要があります - Rは列名が重複するとうまく動作しません! 手動での列名のクリーニングのセクションで説明したように、その位置（例えば5列目）を参照して列名を再設定することができます。]{style="color: red;"}
 
 <!-- ======================================================= -->
 
@@ -488,173 +315,106 @@ linelist_raw <- openxlsx::readWorkbook("linelist_raw.xlsx", fillMergedCells = TR
 
 <!-- ======================================================= -->
 
-## Select or re-order columns
+## 列の選択と並び替え
 
-Use `select()` from **dplyr** to select the columns you want to retain, and to specify their order in the data frame.
+dplyrの`select()`を使って、残したい列を選択し、データフレーム内の順番を指定します。
 
-[***CAUTION:*** In the examples below, the `linelist` data frame is modified with `select()` and displayed, but not saved. This is for demonstration purposes. The modified column names are printed by piping the data frame to `names()`.]{style="color: orange;"}
+[***注意：***以下の例では、`linelist`データフレームを `select()`で変更して表示していますが、保存はしていません。これはデモンストレーションのためです。変更された列名は、データフレームを`names()`にパイプすることで表示されます。]{style="color: orange;"}
 
-**Here are ALL the column names in the linelist at this point in the cleaning pipe chain:**
-
-列の選択と並び替え
-
-dplyrの`select()`を使って、保持したい列を選択し、データフレーム内の順番を指定します。
-
-[***注意：***以下の例では、`linelist`データフレームを`select()`で変更して表示していますが、保存はしていません。これはデモンストレーションのためです。変更された列名は、データフレームを`names()`にパイプすることで表示されます。]{style="color: orange;"}
-
-ここでは、クリーニング・パイプ・チェーンのこの時点での[`linelist`]{style="color: orange;"}の全列名を示しています:
+ここでは、クリーニングパイプチェーンのこの時点での[`linelist`]{style="color: orange;"}の全列名を示しています:
 
 ```{r}
 names(linelist)
 ```
 
-### Keep columns {.unnumbered}
-
-**Select only the columns you want to remain**
-
-Put their names in the `select()` command, with no quotation marks. They will appear in the data frame in the order you provide. Note that if you include a column that does not exist, R will return an error (see use of `any_of()` below if you want no error in this situation).
-
-**列を残す**
+### **列を保持** {.unnumbered}
 
 残しておきたい列のみを選択します。
 
 `select()`コマンドの中で、列の名前を引用符を使わずに記述します。これらの列は、指定した順序でデータフレームに表示されます。存在しない列を入れた場合、Rはエラーを返すことに注意してください（このような場合にエラーを出さないようにするには、後述の`any_of()`の使い方を参照してください）。
 
 ```{r}
-# linelist dataset is piped through select() command, and names() prints just the column names
-# ラインリストのデータセットはselect()コマンドに渡され、names()は列名だけを表示します。
+# ラインリストのデータセットはselect()コマンドに渡され、name()は列名だけを表示する。
 linelist %>% 
   select(case_id, date_onset, date_hospitalisation, fever) %>% 
   names()  # display the column names
 ```
 
-### "tidyselect" helper functions {#clean_tidyselect .unnumbered}
+### **"tidyselect" ヘルパー関数** {#clean_tidyselect .unnumbered}
 
-These helper functions exist to make it easy to specify columns to keep, discard, or transform. They are from the package **tidyselect**, which is included in **tidyverse** and underlies how columns are selected in **dplyr** functions.
+　**tidyselect"** ヘルパー関数は、保持、破棄、または変換する列を簡単に指定するためにあります。これらは、**tidyverse** に含まれる **tidyselect** パッケージのもので、**dplyr** 関数で列を選択する方法の基礎となっています。
 
-For example, if you want to re-order the columns, `everything()` is a useful function to signify "all other columns not yet mentioned". The command below moves columns `date_onset` and `date_hospitalisation` to the beginning (left) of the dataset, but keeps all the other columns afterward. Note that `everything()` is written with empty parentheses:
-
-**"tidyselect" ヘルパー関数**
-
-これらのヘルパー関数は、保持、破棄、または変換する列を簡単に指定するために存在します。これらは、**tidyverse**に含まれる**tidyselect**パッケージのもので、**dplyr**関数で列を選択する方法の基礎となっています。
-
-例えば、列の順番を変えたい場合、`everything()`は「まだ記載されていない他のすべての列」を意味する便利な関数です。以下のコマンドは、`date_onset`と`date_hospitalisation`の列をデータセットの最初（左）に移動させますが、それ以降の他の列はすべて保持します。`everything()`は空の括弧で書かれていることに注意してください。
+　例えば、列の順番を変えたい場合、`everything()`は"まだ記載されていない他のすべての列"を意味する便利な関数です。以下のコマンドは、`date_onset`と`date_hospitalisation`の列をデータセットの最初（左）に移動させますが、それ以降の他の列はすべてそのままにします。`everything()`は空の括弧で書かれていることに注意してください。
 
 ```{r}
-# move date_onset and date_hospitalisation to beginning
-# date_onsetとdate_hospitalisationを先頭に移動させる
+# date_onsetとdate_hospitalisationを先頭に移動させる。
 linelist %>% 
   select(date_onset, date_hospitalisation, everything()) %>% 
   names()
 ```
 
-Here are other "tidyselect" helper functions that also work *within* **dplyr** functions like `select()`, `across()`, and `summarise()`:
+ここでは、`select()`、`across()`、`summary()`などの**dplyr**関数内でも動作する他の"tidyselect"ヘルパー関数を紹介します。
 
--   `everything()` - all other columns not mentioned\
+-   `everything()`- 記載されていない他のすべての列を指定します。\
 
--   `last_col()` - the last column\
-
--   `where()` - applies a function to all columns and selects those which are TRUE\
-
--   `contains()` - columns containing a character string
-
-    -   example: `select(contains("time"))`\
-
--   `starts_with()` - matches to a specified prefix
-
-    -   example: `select(starts_with("date_"))`\
-
--   `ends_with()` - matches to a specified suffix
-
-    -   example: `select(ends_with("_post"))`\
-
--   `matches()` - to apply a regular expression (regex)
-
-    -   example: `select(matches("[pt]al"))`\
-
--   `num_range()` - a numerical range like x01, x02, x03\
-
--   `any_of()` - matches IF column exists but returns no error if it is not found
-
-    -   example: `select(any_of(date_onset, date_death, cardiac_arrest))`
-
-In addition, use normal operators such as `c()` to list several columns, `:` for consecutive columns, `!` for opposite, `&` for AND, and `|` for OR.
-
-Use `where()` to specify logical criteria for columns. If providing a function inside `where()`, do not include the function's empty parentheses. The command below selects columns that are class Numeric.
-
-ここでは、`select()`、`across()`、`summary()`などの**dplyr**関数内でも動作する他の「tidyselect」ヘルパー関数を紹介します。
-
--   `everything()`- 記載されていない他のすべての列\
-
--   `last_col()`- 最後の列です。\
+-   `last_col()`- 最後の列を指定します。\
 
 -   `where()` - すべての列に関数を適用し、TRUEとなるものを選択します。\
 
--   `contains()` - ある文字列を含む列\
+-   `contains()` - ある文字列を含む列を指定します。\
 
     -   例：`select(contains("time"))`\
 
--   starts_with() - 指定された接頭辞にマッチします。
+-   starts_with() - 指定された接頭語を指定します。
 
     -   例：`select(starts_with("date_"))`\
 
--   `ends_with()`- 指定された接尾辞にマッチします。\
+-   `ends_with()`- 指定された接尾語を指定します。\
 
     -   例：`select(ends_with("_post"))`\
 
--   `matches()` - 正規表現(regex)を適用する\
+-   `matches()` - 正規表現(regex)を適用し指定します。\
 
     -   例：`select(matches("[pt]al"))`\
 
 -   `num_range()` - x01, x02, x03のような数値の範囲を指定します。\
 
--   `any_of()`- カラムが存在する場合はマッチしますが、見つからない場合はエラーを返しません。\
+-   `any_of()`- 列が存在する場合は指定できます。見つからない場合でもエラーを表示しません。\
 
     -   例：`select(any_of(date_onset, date_death, cardiac_arrest))`\
 
-さらに、複数の列を列挙するには`c()`、連続した列には`:`、反対の列には`!`,`AND`には `&`, `OR`には `|`などの通常の演算子を使用します。
+　さらに、複数の列を列挙するには`c()`、連続した列には`:`、反対の列には`!`,`AND`には `&`, `OR`には `|`などの通常の演算子を使用します。
 
-列の論理的な条件を指定するには、`where()`を使用します。`where()`の中に関数を入れる場合は、関数の空の括弧は入れないでください。以下のコマンドは、Numericクラスの列を選択します。
+　列の論理的な条件を指定するには、`where()`を使用します。`where()`の中に関数を入れる場合は、関数の空の括弧は入れないでください。以下のコマンドは、 数値クラスの列を選択します。
 
 ```{r}
-# select columns that are class Numeric
-# Numericクラスのカラムを選択
+# 数値クラスの列を選択する。
 linelist %>% 
   select(where(is.numeric)) %>% 
   names()
 ```
 
-Use `contains()` to select only columns in which the column name contains a specified character string. `ends_with()` and `starts_with()` provide more nuance.
-
-列名に指定した文字列が含まれている列のみを選択するには、`contains()`を使用します。 `ends_with()`や `starts_with()`を使用すると、より詳細な情報が得られます。
+　列名に指定した文字列が含まれている列のみを選択するには、`contains()`を使用します。 `ends_with()`や `starts_with()`を使用すると、より詳細な情報が得られます。
 
 ```{r}
-# select columns containing certain characters
-# 特定の文字を含む列を選択する
+# 特定の文字を含む列を選択する。
 linelist %>% 
   select(contains("date")) %>% 
   names()
 ```
 
-The function `matches()` works similarly to `contains()` but can be provided a regular expression (see page on [Characters and strings]), such as multiple strings separated by OR bars within the parentheses:
-
-関数 `matches()`は、`contains()`と同様の動作をしますが、括弧内のORバーで区切られた複数の文字列などの正規表現（[Characters and strings](https://epirhandbook.com/characters-and-strings.html#characters-and-strings)のページを参照）を指定することができます。
+関数 `matches()`は、`contains()`と同様の動作をしますが、括弧内のORバーで区切られた複数の文字列などの正規表現（[Characters and strings](https://epirhandbook.com/characters-and-strings.html#characters-and-strings) のページを参照）を指定することができます。
 
 ```{r}
-# searched for multiple character matches
-# 複数の文字にマッチするものを検索
+# 複数の文字にマッチするものを検索する。
 linelist %>% 
   select(matches("onset|hosp|fev")) %>%   # note the OR symbol "|"
   names()
 ```
 
-[***CAUTION:*** If a column name that you specifically provide does not exist in the data, it can return an error and stop your code. Consider using `any_of()` to cite columns that may or may not exist, especially useful in negative (remove) selections.]{style="color: orange;"}
+[た列名がデータに存在しない場合、エラーを返してコードを停止させることがあります。存在するかどうかわからない列を引用するために、`any_of()`を使用することを検討してください。これは、特に否定的な（削除）選択において有用です。]{style="color: orange;"}
 
-Only one of these columns exists, but no error is produced and the code continues without stopping your cleaning chain.
-
-[***注意***：特に指定した列名がデータに存在しない場合、エラーを返してコードを停止させることがあります。存在するかどうかわからない列を引用するために、`any_of()`を使用することを検討してください。これは、特に否定的な（削除）選択において有用です。]{style="color: orange;"}
-
-これらの列のうち1つだけが存在しますが、エラーは発生せず、コードはクリーニングチェーンを停止することなく継続されます。
+　列のうち1つだけが存在しますが、エラーは発生せず、コードは前処理を停止させることなく実行されます。
 
 ```{r}
 linelist %>% 
@@ -662,81 +422,63 @@ linelist %>%
   names()
 ```
 
-### Remove columns {.unnumbered}
+### **列の削除** {.unnumbered}
 
-**Indicate which columns to remove** by placing a minus symbol "-" in front of the column name (e.g. `select(-outcome)`), or a vector of column names (as below). All other columns will be retained.
-
-**列の削除**
-
-削除する列を示すには、列名の前にマイナス記号「-」を付けるか（例：`select(-outcome)`）、列名のベクトルを付けます（以下のように）。その他の列はすべて維持されます。
+　削除する列を示すには、列名の前にマイナス記号 "-" を付けるか（例：`select(-outcome)`）、列名のベクトルを付けます（以下のように）。その他の列は全て維持されます。
 
 ```{r}
 linelist %>% 
-  select(-c(date_onset, fever:vomit)) %>% # remove date_onset and all columns from fever to vomit
-# date_onsetとfeverからvomitまでの全ての列を削除する。
+  select(-c(date_onset, fever:vomit)) %>%
+     # date_onsetとfeverからvomitまでの全ての列を削除する。
   names()
 ```
 
-You can also remove a column using **base** R syntax, by defining it as `NULL`. For example:
-
-Rの基本的な構文を使って、NULLと定義して列を削除することもできます。例えば、以下のようになります。
+　Rの基本的な構文を使って、NULLと定義して列を削除することもできます。例えば、以下のようになります。
 
 ```{r, eval=F}
-linelist$date_onset <- NULL   # deletes column with base R syntax 
-# Rの基本的な構文でカラムを削除する
+linelist$date_onset <- NULL   # Rの基本的な構文で列を削除する。
 ```
 
-### Standalone {.unnumbered}
+### **独立型** {.unnumbered}
 
-`select()` can also be used as an independent command (not in a pipe chain). In this case, the first argument is the original dataframe to be operated upon.
-
-**独立型**
-
-`select()`は、独立したコマンドとして使用することもできます（パイプ・チェーンではありません）。この場合、最初の引数は操作対象となる元のデータフレームです。
+`select()`は、独立したコマンドとして使用することもできます（パイプ中ではなく）。この場合、最初の引数は操作対象となる元のデータフレームです。
 
 ```{r}
-# Create a new linelist with id and age-related columns
 # IDと年齢に関連した列を持つ新しいラインリストを作成する
 linelist_age <- select(linelist, case_id, contains("age"))
 
-# display the column names
+# 列名の表示
 names(linelist_age)
 ```
 
-#### Add to the pipe chain {.unnumbered}
-
-In the `linelist_raw`, there are a few columns we do not need: `row_num`, `merged_header`, and `x28`. We remove them with a `select()` command in the cleaning pipe chain:
-
 #### パイプチェーンに追加 {.unnumbered}
 
-`linelist_raw`には、`row_num`、`merged_header`、`x28`という必要のない列があります。これらをクリーニング・パイプ・チェーンの`select()`コマンドで削除します。
+`linelist_raw`には、`row_num`、`merged_header`、`x28`という必要のない列があります。これらをクリーニングパイプチェーンの `select()`コマンドで削除します。
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+# パイプチェーン処理 (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
-# パイプチェーンの処理開始
+
+# パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
+
      #列名構文の標準化
     janitor::clean_names() %>% 
     
-    # manually re-name columns
+
      # 手動で列名を変更
-           # NEW name　　　　　　　# OLD name
-     　　　#　新しい名前　　　　　 #古い名前
+     
+     　　　#新しい列名　　　　　　#既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
-    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
-     上記は、すでに説明した上流側の処理手順
+    # 上記は、すでに説明した上流側の処理手順
     #####################################################
 
-    # remove column
  　 #列の除去
     select(-c(row_num, merged_header, x28))
 ```
@@ -747,27 +489,15 @@ linelist <- linelist_raw %>%
 
 <!-- ======================================================= -->
 
-## Deduplication
+## **重複削除**
 
-See the handbook page on [De-duplication] for extensive options on how to de-duplicate data. Only a very simple row de-duplication example is presented here.
-
-The package **dplyr** offers the `distinct()` function. This function examines every row and reduce the data frame to only the unique rows. That is, it removes rows that are 100% duplicates.
-
-When evaluating duplicate rows, it takes into account a range of columns - by default it considers all columns. As shown in the de-duplication page, you can adjust this column range so that the uniqueness of rows is only evaluated in regards to certain columns.
-
-In this simple example, we just add the empty command `distinct()` to the pipe chain. This ensures there are no rows that are 100% duplicates of other rows (evaluated across all columns).
-
-We begin with `nrow(linelist)` rows in `linelist`.
-
-**重複排除**
-
-重複排除の方法については、ハンドブックの[[重複排除]](https://epirhandbook.com/de-duplication.html#de-duplication)のページを参照してください。ここでは、非常に簡単な行の重複排除の例のみを紹介します。
+　重複削除の方法については、ハンドブックの [De-duplication](https://epirhandbook.com/en/de-duplication.html#de-duplication) のページを参照してください。ここでは、非常に簡単な行の重複削除の例のみを紹介します。
 
 **dplyr**パッケージには、`distinct()`関数があります。この関数は、すべての行を調べ、データフレームをユニークな行のみに削減します。つまり、100%重複している行を削除します。
 
-重複する行を評価する際には、列の範囲を考慮しますが、デフォルトではすべての列を考慮します。重複排除のページにあるように、この列の範囲を調整して、特定の列に関してのみ行の一意性が評価されるようにすることができます。
+　重複する行を評価する際には、列の範囲を考慮しますが、デフォルトではすべての列を行います。de-duplication のページにあるように、この列の範囲を調整して、特定の列に関してのみ行の一意性が評価されるようにすることができます。
 
-この単純な例では、空のコマンドdistinct()をパイプチェーンに追加するだけです。これにより、他の行と100%重複している行がないことが保証されます（すべての列で評価されます）。
+　この単純な例では、空のコマンドdistinct()をパイプチェーンに追加するだけです。これにより、他の行と100%重複している行がないことが保証されます（すべての列で評価されます）。
 
 まず `linelist` の行数を `nrow(linelist)`とします。
 
@@ -776,45 +506,35 @@ linelist <- linelist %>%
   distinct()
 ```
 
-After de-duplication there are `nrow(linelist)` rows. Any removed rows would have been 100% duplicates of other rows.
-
-Below, the `distinct()` command is added to the cleaning pipe chain:
-
-重複排除後の行数は `nrow(linelist)`です。削除された行は、他の行と100%重複しています。
+　重複削除後の行数は `nrow(linelist)`です。削除された行は、他の行と100%重複しています。
 
 以下では、パイプチェーンに`distinct()`コマンドを追加しています。
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
-＃クリーニングパイプチェーン(生データから始まり、クリーニングステップを経てパイプに送られる)
+# クリーニングパイプチェーン(未加工データ開始し、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
-#パイプチェーンのクリーニン開始
+# パイプチェーンの処理開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
-     ＃列名の構文の標準化
+
+     # 列名の構文の標準化
     janitor::clean_names() %>% 
     
-    # manually re-name columns
-     ＃手動でカラム列を変更
-           # NEW name             # OLD name
+     # 手動でカラム列を変更
+           # 新しい列名            # 既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
-    # remove column
-     ＃列の除去
+    # 列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
-    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
-＃上記は、すでに説明した上流側のクリーニング手順
+    #上記は、すでに説明した上流側のクリーニング手順
     #####################################################
     
-    # de-duplicate
-＃重複除去
+    # 重複除去
     distinct()
 ```
 
@@ -824,83 +544,51 @@ linelist <- linelist_raw %>%
 
 <!-- ======================================================= -->
 
-## Column creation and transformation
+## **列の作成と変換**
 
-**We recommend using the dplyr function `mutate()` to add a new column, or to modify an existing one.**
+　新しい列を追加したり、既存の列を修正したりするには、**dplyr**の関数 `mutate()`を使うことをお勧めします。
 
-Below is an example of creating a new column with `mutate()`. The syntax is: `mutate(new_column_name = value or transformation)`
+　以下は、`mutate()`を使って新しい列を作成する例です。構文は次のとおりです： `mutate(new_column_name = value or transformation)`
 
-In Stata, this is similar to the command `generate`, but R's `mutate()` can also be used to modify an existing column.
-
-### New columns {.unnumbered}
-
-The most basic `mutate()` command to create a new column might look like this. It creates a new column `new_col` where the value in every row is 10.
-
-**列の作成と変換**
-
-新しい列を追加したり、既存の列を修正したりするには、**dplyr**の関数`mutate()`を使うことをお勧めします。
-
-以下は、`mutate()`を使って新しい列を作成する例です。構文は次のとおりです： `mutate(new_column_name = value or transformation)`
-
-Stataでは、これは`generate`コマンドに似ていますが、Rの`mutate()`は既存の列を修正するためにも使用できます。
-
-カラムの作成と変換
-
-新しいカラムを追加したり、既存のカラムを修正したりするには、dplyrの関数mutate()を使うことをお勧めします。
-
-以下は、mutate()を使って新しいカラムを作成する例です。構文は次のとおりです： mutate(new_column_name = value or transformation)
-
-Stataでは、これはgenerateコマンドに似ていますが、Rのmutate()は既存の列を修正するためにも使用できます。
+　Stataでは、これは`generate`コマンドに似ていますが、Rの`mutate()`は既存の列を修正するためにも使用できます。
 
 **新しいカラム**
 
-新しい列を作成する最も基本的な`mutate()`コマンドは次のようになります。これは、すべての行の値が10である新しい列`new_col`を作成します。
+　新しい列を作成する最も基本的な`mutate()`コマンドは次のようになります。以下では、すべての行の値が10である新しい列`new_col`を作成します。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(new_col = 10)
 ```
 
-You can also reference values in other columns, to perform calculations. Below, a new column `bmi` is created to hold the Body Mass Index (BMI) for each case - as calculated using the formula BMI = kg/m\^2, using column `ht_cm` and column `wt_kg`.
-
-また、他の列の値を参照して、計算を行うこともできます。以下では、新しい列`bmi`が作成され、各ケースのボディマス指数（BMI）を保持しています。これは、列`ht_cm`と列`wt_kg`を使用して、BMI = kg/m\^2の式で計算されたものです。
+　また、他の列の値を参照して、計算を行うこともできます。以下では、新しい列 `bmi`が作成され、各ケースのBody mass index（BMI）を格納しています。これは、列`ht_cm`と列`wt_kg`を使用して、BMI = kg/m\^2の式で計算されたものです。
 
 ```{r}
 linelist <- linelist %>% 
   mutate(bmi = wt_kg / (ht_cm/100)^2)
 ```
 
-If creating multiple new columns, separate each with a comma and new line. Below are examples of new columns, including ones that consist of values from other columns combined using `str_glue()` from the **stringr** package (see page on [Characters and strings].
-
-複数の新しい列を作成する場合は、それぞれをコンマで区切って改行します。以下は、**stringr**パッケージの`str_glue()`を使って他列の値を組み合わせたものなど、新しい列の例です（[[文字と文字列]](https://epirhandbook.com/characters-and-strings.html#characters-and-strings)のページを参照）。
+　複数の新しい列を作成する場合は、それぞれをコンマで区切って改行します。以下は、**stringr**パッケージの `str_glue()`を使って他列の値を組み合わせたものなど、新しい列の例です（[Characters and strings](https://epirhandbook.com/en/characters-and-strings.html#characters-and-strings) のページを参照）。
 
 ```{r}
 new_col_demo <- linelist %>%                       
   mutate(
-    new_var_dup    = case_id,             # new column = duplicate/copy another existing column
-    ＃新しい列＝重複削除/存在する他の列をコピー
-    new_var_static = 7,                   # new column = all values the same
-    ＃新しい列＝全ての値が同じ
-    new_var_static = new_var_static + 5,  # you can overwrite a column, and it can be a calculation using other variables
-    ＃列を上書きしたり、他の変数を使って計算したりすることができます。
-    new_var_paste  = stringr::str_glue("{hospital} on ({date_hospitalisation})") # new column = pasting together values from other columns
+    new_var_dup    = case_id,             #新しい列＝重複削/存在する他の列をコピー
+    new_var_static = 7,                   # 新しい列＝全ての値が同じ
+    new_var_static = new_var_static + 5,  # 列を上書きしたり、他の変数を使って計算したりすることがでる。
+    new_var_paste  = stringr::str_glue("{hospital} on ({date_hospitalisation})") 
     # 新しい列 = 他の列の値を貼り付ける
     ) %>% 
-  select(case_id, hospital, date_hospitalisation, contains("new"))        # show only new columns, for demonstration purposes
-＃デモ用に新しい列のみを表示
+  select(case_id, hospital, date_hospitalisation, contains("new"))        
+# デモ用に新しい列のみを表示
 ```
 
-Review the new columns. For demonstration purposes, only the new columns and the columns used to create them are shown:
-
-新しい列を確認します。デモのために、新しい列とそれを作成するために使用された列のみが表示されています。
+　新しい列を確認します。デモのために、新しい列とそれを作成するために使用された列のみが表示されています。
 
 ```{r message=FALSE, echo=F}
-# display the linelist data as a table
-# ラインリストのデータを表にして表示する
+# ラインリストのデータを表にして表示する。
 DT::datatable(head(new_col_demo,50), rownames = FALSE, options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
-
-[***TIP:*** A variation on `mutate()` is the function `transmute()`. This function adds a new column just like `mutate()`, but also drops/removes all other columns that you do not mention within its parentheses.]{style="color: darkgreen;"}
 
 [***ヒント:*** `mutate()`のバリエーションとして、`transmute()`という関数があります。この関数は、`mutate()`と同じように新しい列を追加しますが、括弧の中に書かれていない他のすべての列を削除または取り除きます。]{style="color: darkgreen;"}
 
@@ -912,31 +600,19 @@ DT::datatable(head(new_col_demo,50), rownames = FALSE, options = list(pageLength
 #   select(-contains("new_var"))
 ```
 
-### Convert column class {.unnumbered}
-
-Columns containing values that are dates, numbers, or logical values (TRUE/FALSE) will only behave as expected if they are correctly classified. There is a difference between "2" of class character and 2 of class numeric!
-
-There are ways to set column class during the import commands, but this is often cumbersome. See the [R Basics] section on object classes to learn more about converting the class of objects and columns.
-
-First, let's run some checks on important columns to see if they are the correct class. We also saw this in the beginning when we ran `skim()`.
-
-Currently, the class of the `age` column is character. To perform quantitative analyses, we need these numbers to be recognized as numeric!
-
 **列クラスの変換**
 
-日付、数字、理論値（TRUE/FALSE）を含む列は、正しく分類されれば期待通の動きをします。文字クラスの"2"と数字クラスの2は異なります。
+　日付、数字、理論値（TRUE/FALSE）を含む列は、正しく分類されれば期待通の動きをします。文字クラスの"2"と数字クラスの2は異なります。
 
-インポートコマンド中に列クラスを設定する方法もありますが、扱いにくい場合が多いです。オブジェクトや列のクラスを変換する方法については、[[Rの基本]](https://epirhandbook.com/en/r-basics.html#r-basics)のオブジェクトクラスの項を参照してください。
+　インポートコマンド中に列クラスを設定する方法もありますが、扱いにくい場合が多いです。オブジェクトや列のクラスを変換する方法については、[R Basics](https://epirhandbook.com/en/r-basics.html#r-basics) のオブジェクトクラスの項を参照してください。
 
-まず、重要なカラムについて、正しいクラスであるかどうかのチェックを行ってみましょう。これは最初に`skim()`を実行したときに確認しまし。
+　まず、重要な列について、正しいクラスであるかどうかのチェックを行ってみましょう。これは最初に`skim()`を実行したときに確認しました。
 
-現在、`age`の列のクラスはcharacterです。定量的な分析を行うためには、これらの数字が数値として認識される必要があります!
+　現在、`age`の列のクラスはcharacter型です。定量的な分析を行うためには、これらの数字が数値として認識される必要があります!
 
 ```{r}
 class(linelist$age)
 ```
-
-The class of the `date_onset` column is also character! To perform analyses, these dates must be recognized as dates!
 
 `date_onset`列のクラスも文字です! 分析を行うには、これらの日付を日付として認識する必要があります。
 
@@ -944,67 +620,43 @@ The class of the `date_onset` column is also character! To perform analyses, the
 class(linelist$date_onset)
 ```
 
-To resolve this, use the ability of `mutate()` to re-define a column with a transformation. We define the column as itself, but converted to a different class. Here is a basic example, converting or ensuring that the column `age` is class Numeric:
-
-これを解決するには、mutate()の機能を使って、変換で列を再定義します。列をそれ自体として定義しますが、異なるクラスに変換します。ここでは、基本的な例として、列`age`がクラスNumericであることを変換または適正化します。
+　これを解決するには、mutate()の機能を使って、変換で列を再定義します。列をそれ自体として定義し、異なるクラスに変換します。ここでは、基本的な例として、列`age`がクラスNumeric型に変換または適正化します。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(age = as.numeric(age))
 ```
 
-In a similar way, you can use `as.character()` and `as.logical()`. To convert to class Factor, you can use `factor()` from **base** R or `as_factor()` from **forcats**. Read more about this in the [Factors] page.
+　同様に、`as.character()`や`as.logical()`を使うこともできます。factor型に変換するには、**base R**の`factor()`やforcatsの`as_factor()`が使えます。詳しくは [ Factors](https://epirhandbook.com/en/factors.html#factors) のページをご覧ください。
 
-You must be careful when converting to class Date. Several methods are explained on the page [Working with dates]. Typically, the raw date values must all be in the same format for conversion to work correctly (e.g "MM/DD/YYYY", or "DD MM YYYY"). After converting to class Date, check your data to confirm that each value was converted correctly.
+Date型 への変換には注意が必要です。いくつかの方法は [Working with dates](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1) のページで説明されています。通常、変換が正しく行われるためには、未加工の日付値がすべて同じ形式である必要があります (例: "MM/DD/YYYY"、または "DD MM YYYY")。クラスの日付に変換した後、データをチェックして、各値が正しく変換されたことを確認してください。
 
-同様に、`as.character()`や`as.logical()`を使うこともできます。クラスFactorに変換するには、**base R**の`factor()`やforcatsの`as_factor()`が使えます。詳しくは[[Factors]](https://epirhandbook.com/en/factors.html#factors)のページをご覧ください。
+### **グループ化されたデータ** {.unnumbered}
 
-Date クラスへの変換には注意が必要です。いくつかの方法は[[Working with dates]](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)のページで説明されています。通常、変換が正しく行われるためには、生の日付値がすべて同じ形式である必要があります (例: "MM/DD/YYYY"、または "DD MM YYYY")。クラスの日付に変換した後、データをチェックして、各値が正しく変換されたことを確認してください。
-
-### Grouped data {.unnumbered}
-
-If your data frame is already *grouped* (see page on [Grouping data]), `mutate()` may behave differently than if the data frame is not grouped. Any summarizing functions, like `mean()`, `median()`, `max()`, etc. will calculate by group, not by all the rows.
-
-**グループ化されたデータ**
-
-データフレームがすでにグループ化されている場合（[[データのグループ化]](https://epirhandbook.com/en/grouping-data.html#grouping-data)のページを参照）、`mutate()`の動作はグループ化されていない場合とは異なるかもしれません。`mean()`、`median()`、`max()`などの要約関数は、すべての行ではなく、グループごとに計算されます。
+　 データフレームがすでにグループ化されている場合（[Grouping data](https://epirhandbook.com/en/grouping-data.html#grouping-data)のページを参照）、`mutate()`の動作はグループ化されていない場合とは異なるかもしれません。`mean()`、`median()`、`max()`などの要約関数は、すべての行ではなく、グループごとに計算されます。
 
 ```{r, eval=F}
-# age normalized to mean of ALL rows
+# 全行の平均値で正規化された年齢
 linelist %>% 
   mutate(age_norm = age / mean(age, na.rm=T))
 
-# age normalized to mean of hospital group
+# 年齢を病院グループの平均値で正規化
 linelist %>% 
   group_by(hospital) %>% 
   mutate(age_norm = age / mean(age, na.rm=T))
 ```
 
-Read more about using `mutate ()` on grouped dataframes in this [tidyverse mutate documentation](https://dplyr.tidyverse.org/reference/mutate.html).
+　グループ化されたデータフレームでの `mutate ()`の使用については、この [tidyverse mutate documentation](https://dplyr.tidyverse.org/reference/mutate.html) ドキュメントで詳しく説明しています。
 
-グループ化されたデータフレームでの `mutate ()`の使用については、この [tidyverse mutate documentation](https://dplyr.tidyverse.org/reference/mutate.html) ドキュメントで詳しく説明しています。
+### **複数のカラムの変換** {#clean_across .unnumbered}
 
-### Transform multiple columns {#clean_across .unnumbered}
+　簡潔なコードを書くために、同じ変換を複数の列に一度に適用したいことがあります。**dplyr**パッケージ（ **Tidyverse** パッケージにも含まれています）の `across()` 関数を使用して、変換を複数の列に一度に適用することができます。 `across()`はどの **dplyr** 関数で使用することができますが、一般的には`select()`、`mutate()`、`filter()`、`summarise()`内で使用されます。`summarise()`にどのように適用されるかは、[Descriptive tables](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables) のページを参照してください。
 
-Often to write concise code you want to apply the same transformation to multiple columns at once. A transformation can be applied to multiple columns at once using the `across()` function from the package **dplyr** (also contained within **tidyverse** package). `across()` can be used with any **dplyr** function, but is commonly used within `select()`, `mutate()`, `filter()`, or `summarise()`. See how it is applied to `summarise()` in the page on [Descriptive tables].
+　引数`.cols =`には列を指定し、`.fns =`には適用する関数を指定します。`.fns`関数に与える追加の引数は、カンマの後に含めることができます。
 
-Specify the columns to the argument `.cols =` and the function(s) to apply to `.fns =`. Any additional arguments to provide to the `.fns` function can be included after a comma, still within `across()`.
+#### `cross()`列選択 {.unnumbered}
 
-**複数のカラムの変換**
-
-簡潔なコードを書くために、同じ変換を複数の列に一度に適用したいことがあります。**dplyr**パッケージ（**Tidyverse**パッケージにも含まれています）の `across()` 関数を使用して、変換を複数の列に一度に適用することができます。 `across()`はどの**dplyr**関数で使用することができますが、一般的には`select()`、`mutate()`、`filter()`、`summarise()`内で使用されます。`summarise()`にどのように適用されるかは、[[記述式テーブル]](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables)のページを参照してください。
-
-引数`.cols =`には列を指定し、`.fns =`には適用する関数を指定します。`.fns`関数に与える追加の引数は、カンマの後に含めることができます。
-
-#### `across()` column selection {.unnumbered}
-
-Specify the columns to the argument `.cols =`. You can name them individually, or use "tidyselect" helper functions. Specify the function to `.fns =`. Note that using the function mode demonstrated below, the function is written *without* its parentheses ( ).
-
-Here the transformation `as.character()` is applied to specific columns named within `across()`.
-
-`cross()`列選択
-
-引数`.cols =` に列を指定します。 個別に名前を付けることもできますし、"tidyselect" ヘルパー関数を使用することもできます。関数を`.fns =`に指定します。 以下に示す関数機能を使用すると、関数はその括弧（ ）なしで記述することに注意してください。
+　引数`.cols =` に列を指定します。 個別に名前を付けることもできますし、"tidyselect" ヘルパー関数を使用することもできます。関数を`.fns =`に指定します。 以下に示す関数機能を使用すると、関数はその括弧（ ）なしで記述することに注意してください。
 
 ここでは、`as.character()`という変換が、 `across()`で指定された特定の列に適用されています。
 
@@ -1013,137 +665,88 @@ linelist <- linelist %>%
   mutate(across(.cols = c(temp, ht_cm, wt_kg), .fns = as.character))
 ```
 
-The "tidyselect" helper functions are available to assist you in specifying columns. They are detailed above in the section on Selecting and re-ordering columns, and they include: `everything()`, `last_col()`, `where()`, `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()` and `any_of()`.
+　"tidyselect"ヘルパー関数は、列の指定する際に参考になります。これらの関数は上記の列の選択と並び替えのセクションで詳述されており、次のものが含まれます：`everything()`、`last_col()`、`where()`、`starts_with()`、`ends_with()`、`contains()`、`matches()`、`num_range()`、`any_of()`。
 
-Here is an example of how one would change **all columns** to character class:
-
-"tidyselect"ヘルパー関数は、列の指定する際に参考になります。これらの関数は上記の列の選択と並び替えのセクションで詳述されており、次のものが含まれます：`everything()`、`last_col()`、`where()`、`starts_with()`、`ends_with()`、`contains()`、`matches()`、`num_range()`、`any_of()`。
-
-ここでは、すべての列を文字クラスに変更する例を示します。
+ここでは、すべての列をcharacter型に変更する例を示します。
 
 ```{r, eval=F}
-#to change all columns to character class
+#全ての列をcharactor型に変換する。
 linelist <- linelist %>% 
   mutate(across(.cols = everything(), .fns = as.character))
 ```
 
-Convert to character all columns where the name contains the string "date" (note the placement of commas and parentheses):
-
-名前に "date "という文字列が含まれるすべての列を文字に変換します（カンマと括弧の配置に注意してください）。
+　名前に "date "という文字列が含まれるすべての列を文字に変換します（カンマと括弧の配置に注意してください）。
 
 ```{r, eval=F}
-#to change all columns to character class
+#全ての列をcharactor型に変換する。
 linelist <- linelist %>% 
   mutate(across(.cols = contains("date"), .fns = as.character))
 ```
 
-Below, an example of mutating the columns that are currently class POSIXct (a raw datetime class that shows timestamps) - in other words, where the function `is.POSIXct()` evaluates to `TRUE`. Then we want to apply the function `as.Date()` to these columns to convert them to a normal class Date.
-
-以下は、現在POSIXctクラス（タイムスタンプを示す生のdatetimeクラス）である列、つまり`is.POSIXct()`関数の評価値が`TRUE`である列を変換する例です。次に、これらの列に`as.Date()`という関数を適用して、通常のDateクラスに変換したいと思います。
+　以下は、現在POSIXct型（タイムスタンプを示す未加工のdatetime型）である列、つま `is.POSIXct()`関数の評価値が`TRUE`である列を変換する例です。次に、これらの列に `as.Date()`という関数を適用して、通常のDate型に変換したいと思います。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(across(.cols = where(is.POSIXct), .fns = as.Date))
 ```
 
--   Note that within `across()` we also use the function `where()` as `is.POSIXct` is evaluating to either TRUE or FALSE.\
-
--   Note that `is.POSIXct()` is from the package **lubridate**. Other similar "is" functions like `is.character()`, `is.numeric()`, and `is.logical()` are from **base R**
-
 -   is.POSIXctがTRUEまたはFALSEに評価されるように、`across()`内では`where()`という関数も使用していることに注意してください。
 
--   `is.POSIXct()`は**lubridate**パッケージのものであることに注意してください。`is.character()`、`is.numeric()`、`is.logical()`のような他の類似した「is」関数は**base R**のものです。
+-   `is.POSIXct()`は **lubridate** パッケージのものであることに注意してください。`is.character()`、`is.numeric()`、`is.logical()`のような他の類似した"is"関数は **base R** のものです。
 
-#### `across()` functions {.unnumbered}
-
-You can read the documentation with `?across` for details on how to provide functions to `across()`. A few summary points: there are several ways to specify the function(s) to perform on a column and you can even define your own functions:
-
--   You can provide the function name alone (e.g. `mean` or `as.character`)\
-
--   You can provide the function in **purrr**-style (e.g. `~ mean(.x, na.rm = TRUE)`) (see [this page][Iteration, loops, and lists])\
-
--   You can specify multiple functions by providing a list (e.g. `list(mean = mean, n_miss = ~ sum(is.na(.x))`).
-
-    -   If you provide multiple functions, multiple transformed columns will be returned per input column, with unique names in the format `col_fn`. You can adjust how the new columns are named with the `.names =` argument using **glue** syntax (see page on [Characters and strings]) where `{.col}` and `{.fn}` are shorthand for the input column and function.
-
-Here are a few online resources on using `across()`: [creator Hadley Wickham's thoughts/rationale](https://www.tidyverse.org/blog/2020/04/dplyr-1-0-0-colwise/)
-
-**`across()`関数**
+#### **`across()`関数** {.unnumbered}
 
 `across()`に関数を提供する方法の詳細については、`?across`のドキュメントをお読みください。要約すると、列に対して実行する関数を指定する方法はいくつかあり、独自の関数を定義することもできます。
 
--   関数名のみを指定することができます（例：`mean`または`as.character`）。
+-   関数名のみを指定することができます（例：`mean`または `as.character`）。
 
--   関数を**purrr**スタイルで提供することができます（例：`~ mean(.x, na.rm = TRUE))`([本ページ](https://epirhandbook.com/en/iteration-loops-and-lists.html#iteration-loops-and-lists)参照)
+-   関数を **purrr** スタイルで提供することができます（例：`~ mean(.x, na.rm = TRUE))`( [本ページ](https://epirhandbook.com/en/iteration-loops-and-lists.html#iteration-loops-and-lists)参照 )
 
 -   リストを指定することで，複数の関数を指定することができます（例：`list(mean = mean, n_miss = ~ sum(is.na(.x)))`）．
 
--   複数の関数を指定した場合は、入力列ごとに複数の変換後の列が返され、`col_fn`という形式で一意の名前が付けられます。新しい列の名前を調整するには、`.names =` 引数で**glue**の構文（[Characters and strings](https://epirhandbook.com/en/characters-and-strings.html#characters-and-strings)のページを参照）を使用します。`{.col}`と`{.fn}`は入力列と関数の省略形です。
+-   複数の関数を指定した場合は、入力列ごとに複数の変換後の列が返され、`col_fn`という形式で一意の名前が付けられます。新しい列の名前を調整するには、`.names =` 引数で**glue**の構文（[Characters and strings](https://epirhandbook.com/en/characters-and-strings.html#characters-and-strings) のページを参照）を使用します。`{.col}`と`{.fn}`は入力列と関数の省略形です。
 
 ### `coalesce()` {.unnumbered}
 
-This **dplyr** function finds the first non-missing value at each position. It "fills-in" missing values with the first available value in an order you specify.
+　この **dplyr** 関数は、各位置で最初の欠損値ではない値を見つけます。この関数は、指定された順序で、取得可能な最初の値で欠損値を埋めます。
 
-Here is an example *outside the context of a data frame*: Let us say you have two vectors, one containing the patient's village of detection and another containing the patient's village of residence. You can use coalesce to pick the first non-missing value for each index:
-
-**`coalesce()`**
-
-この**dplyr**関数は、各位置で最初の非欠損値を見つけます。この関数は、指定された順序で、利用可能な最初の値で欠損値を「埋める」。
-
-ここでは、データフレーム以外の例を示します。2つのベクトルがあるとします。1つは患者の発見された村、もう1つは患者の居住地の村です。coalesceを使って、各インデックスの最初の非欠損値を選ぶことができます。
+　ここでは、データフレーム以外の例を示します。2つのベクトルがあるとします。1つは患者の発見された村、もう1つは患者の居住地の村です。coalesceを使って、各インデックスの最初の非欠損値を選ぶことができます。
 
 ```{r}
 village_detection <- c("a", "b", NA,  NA)
 village_residence <- c("a", "c", "a", "d")
 
 village <- coalesce(village_detection, village_residence)
-village    # print
+village    #表示
 ```
 
-This works the same if you provide data frame columns: for each row, the function will assign the new column value with the first non-missing value in the columns you provided (in order provided).
-
-これは、データフレームの列を指定した場合にも同じように動作します。この関数は、各行ごとに、指定した列の中で最初に欠落していない値を新しい列の値として割り当てます（指定した順に）。
+　これは、データフレームの列を指定した場合にも同じように動作します。この関数は、各行ごとに、指定した列の中で最初に欠落していない値を新しい列の値として割り当てます（指定した順に）。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(village = coalesce(village_detection, village_residence))
 ```
 
-This is an example of a "row-wise" operation. For more complicated row-wise calculations, see the section below on Row-wise calculations.
+　これは "row-wise "演算の一例です。より複雑な行単位の計算については、下記の "行単位の計算" の項をご覧ください。
 
-これは "row-wise "演算の一例です。より複雑な行単位の計算については、下記の「行単位の計算」の項をご覧ください。
+### **累積計算** {.unnumbered}
 
-### Cumulative math {.unnumbered}
-
-If you want a column to reflect the cumulative sum/mean/min/max etc as assessed down the rows of a dataframe to that point, use the following functions:
-
-`cumsum()` returns the cumulative sum, as shown below:
-
-**累積計算**
-
-データフレームの行を評価して、その時点までの累積和/平均/最小/最大などを列に反映させたい場合は、以下の関数を使用します。
+　データフレーム行を計算し、その時点までの累積和/平均/最小/最大などを列に反映させたい場合は、以下の関数を使用します。
 
 cumsum()は、以下のように、累積和を返します。
 
 ```{r}
-sum(c(2,4,15,10))     # returns only one number
-　　　　　　　　　　　# 1つの数字のみを返す
-cumsum(c(2,4,15,10))  # returns the cumulative sum at each step
-　　　　　　　　　　　# 各ステップでの累積和を返す
+sum(c(2,4,15,10))     # 1つの数字のみを返す。
+cumsum(c(2,4,15,10))  # 各ステップでの累積和を返す。
 ```
 
-This can be used in a dataframe when making a new column. For example, to calculate the cumulative number of cases per day in an outbreak, consider code like this:
-
-これは、データフレームで新しい列を作るときに使用できます。例えば、アウトブレイクにおける1日あたりの累積症例数を計算するには、次のようなコードを考えます。
+　これは、データフレームで新しい列を作るときに使用できます。例えば、アウトブレイクにおける1日あたりの累積症例数を計算するには、次のようなコードを考えます。
 
 ```{r, warning=F, message=F}
-cumulative_case_counts <- linelist %>%  # begin with case linelist
-     　　　　　　　　　　　　　　　　　 #  ケースラインリスト出始める 
-  count(date_onset) %>%                 # count of rows per day, as column 'n'   　　　　　　　　　　　　　 #一日当たりの行数をカウント 　　
-  mutate(cumulative_cases = cumsum(n))  # new column, of the cumulative sum at each row　　　　　　　　　　　　 #累積の新しい列
+cumulative_case_counts <- linelist %>%  # 症例ラインリスト 
+  count(date_onset) %>%                 #一日当たりの行数をカウント 　　
+  mutate(cumulative_cases = cumsum(n))  #累積の新しい列
 ```
-
-Below are the first 10 rows:
 
 以下は、最初の10行です。
 
@@ -1151,144 +754,100 @@ Below are the first 10 rows:
 head(cumulative_case_counts, 10)
 ```
 
-See the page on [Epidemic curves] for how to plot cumulative incidence with the epicurve.
-
-See also:\
-`cumsum()`, `cummean()`, `cummin()`, `cummax()`, `cumany()`, `cumall()`
-
-エピカーブで累積罹患率をプロットする方法については、[Epidemic curves](https://epirhandbook.com/en/epidemic-curves.html#epidemic-curves) のページを参照してください。
+　エピカーブで累積罹患率をプロットする方法については、[Epidemic curves](https://epirhandbook.com/en/epidemic-curves.html#epidemic-curves) のページを参照してください。
 
 関連項目： `cumsum()`, `cummean()`,`cummin()`, `cummax()`, `cumany()`, `cumall()`
 
-### Using **base** R {.unnumbered}
-
-To define a new column (or re-define a column) using **base** R, write the name of data frame, connected with `$`, to the *new* column (or the column to be modified). Use the assignment operator `<-` to define the new value(s). Remember that when using **base** R you must specify the data frame name before the column name every time (e.g. `dataframe$column`). Here is an example of creating the `bmi` column using **base** R:
-
 ### **base** R**の使い方** {.unnumbered}
 
-**base** Rを使って新しい列を定義する（または列を再定義する）。新しい列（または修正する列）にデータフレームの名前を\$でつないで書きます。代入演算子`<-`を使って新しい値を定義します。**base** R を使用する際には、毎回、列名の前にデータフレーム名を指定しなければならないことを覚えておいてください（例：dataframe\$column）。ここでは、**base** R を使って`bmi`カラムを作成する例を示します。
+**base** Rを使って新しい列を定義する（または列を再定義する）。新しい列（または修正する列）にデータフレームの名前を\$でつないで書きます。代入演算子`<-`を使って新しい値を定義します。**base** R を使用する際には、毎回、列名の前にデータフレーム名を指定しなければならないことを覚えておいてください（例：dataframe\$column ）。ここでは、**base** R を使って`bmi`カラムを作成する例を示します。
 
 ```{r, eval=F}
 linelist$bmi = linelist$wt_kg / (linelist$ht_cm / 100) ^ 2)
 ```
 
-### Add to pipe chain {.unnumbered}
+### **パイプチェーンへの追加** {.unnumbered}
 
-**Below, a new column is added to the pipe chain and some classes are converted.**
-
-**パイプチェーンへの追加**
-
-**以下では、パイプチェーンに新しいカラムを追加し、いくつかのクラスを変換しています。**
+**以下では、パイプチェーンに新しい列を追加し、いくつかの型を変換しています。**
 
 ```{r }
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
-#CLEANING 'PIPE' CHAIN (生データから始まり、クリーニングステップを通じてデータをパイプする)
+# パイプチェーン処理 (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
+
 # パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
 　　# 列カラム名の構文の標準化
     janitor::clean_names() %>% 
     
-    # manually re-name columns
      #手動で列名を変更
-           # NEW name　　　　　　　# OLD name
-     　　　#　新しい名前　　　　　　#古い名前
+
+     　　　#　新しい列名　　　　　　#既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
-    # remove column
+
 　　#　列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
-    # de-duplicate
-　　#重複排除
+　　#重複削除
     distinct() %>% 
   
-    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
-    #  上記は、すでに説明した上流側の前処理手順
+    #  上記は、すでに説明した上流側のクリーニング手順
     ###################################################
-    # add new column
 　　#新しい列の追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>% 
   
-    # convert class of columns　
-　　#列のクラスを変換
+　　#列の型を変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) 
 ```
 
-## Re-code values
+## **値の再定義**
 
-Here are a few scenarios where you need to re-code (change) values:
+値を再定義（変更）する必要があるいくつかの方法があります。
 
--   to edit one specific value (e.g. one date with an incorrect year or format)\
--   to reconcile values not spelled the same
--   to create a new column of categorical values\
--   to create a new column of numeric categories (e.g. age categories)
+-   特定の値を編集する場合（例：日付の年号や書式が間違っている場合など）。
 
-**値の再コード化**
+-   同じ綴りでない値を調整する場合。
 
-値を再コード化（変更）する必要があるいくつかのシナリオがあります。
-
--   特定の値を編集する場合（例：日付の年号や書式が間違っている場合など
-
--   同じ綴りでない値を調整する場合
-
--   カテゴリー値の新しい列を作成する場合
+-   カテゴリー値の新しい列を作成する場合。
 
 -   数値カテゴリーの新しい列を作成する（例：年齢カテゴリー）。
 
-### Specific values {.unnumbered}
+### **特定の値** {.unnumbered}
 
-To change values manually you can use the `recode()` function within the `mutate()` function.
+　値を手動で変更するには、`mutate()`関数の中の`recode()`関数を使用します。
 
-Imagine there is a nonsensical date in the data (e.g. "2014-14-15"): you could fix the date manually in the raw source data, or, you could write the change into the cleaning pipeline via `mutate()` and `recode()`. The latter is more transparent and reproducible to anyone else seeking to understand or repeat your analysis.
-
-**特定の値**
-
-値を手動で変更するには、`mutate()`関数の中の`recode()`関数を使用します。
-
-データの中に意味のない日付（例："2014-14-15"）があるとします。生のソースデータの中で手動で日付を修正することもできますし、mutate()とrecode()を介してクリーニングパイプラインに変更を書き込むこともできます。後者の方がより透明性が高く、あなたの分析を理解しようとする人や再現しようとする人にとって再現性があります。
+　データの中に意味のない日付（例："2014-14-15"）があるとします。未加工のソースデータの中で手動で日付を修正することもできますし、`mutate()`と `recode()`を介してクリーニングパイプラインに変更を書き込むこともできます。後者の方がより透明性が高く、分析を理解しようとする他者や同じように分析しようとする人にとって再現性があります。
 
 ```{r, eval=F}
-# fix incorrect values                   # old value       # new value
-#不正な値の修正　　　　　　　　　　　　　#古い値　　　　　#新しい値
+#不正な値の修正　　　　　　　　　　　　　　#既存の値　　　　　#新しい値
 linelist <- linelist %>% 
   mutate(date_onset = recode(date_onset, "2014-14-15" = "2014-04-15"))
 ```
 
-The `mutate()` line above can be read as: "mutate the column `date_onset` to equal the column `date_onset` re-coded so that OLD VALUE is changed to NEW VALUE". Note that this pattern (OLD = NEW) for `recode()` is the opposite of most R patterns (new = old). The R development community is working on revising this.
+　上記の`mutate()`の行は、次のように読むことができます。OLD VALUE が NEW VALUE に変更されるように再定義された列 `date_onset`と同じになるように列date_onsetを変異させる "と読めます。`recode()`のこのパターン(OLD = NEW)は、ほとんどのRのパターン(new = old)とは逆であることに注意してください。Rの開発コミュニティでは、この点の修正に取り組んでいます。
 
-**Here is another example re-coding multiple values within one column.**
-
-In `linelist` the values in the column "hospital" must be cleaned. There are several different spellings and many missing values.
-
-上記の`mutate()`の行は、次のように読むことができます。"OLD VALUEがNEW VALUEに変更されるように再コード化された列`date_onset`と同じになるように列date_onsetを変異させる "と読めます。`recode()`のこのパターン(OLD = NEW)は、ほとんどのRのパターン(new = old)とは逆であることに注意してください。Rの開発コミュニティでは、この点の修正に取り組んでいます。
-
-**ここでは、1つの列の中の複数の値を再コード化する別の例を紹介します。**
+**ここでは、1つの列の中の複数の値を再定義する別の例を紹介します。**
 
 `linelist`では、列 "hospital "の値をクリーンアップする必要があります。いくつかの異なる記載があり、多くの欠損値があります。
 
 ```{r}
-table(linelist$hospital, useNA = "always")  # print table of all unique values, including missing  
- # 欠損値を含むすべてのユニークな値のテーブルを表示
+table(linelist$hospital, useNA = "always")  
+ # 欠損値を含むすべてのユニークな値のテーブルを表示。
 ```
 
-The `recode()` command below re-defines the column "hospital" as the current column "hospital", but with the specified recode changes. Don't forget commas after each!
-
-以下の`recode()`コマンドは、列 "hospital "を現在の列 "hospital "として再定義しますが、指定されたrecodeの変更があります。それぞれの後にカンマを忘れないでください
+　以下の`recode()`コマンドは、列 "hospital "を現在の列 "hospital "として再定義しますが、指定されたrecodeの変更があります。それぞれの後にカンマを忘れないでください。
 
 ```{r}
 linelist <- linelist %>% 
   mutate(hospital = recode(hospital,
-                     # for reference: OLD = NEW
+                     # 参照　　　　: 既存 = 新
                       "Mitylira Hopital"  = "Military Hospital",
                       "Mitylira Hospital" = "Military Hospital",
                       "Military Hopital"  = "Military Hospital",
@@ -1299,50 +858,27 @@ linelist <- linelist %>%
                       ))
 ```
 
-Now we see the spellings in the `hospital` column have been corrected and consolidated:
-
-現在、 `hospital`のスペルが修正され、統合されているのがわかります。
+　現在、 `hospital`のスペルが修正され、統合されているのがわかります。
 
 ```{r}
 table(linelist$hospital, useNA = "always")
 ```
 
-[***TIP:*** The number of spaces before and after an equals sign does not matter. Make your code easier to read by aligning the = for all or most rows. Also, consider adding a hashed comment row to clarify for future readers which side is OLD and which side is NEW.]{style="color: darkgreen;"}
+[**ヒント**：等号の前後のスペースの数は関係ありません。コードを読みやすくするために、すべての行またはほとんどの行で = を揃えてください。また、ハッシュ化されたコメント行を追加して、どちらが古いか、どちらが新しいかを将来の読み手に明確にすることも検討してください。]{style="color: darkgreen;"}
 
-[***TIP:*** Sometimes a *blank* character value exists in a dataset (not recognized as R's value for missing - `NA`). You can reference this value with two quotation marks with no space inbetween ("").]{style="color: darkgreen;"}
+[**ヒント**：データセットの中に空白文字の値が存在することがあります（R の missing の値である NA として認識されません）。この値を参照するには、スペースを空けずに2つのクォーテーションマーク（""）を使用します。]{style="color: darkgreen;"}
 
-[**ヒント**：等号の前後のスペースの数は関係ありません。コードを読みやすくするために、すべての行またはほとんどの行で=を揃えてください。また、ハッシュ化されたコメント行を追加して、どちらが古いか、どちらが新しいかを将来の読み手に明確にすることも検討してください。]{style="color: darkgreen;"}
+### **論理条件** {.unnumbered}
 
-[**ヒント**：データセットの中に空白文字の値が存在することがあります（Rのmissingの値であるNAとして認識されません）。この値を参照するには、スペースを空けずに2つのクォーテーションマーク（""）を使用します。]{style="color: darkgreen;"}
+以下では、論理条件と条件を使って列の値を再定義する方法を示します。
 
-### By logic {.unnumbered}
+-   単純な論理条件には`replace()`、`ifelse()`、`if_else()`を使う
 
-Below we demonstrate how to re-code values in a column using logic and conditions:
+-   より複雑な論理条件には`case_when()`を使う
 
--   Using `replace()`, `ifelse()` and `if_else()` for simple logic
--   Using `case_when()` for more complex logic
-
-**ロジック**
-
-以下では、ロジックと条件を使って列の値を再コード化する方法を示します。
-
--   単純なロジックには`replace()`、`ifelse()`、`if_else()`を使う
-
--   より複雑なロジックには`case_when()`を使う
-
-### Simple logic {.unnumbered}
+### **シンプルな論理条件** {.unnumbered}
 
 #### `replace()` {.unnumbered}
-
-To re-code with simple logical criteria, you can use `replace()` within `mutate()`. `replace()` is a function from **base** R. Use a logic condition to specify the rows to change . The general syntax is:
-
-`mutate(col_to_change = replace(col_to_change, criteria for rows, new value))`.
-
-One common situation to use `replace()` is **changing just one value in one row, using an unique row identifier**. Below, the gender is changed to "Female" in the row where the column `case_id` is "2195".
-
-**シンプルなロジック**
-
-`replace()`
 
 `replace()`は**base** Rの関数で、論理条件を使って変更する行を指定します。一般的な構文は次のとおりです。
 
@@ -1351,14 +887,12 @@ One common situation to use `replace()` is **changing just one value in one row,
 `replace()`を使用する一般的な状況としては、一意の行識別子を使用して、1つの行の1つの値だけを変更する場合です。下の例では、`case_id`が "2195 "である行で、性別を "Female "に変更しています。
 
 ```{r, eval=F}
-# Example: change gender of one specific observation to "Female" 
+# 例：ある特定の観測データの性別を "Female "に変更する。
 linelist <- linelist %>% 
   mutate(gender = replace(gender, case_id == "2195", "Female"))
 ```
 
-The equivalent command using **base** R syntax and indexing brackets `[ ]` is below. It reads as "Change the value of the dataframe `linelist`'s column `gender` (for the rows where `linelist`'s column `case_id` has the value '2195') to 'Female' ".
-
-Rの基本的な構文と索引括弧[ ]を使った同等のコマンドは以下の通りです。データフレームの`linelist`の列`gender`の値を（`linelist`の列`case_id`の値が'2195'である行について）'Female'に変更する」と読めます。
+　Rの基本的な構文と索引括弧[ ]を使った同等のコマンドは以下の通りです。データフレームの `linelist`の列 `gender`の値を（`linelist`の列 `case_id`の値が'2195'である行について）'Female'に変更する"と読めます。
 
 ```{r, eval=F}
 linelist$gender[linelist$case_id == "2195"] <- "Female"
@@ -1366,34 +900,22 @@ linelist$gender[linelist$case_id == "2195"] <- "Female"
 
 #### `ifelse()` and `if_else()` {.unnumbered}
 
-Another tool for simple logic is `ifelse()` and its partner `if_else()`. However, in most cases for re-coding it is more clear to use `case_when()` (detailed below). These "if else" commands are simplified versions of an `if` and `else` programming statement. The general syntax is:\
-`ifelse(condition, value to return if condition evaluates to TRUE, value to return if condition evaluates to FALSE)`
+　 簡潔な論理条件のためのツールとして、`ifelse()`とそのパートナーである`if_else()`があります。しかし、ほとんどの場合、再定義のためには`case_when()`（以下に詳述）を使ったほうがわかりやすいでしょう。これらの"if else"コマンドは、`if`と`else`のプログラミング文を簡略化したものです。一般的な構文は次のとおりです： `ifelse(condition, value to return if condition evaluates to TRUE, value to return if condition evaluates to FALSE)`
 
-Below, the column `source_known` is defined. Its value in a given row is set to "known" if the row's value in column `source` is *not* missing. If the value in `source` *is* missing, then the value in `source_known` is set to "unknown".
-
-**`ifelse()`**と**`if_else()`**
-
-単純なロジックのためのツールとして、`ifelse()`とそのパートナーである`if_else()`があります。しかし、ほとんどの場合、再コーディングのためには`case_when()`（以下に詳述）を使ったほうがわかりやすいでしょう。これらの「if else」コマンドは、`if`と`else`のプログラミング文を簡略化したものです。一般的な構文は次のとおりです： `ifelse(condition, value to return if condition evaluates to TRUE, value to return if condition evaluates to FALSE)`
-
-下の例では、`source_known`という列が定義されています。ある行の列s`ource`の値が欠損していなければ、その値は「known」に設定されます。sourceの値が欠落している場合、`source_known`の値は "unknown "に設定されます。
+　下の例では、`source_known`という列が定義されています。ある行の列 `source`の値が欠損していなければ、その値は "known" に設定されます。sourceの値が欠落している場合、`source_known`の値は "unknown " に設定されます。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
   mutate(source_known = ifelse(!is.na(source), "known", "unknown"))
 ```
 
-`if_else()` is a special version from **dplyr** that handles dates. Note that if the 'true' value is a date, the 'false' value must also qualify a date, hence using the special value `NA_real_` instead of just `NA`.
-
-`if_else()`は、日付を扱う**dplyr**の特別バージョンです。真の値が日付の場合、「偽」の値も日付でなければならないことに注意してください。そのため、単にNAではなくNA_real_という特別な値を使用しています。
+`if_else()`は、日付を扱う **dplyr** の特別バージョンです。真の値が日付の場合、"偽"の値も日付でなければならないことに注意してください。そのため、単に NA ではなく NA_real\_ という特別な値を使用しています。
 
 ```{r, eval=F}
-# Create a date of death column, which is NA if patient has not died.
-#  患者が死亡していない場合はNAとなる、死亡日列を作成します。
+#  患者が死亡していない場合はNAとなる死亡日列を作成。
 linelist <- linelist %>% 
   mutate(date_death = if_else(outcome == "Death", date_outcome, NA_real_))
 ```
-
-**Avoid stringing together many ifelse commands... use `case_when()` instead!** `case_when()` is much easier to read and you'll make fewer errors.
 
 **ifelseコマンドをたくさん並べるのは避けましょう...**代わりに`case_when()`を使ってください！`case_when()`はずっと読みやすく、エラーも少なくなります。
 
@@ -1401,66 +923,40 @@ linelist <- linelist %>%
 knitr::include_graphics(here::here("images", "ifelse bad.png"))
 ```
 
-Outside of the context of a data frame, if you want to have an object used in your code switch its value, consider using `switch()` from **base** R.
+　データフレーム以外で、コード内で使用するオブジェクトの値を切り替えたい場合は、**base** R の`switch()`の使用を検討してください。
 
-データフレーム以外で、コード内で使用するオブジェクトの値を切り替えたい場合は、**base** Rの`switch()`の使用を検討してください。
+### **複雑な論理条件** {#clean_case_when .unnumbered}
 
-### Complex logic {#clean_case_when .unnumbered}
+　多数の新しいグループに再定義する場合や、複雑な論理条件文を使って値を再定義する必要がある場合は、**dplyr** の `case_when()`を使用します。この関数は、データフレーム内のすべての行を計算し、その行が指定された基準を満たしているかどうかを評価して、正しい新しい値を割り当てます。
 
-Use **dplyr**'s `case_when()` if you are re-coding into many new groups, or if you need to use complex logic statements to re-code values. This function evaluates every row in the data frame, assess whether the rows meets specified criteria, and assigns the correct new value.
-
-`case_when()` commands consist of statements that have a Right-Hand Side (RHS) and a Left-Hand Side (LHS) separated by a "tilde" `~`. The logic criteria are in the left side and the pursuant values are in the right side of each statement. Statements are separated by commas.
-
-For example, here we utilize the columns `age` and `age_unit` to create a column `age_years`:
-
-**複雑なロジック**
-
-多数の新しいグループに再コード化する場合や、複雑なロジック文を使って値を再コード化する必要がある場合は、**dplyr**の`case_when()`を使用します。この関数は、データフレーム内のすべての行を評価し、その行が指定された基準を満たしているかどうかを評価して、正しい新しい値を割り当てます。
-
-`case_when()`コマンドは、右手側(RHS)と左手側(LHS)を「チルダ」～で区切ったステートメントで構成されています。各ステートメントの左側には論理条件が、右側には準拠値が記述されています。ステートメントはコンマで区切られています。
+`case_when()`コマンドは、右手側(RHS)と左手側(LHS)を"チルダ"～で区切ったステートメントで構成されています。各ステートメントの左側には論理条件が、右側には準拠値が記述されています。ステートメントはコンマで区切られています。
 
 例えば、ここでは`age`と`age_unit`の列を利用して`age_years`の列を作成しています。
 
 ```{r}
 linelist <- linelist %>% 
   mutate(age_years = case_when(
-            age_unit == "years"  ~ age,       # if age is given in years
-            age_unit == "months" ~ age/12,    # if age is given in months
-            is.na(age_unit)      ~ age,       # if age unit is missing, assume years
-            TRUE                 ~ NA_real_)) # any other circumstance, assign missing
+            age_unit == "years"  ~ age,       # 年齢が年単位の場合
+            age_unit == "months" ~ age/12,    # 年齢が月単位の場合
+            is.na(age_unit)      ~ age,       #年齢の単位が見つからない場合は、年を仮定
+            TRUE                 ~ NA_real_)) #その他の状況では、不足分を割り当る。
 ```
 
-As each row in the data is evaluated, the criteria are applied/evaluated in the order the `case_when()` statements are written - from top-to-bottom. If the top criteria evaluates to `TRUE` for a given row, the RHS value is assigned, and the remaining criteria are not even tested for that row. Thus, it is best to write the most specific criteria first, and the most general last.
+　データの各行が計算されるとき、基準は `case_when()`ステートメントが書かれた順に、上から下へと適用/評価されます。ある行で一番上の基準が `TRUE`と評価された場合、RHSの値が割り当てられ、残りの基準はその行では確認されません。したがって、最も明確な基準を最初に書き、最も一般的な基準を最後に書くのがよいでしょう。
 
-Along those lines, in your final statement, place `TRUE` on the left-side, which will capture any row that did not meet any of the previous criteria. The right-side of this statement could be assigned a value like "check me!" or missing.
+　このようにして、最後の文では、左側に`TRUE`を置くことで、前の基準のどれにも当てはまらない行を捕捉することができます。この文の右側には、 "check me!" や missing のような値を割り当てることができます。
 
-データの各行が評価されるとき、基準は`case_when()`ステートメントが書かれた順に、上から下へと適用/評価されます。ある行で一番上の基準が`TRUE`と評価された場合、RHSの値が割り当てられ、残りの基準はその行ではテストされません。したがって、最も明確な基準を最初に書き、最も一般的な基準を最後に書くのがよいでしょう。
+[要注意：右辺のVvalues はすべて同じクラスでなければなりません。欠落（NA）を割り当てるには、`NA_character_`、`NA_real_`（数値やPOSIXの場合）、`as.Date(NA)`など、NAの特別なバリエーションを使用する必要があるかもしれません。詳しくは[Working with dates](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)をご覧ください]{style="color: red;"}
 
-このようにして、最後の文では、左側に`TRUE`を置くことで、前の基準のどれにも当てはまらない行を捕捉することができます。この文の右側には、"check me!" や missing のような値を割り当てることができます。
+### **欠損値** {.unnumbered}
 
-[***DANGER:*** **Vvalues on the right-side must all be the same class** - either numeric, character, date, logical, etc. To assign missing (`NA`), you may need to use special variations of `NA` such as `NA_character_`, `NA_real_` (for numeric or POSIX), and `as.Date(NA)`. Read more in [Working with dates].]{style="color: red;"}
+　以下は、データクリーニングの観点から欠損値を処理するための特別な関数です。
 
-[危険：右辺のVvaluesはすべて同じクラスでなければなりません。欠落（NA）を割り当てるには、`NA_character_`、`NA_real_`（数値やPOSIXの場合）、`as.Date(NA)`など、NAの特別なバリエーションを使用する必要があるかもしれません。詳しくは[Working with dates](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)をご覧ください]{style="color: red;"}
-
-### Missing values {.unnumbered}
-
-Below are special functions for handling missing values in the context of data cleaning.
-
-See the page on [Missing data] for more detailed tips on identifying and handling missing values. For example, the `is.na()` function which logically tests for missingness.
+　欠損値の識別と処理に関するより詳細なヒントは、[Missing data](https://epirhandbook.com/en/missing-data.html#missing-data) のページを参照してください。例えば、論理的に欠損をテストする`is.na()`関数などです。
 
 **`replace_na()`**
 
-To change missing values (`NA`) to a specific value, such as "Missing", use the **dplyr** function `replace_na()` within `mutate()`. Note that this is used in the same manner as `recode` above - the name of the variable must be repeated within `replace_na()`.
-
-**欠損値**
-
-以下は、データクリーニングの観点から欠損値を処理するための特別な関数です。
-
-欠損値の識別と処理に関するより詳細なヒントは、[Missing data](https://epirhandbook.com/en/missing-data.html#missing-data) のページを参照してください。例えば、論理的に欠損をテストする`is.na()`関数などです。
-
-**`replace_na()`**
-
-欠損値（NA）を「Missing」などの特定の値に変更するには、`mutate()`内の**dply**r関数`replace_na()`を使用します。これは、上記の`recode`と同じ方法で使用されることに注意してください 。変数の名前は`replace_na()`内で繰り返されなければなりません。
+欠損値（NA）を"Missing"などの特定の値に変更するには、`mutate()`内の**dply**r関数`replace_na()`を使用します。これは、上記の`recode`と同じ方法で使用されることに注意してください 。変数の名前は`replace_na()`内で繰り返されなければなりません。
 
 ```{r}
 linelist <- linelist %>% 
@@ -1469,81 +965,51 @@ linelist <- linelist %>%
 
 **fct_explicit_na()**
 
-This is a function from the **forcats** package. The **forcats** package handles columns of class Factor. Factors are R's way to handle *ordered* values such as `c("First", "Second", "Third")` or to set the order that values (e.g. hospitals) appear in tables and plots. See the page on [Factors].
+　これは、**forcats** パッケージの関数です。**forcats** パッケージはFactor型の列を扱います。ファクターは、`c("First", "Second", "Third")`のような順序付きの値を扱うためのRの方法であり、表やプロットに表示される値（病院など）の順序を設定します。[Factors](https://epirhandbook.com/en/factors.html#factors)のページを参照してください。
 
-If your data are class Factor and you try to convert `NA` to "Missing" by using `replace_na()`, you will get this error: `invalid factor level, NA generated`. You have tried to add "Missing" as a value, when it was not defined as a possible level of the factor, and it was rejected.
+データがFactor型で、`replace_na()`を使ってNAを "Missing "に変換しようとすると、次のようなエラーが表示されます： `invalid factor level, NA generated.` 因子の可能なレベルとして定義されていない "Missing" を値として追加しようとしたため、拒否されます。
 
-The easiest way to solve this is to use the **forcats** function `fct_explicit_na()` which converts a column to class factor, and converts `NA` values to the character "(Missing)".
-
-**fct_explicit_na()**
-
-これは、**forcats** パッケージの関数です。**forcats**パッケージはFactorクラスの列を扱います。因子は、`c("First", "Second", "Third")`のような順序付きの値を扱うためのRの方法であり、表やプロットに表示される値（病院など）の順序を設定します。[Factors](https://epirhandbook.com/en/factors.html#factors)のページを参照してください。
-
-データがクラスFactorで、`replace_na()`を使ってNAを "Missing "に変換しようとすると、次のようなエラーが表示されます： `invalid factor level, NA generated.` 因子の可能なレベルとして定義されていない "Missing" を値として追加しようとしたため、拒否されます。
-
-この問題を解決する最も簡単な方法は、forcatsの関数`fct_explicit_na()`を使用することです。この関数は、列をクラス因子に変換し、NA値を文字「(Missing)」に変換します。
+この問題を解決する最も簡単な方法は、forcats の関数`fct_explicit_na()`を使用することです。この関数は、列をFactor型に変換し、NA値を文字"(Missing)"に変換します。
 
 ```{r, eval=F}
 linelist %>% 
   mutate(hospital = fct_explicit_na(hospital))
 ```
 
-A slower alternative would be to add the factor level using `fct_expand()` and then convert the missing values.
-
-よりゆっくりとした方法としては、`fct_expand()`を用いて因子レベルを追加し、その後、欠損値を変換する方法があります。
+　よりゆっくりとした方法としては、`fct_expand()`を用いてFactor型を追加し、その後、欠損値を変換する方法があります。
 
 **`na_if()`**
 
-To convert a *specific value to* `NA`, use **dplyr**'s `na_if()`. The command below performs the opposite operation of `replace_na()`. In the example below, any values of "Missing" in the column `hospital` are converted to `NA`.
-
-**`na_if()`**
-
-特定の値をNAに変換するには、**dplyr**の`na_if()`を使います。以下のコマンドは`replace_na()`の逆の操作を行います。以下の例では、列 `hospital` の "Missing" の値はすべて`NA`に変換されます。
+　特定の値を NA に変換するには、**dplyr** の `na_if()`を使います。以下のコマンドは `replace_na()`の逆の操作を行います。以下の例では、列 `hospital` の "Missing" の値はすべて `NA`に変換されます。
 
 ```{r}
 linelist <- linelist %>% 
   mutate(hospital = na_if(hospital, "Missing"))
 ```
 
-Note: `na_if()` **cannot be used for logic criteria** (e.g. "all values \> 99") - use `replace()` or `case_when()` for this:
-
-注意： `na_if()`は論理的条件（例：「 "all values \> 99"」）には使用できません。これには`replace()`または`case_when()`を使用してください。
+　注意： `na_if()`は論理的条件（例：" "all values \> 99""）には使用できません。これには`replace()`または`case_when()`を使用してください。
 
 ```{r, eval=F}
-# Convert temperatures above 40 to NA
-#40以上の温度をNAに変換 
+#40以上の温度をNAに変換。 
 linelist <- linelist %>% 
   mutate(temp = replace(temp, temp > 40, NA))
 
-# Convert onset dates earlier than 1 Jan 2000 to missing
-# 2000年1月1日以前の発症日を欠損に変換する
+# 2000年1月1日以前の発症日を欠損に変換する。
 linelist <- linelist %>% 
   mutate(date_onset = replace(date_onset, date_onset > as.Date("2000-01-01"), NA))
 ```
 
-### Cleaning dictionary {.unnumbered}
+### **クリーニング辞書**  {.unnumbered}
 
-Use the R package **linelist** and it's function `clean_variable_spelling()` to clean a data frame with a *cleaning dictionary*. **linelist** is a package developed by [RECON](https://github.com/reconhub/linelist) - the R Epidemics Consortium.
+　Rパッケージ **linelist** とその関数 `clean_variable_spelling()`を使って、データフレームをクリーニング辞書でクリーニングします。 **linelis**t は[RECON](https://github.com/reconhub/linelist) - the R Epidemics Consortiumによって開発されたパッケージです。
 
-1)  Create a cleaning dictionary with 3 columns:
-
-    -   A "from" column (the incorrect value)\
-    -   A "to" column (the correct value)\
-    -   A column specifying the column for the changes to be applied (or ".global" to apply to all columns)
-
-Note: .global dictionary entries will be overridden by column-specific dictionary entries.
-
-**クリーニング辞書**
-
-Rパッケージ**linelist**とその関数`clean_variable_spelling()`を使って、データフレームをクリーニング辞書でクリーニングします。 **linelis**tは[RECON](https://github.com/reconhub/linelist) - the R Epidemics Consortiumによって開発されたパッケージです。
-
-3つの列でクリーニング辞書を作成します。
+1.  3つの列でクリーニング辞書を作成します。
 
 -   from "カラム（不正な値）
 
 -   to "カラム（正しい値）
 
--   変更を適用する列を指定する列（または、すべての列に適用する場合は「.global」）。
+-   変更を適用する列を指定する列（または、すべての列に適用する場合は".global"）。
 
 注意：.globalの辞書項目は、列固有の辞書項目によって上書きされます。
 
@@ -1551,9 +1017,7 @@ Rパッケージ**linelist**とその関数`clean_variable_spelling()`を使っ�
 knitr::include_graphics(here::here("images", "cleaning_dict.png"))
 ```
 
-2)  Import the dictionary file into R. This example can be downloaded via instructions on the [Download handbook and data] page.
-
-    この例題は、[Download handbook and data](https://epirhandbook.com/en/download-handbook-and-data.html#download-handbook-and-data)のページにある手順でダウンロードできます。
+2)  この例題は、[Download handbook and data](https://epirhandbook.com/en/download-handbook-and-data.html#download-handbook-and-data)のページにある手順でダウンロードできます。
 
 ```{r, echo=F}
 cleaning_dict <- rio::import(here("data", "case_linelists", "cleaning_dict.csv"))
@@ -1563,67 +1027,51 @@ cleaning_dict <- rio::import(here("data", "case_linelists", "cleaning_dict.csv")
 cleaning_dict <- import("cleaning_dict.csv")
 ```
 
-3)  Pass the raw linelist to `clean_variable_spelling()`, specifying to `wordlists =` the cleaning dictionary data frame. The `spelling_vars =` argument can be used to specify which column in the dictionary refers to the columns (3rd by default), or can be set to `NULL` to have the dictionary apply to all character and factor columns. Note this function can take a long time to run.
-
-    生のラインリストを`clean_variable_spelling()`に渡し、wordlists = クリーニング辞書データフレームに指定します。spelling_vars = 引数は、辞書のどの列を参照するかを指定するために使用することができます（デフォルトでは3番目）。また、辞書をすべての文字列と因子列に適用するためにNULLを設定することもできます。この関数の実行には時間がかかることに注意してください。
+3)  未加工のラインリストを `clean_variable_spelling()`に渡し、wordlists = クリーニング辞書データフレームに指定します。spelling_vars = 引数は、辞書のどの列を参照するかを指定するために使用することができます（デフォルトでは3番目）。また、辞書をすべてのcharactor列とfactor列に適用するためにNULLを設定することもできます。この関数の実行には時間がかかることに注意してください。
 
 ```{r}
 linelist <- linelist %>% 
   linelist::clean_variable_spelling(
     wordlists = cleaning_dict,
-    spelling_vars = "col",        # dict column containing column names, defaults to 3rd column in dict
-     #列名を含むdict列、デフォルトではdictの3番目の列になる
+    spelling_vars = "col",        
+     #列名を含むdict列、デフォルトではdictの3番目の列になる。
   )
 ```
 
-Now scroll to the right to see how values have changed - particularly `gender` (lowercase to uppercase), and all the symptoms columns have been transformed from yes/no to 1/0.
-
-右側にスクロールすると、値がどのように変化したかがわかります。特に性別（小文字→大文字）や、すべての症状の列がYes/noから1/0に変化しています。
+　右側にスクロールすると、値がどのように変化したかがわかります。特に性別（小文字→大文字）や、すべての症状の列がYes/noから1/0に変化しています。
 
 ```{r message=FALSE, echo=F}
-# display the linelist data as a table
 # ラインリストのデータを表として表示する
 DT::datatable(head(linelist,50), rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T), class = 'white-space: nowrap' )
 ```
 
-Note that your column names in the cleaning dictionary must correspond to the names *at this point* in your cleaning script. See this [online reference for the linelist package](https://www.repidemicsconsortium.org/linelist/reference/clean_data.html) for more details.
+　クリーニング辞書の列名は、クリーニングスクリプトのこの時点での名前に対応していなければならないことに注意してください。詳細については、linelistパッケージの[online reference for the linelist package](https://www.repidemicsconsortium.org/linelist/reference/clean_data.html)を参照してください。
 
-クリーニング辞書の列名は、クリーニングスクリプトのこの時点での名前に対応していなければならないことに注意してください。詳細については、linelistパッケージの[online reference for the linelist package](https://www.repidemicsconsortium.org/linelist/reference/clean_data.html)を参照してください。
-
-#### Add to pipe chain {.unnumbered}
-
-**Below, some new columns and column transformations are added to the pipe chain.**
-
-パイプチェーンへの追加
+#### パイプチェーンへの追加 {.unnumbered}
 
 以下では、いくつかの新しい列と列変換がパイプチェーンに追加されています。
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
-# CLEANING 'PIPE' CHAIN (生データから始まり、クリーニングを経てパイプに送られる)
+#クリーニングパイプチェーン (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
-＃パイプチェーンのクリーニング開始
+# パイプチェーンの処理開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
+ 
      # 列名の構文の標準化
     janitor::clean_names() %>% 
-    
-    # manually re-name columns
+
      # 手動で列名を変更
-           # NEW name             # OLD name
+           # 新しい列名             # 既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
-    # remove column
      # 列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
-    # de-duplicate
 　　#　重複除去
     distinct() %>% 
   
@@ -1631,22 +1079,19 @@ linelist <- linelist_raw %>%
 　　#　列を追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>%     
 
-    # convert class of columns
-      # 列のクラスを変換
+      # 列の型を変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) %>% 
-    
-    # add column: delay to hospitalisation
+  
+     
      # 列の追加: 入院の遅れ
     mutate(days_onset_hosp = as.numeric(date_hospitalisation - date_onset)) %>% 
     
-   # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
      # 上記は、すでに説明した上流側のクリーニング方法です。
    ###################################################
 
-    # clean values of hospital column
-　　# 病院の列の値をきれいにする
+　　# 病院の列の値をきれいにする。
     mutate(hospital = recode(hospital,
                       # OLD = NEW
                       "Mitylira Hopital"  = "Military Hospital",
@@ -1660,7 +1105,6 @@ linelist <- linelist_raw %>%
     
     mutate(hospital = replace_na(hospital, "Missing")) %>% 
 
-    # create age_years column (from age and age_unit)
        # age_yearsカラムの作成(from age and age_unit)
     mutate(age_years = case_when(
           age_unit == "years" ~ age,
@@ -1675,48 +1119,31 @@ linelist <- linelist_raw %>%
 
 <!-- ======================================================= -->
 
-## Numeric categories {#num_cats}
+## **数値カテゴリー** {#num_cats}
 
-Here we describe some special approaches for creating categories from numerical columns. Common examples include age categories, groups of lab values, etc. Here we will discuss:
+　ここでは、数値列からカテゴリを作成するための特別なアプローチを説明します。一般的な例としては、年齢のカテゴリー、検査値のグループなどがあります。ここでは、以下について説明します。
 
--   `age_categories()`, from the **epikit** package\
--   `cut()`, from **base** R\
--   `case_when()`\
--   quantile breaks with `quantile()` and `ntile()`
-
-### Review distribution {.unnumbered}
-
-For this example we will create an `age_cat` column using the `age_years` column.
-
-**数値カテゴリー**
-
-ここでは、数値列からカテゴリを作成するための特別なアプローチを説明します。一般的な例としては、年齢のカテゴリー、検査値のグループなどがあります。ここでは、以下について説明します。
-
--   `age_categories()`(**epikit** パッケージより)
+-   `age_categories()`( **epikit** パッケージより)
 
 -   `cut()`, base Rより
 
 -   `case_when(`)
 
--   `quantile()`と`ntile()`を使った分位値ブレーク
+-   `quantile()`と`ntile()`を使った分位値分割
 
 **レビュー分布**
 
 この例では、`age_years`列を使って`age_cat`列を作成します。
 
 ```{r}
-#check the class of the linelist variable age
-#linelist変数ageの列をチェックする
+#linelist変数ageの列をチェックする。
 class(linelist$age_years)
 ```
 
-First, examine the distribution of your data, to make appropriate cut-points. See the page on [ggplot basics].
-
-まず、データの分布を調べて、適切なカットポイントを作ります。[ggplot basics](https://epirhandbook.com/en/ggplot-basics.html#ggplot-basics).のページをご覧ください。
+　まず、データの分布を調べて、適切なカットポイントを作ります。[ggplot basics](https://epirhandbook.com/en/ggplot-basics.html#ggplot-basics) のページをご覧ください。
 
 ```{r, out.height='50%'}
-# examine the distribution
-# 分布を調べる
+# 分布を調べる。
 hist(linelist$age_years)
 ```
 
@@ -1724,26 +1151,13 @@ hist(linelist$age_years)
 summary(linelist$age_years, na.rm=T)
 ```
 
-[***CAUTION:*** Sometimes, numeric variables will import as class "character". This occurs if there are non-numeric characters in some of the values, for example an entry of "2 months" for age, or (depending on your R locale settings) if a comma is used in the decimals place (e.g. "4,5" to mean four and one half years)..]{style="color: orange;"}
-
-[**注意**：数値の変数がクラス「character」としてインポートされることがあります。これは、値の一部に数字以外の文字が含まれている場合に発生します。例えば、年齢を「2ヶ月」と入力した場合や、（Rのロケール設定にもよりますが）小数点以下の位置にコンマが使用されている場合などです（例：「4,5」は4年半の意味）。]{style="color: orange;"}
+[**注意**：数値の変数型が"character"としてインポートされることがあります。これは、値の一部に数字以外の文字が含まれている場合に発生します。例えば、年齢を"2ヶ月"と入力した場合や、（Rのロケール設定にもよりますが）小数点以下の位置にコンマが使用されている場合などです（例："4.5"は4年半の意味）。]{style="color: orange;"}
 
 <!-- ======================================================= -->
 
 ### `age_categories()` {.unnumbered}
 
-With the **epikit** package, you can use the `age_categories()` function to easily categorize and label numeric columns (note: this function can be applied to non-age numeric variables too). As a bonum, the output column is automatically an ordered factor.
-
-Here are the required inputs:
-
--   A numeric vector (column)\
--   The `breakers =` argument - provide a numeric vector of break points for the new groups
-
-First, the simplest example:
-
-**`age_categories()`**
-
-**epikit**パッケージでは、`age_categories()`関数を使って、数値列の分類やラベル付けを簡単に行うことができます（注：この関数は、年齢以外の数値変数にも適用できます）。その結果、出力される列は自動的に順序付けられた因子となります。
+**epikit** パッケージでは、`age_categories()`関数を使って、数値列の分類やラベル付けを簡単に行うことができます（注：この関数は、年齢以外の数値変数にも適用できます）。その結果、出力される列は自動的に順序付けられたカテゴリーとなります。
 
 必要な入力は以下の通りです。
 
@@ -1751,33 +1165,29 @@ First, the simplest example:
 
 -   `breakers =` 引数 - 新しいグループのブレークポイントの数値ベクトルを提供する。
 
-まず、最も簡単な例を示します
+まず、最も簡単な例を示します。
 
 ```{r}
 # Simple example
 # 簡単な例
 ################
-pacman::p_load(epikit)                    # load package　#パッケージのロード
+pacman::p_load(epikit)                    　#パッケージのロード
 
 linelist <- linelist %>% 
   mutate(
-    age_cat = age_categories(             # create new column　
+    age_cat = age_categories(             
          　　　　　　　　　　　　　　　　　# 新しい列の作成
       age_years,                            # グループを作るための数値列
       breakers = c(0, 5, 10, 15, 20,        # ブレークポイント
                    30, 40, 50, 60, 70)))
 
-# show table
 # テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
-The break values you specify are by default the lower bounds - that is, they are included in the "higher" group / the groups are "open" on the lower/left side. As shown below, you can add 1 to each break value to achieve groups that are open at the top/right.
-
-指定したブレーク値は、デフォルトでは下限含めます。つまり、「上位」のグループに含まれ、グループが下/左に「開いて」いる状態になります。下図のように、各ブレーク値に1を加えることで、上/右で開いたグループにすることができます。
+　指定したブレーク値は、デフォルトでは下限含めます。つまり、"上位"のグループに含まれ、グループが下/左に"開いて"いる状態になります。下図のように、各ブレーク値に1を加えることで、上/右で開いたグループにすることができます。
 
 ```{r}
-# Include upper ends for the same categories
 # 同じカテゴリーの上端を含める
 ############################################
 linelist <- linelist %>% 
@@ -1786,21 +1196,15 @@ linelist <- linelist %>%
       age_years, 
       breakers = c(0, 6, 11, 16, 21, 31, 41, 51, 61, 71)))
 
-# show table
 #　テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
-You can adjust how the labels are displayed with `separator =`. The default is "-"
-
-You can adjust how the top numbers are handled, with the `ceiling =` arguemnt. To set an upper cut-off set `ceiling = TRUE`. In this use, the highest break value provided is a "ceiling" and a category "XX+" is not created. Any values above highest break value (or to `upper =`, if defined) are categorized as `NA`. Below is an example with `ceiling = TRUE`, so that there is no category of XX+ and values above 70 (the highest break value) are assigned as NA.
-
 `separator =` で、ラベルの表示方法を調整できます。 デフォルトは "-" です。
 
-`ceiling =`で、上位の数字の扱い方を調整できます。上限値を設定するには `ceiling = TRUE` とします。この使用方法では、提供された最も高いブレーク値は「上限」であり、カテゴリー「XX+」は作成されません。ブレーク値の上限（または定義されている場合は上限＝）を超える値は、`NA`に分類されます。以下は、`ceiling = TRUE`の例で、XX+のカテゴリーはなく、70（最も高いブレーク値）を超える値は`NA`として割り当てられます。
+`ceiling =`で、上位の数字の扱い方を調整できます。上限値を設定するには `ceiling = TRUE` とします。この使用方法では、提供された最も高いブレーク値は"上限"であり、カテゴリー"XX+"は作成されません。ブレーク値の上限（または定義されている場合は上限＝）を超える値は、`NA`に分類されます。以下は、`ceiling = TRUE`の例で、XX+のカテゴリーはなく、70（最も高いブレーク値）を超える値は`NA`として割り当てられます。
 
 ```{r}
-# With ceiling set to TRUE
 # 上限をTRUEに設定した場合
 ##########################
 linelist <- linelist %>% 
@@ -1810,18 +1214,11 @@ linelist <- linelist %>%
       breakers = c(0, 5, 10, 15, 20, 30, 40, 50, 60, 70),
       ceiling = TRUE)) # 70 is ceiling, all above become NA
 
-# show table
 # テーブルを表示
 table(linelist$age_cat, useNA = "always")
 ```
 
-Alternatively, instead of `breakers =`, you can provide all of `lower =`, `upper =`, and `by =`:
-
--   `lower =` The lowest number you want considered - default is 0\
--   `upper =` The highest number you want considered\
--   `by =` The number of years between groups
-
-また、ブレーカー＝の代わりに、`lower＝`、`upper＝`、`by＝`のすべてを指定することもできます。
+また、`breakers＝`の代わりに、`lower＝`、`upper＝`、`by＝`のすべてを指定することもできます。
 
 -   `lower =`考慮したい最低の数値 - デフォルトは0
 
@@ -1838,12 +1235,9 @@ linelist <- linelist %>%
       upper = 100,
       by = 10))
 
-# show table
 # テーブルの表示
 table(linelist$age_cat, useNA = "always")
 ```
-
-See the function's Help page for more details (enter `?age_categories` in the R console).
 
 詳細は、この関数のヘルプページをご覧ください（Rコンソールで`?age_categories`と入力してください）。
 
@@ -1851,90 +1245,58 @@ See the function's Help page for more details (enter `?age_categories` in the R 
 
 ### `cut()` {.unnumbered}
 
-`cut()` is a **base** R alternative to `age_categories()`, but I think you will see why `age_categories()` was developed to simplify this process. Some notable differences from `age_categories()` are:
+`cut()`は`age_categories()`に代わる R のベースとなるものですが、この処理を簡単にするために `age_categories()`が開発された理由がわかります。`age_categories()`との注目すべき違いは以下のとおりです。
 
--   You do not need to install/load another package\
--   You can specify whether groups are open/closed on the right/left\
--   You must provide accurate labels yourself\
--   If you want 0 included in the lowest group you must specify this
+-   別のパッケージをインストール/ロードする必要がない。
 
-The basic syntax within `cut()` is to first provide the numeric column to be cut (`age_years`), and then the *breaks* argument, which is a numeric vector `c()` of break points. Using `cut()`, the resulting column is an ordered factor.
+-   グループが右か左に開いているか閉じているかを指定できる。
 
-By default, the categorization occurs so that the right/upper side is "open" and inclusive (and the left/lower side is "closed" or exclusive). This is the opposite behavior from the `age_categories()` function. The default labels use the notation "(A, B]", which means A is not included but B is. **Reverse this behavior by providing the `right = TRUE` argument**.
+-   正確なラベルを自分で用意する必要がある。
 
-Thus, by default, "0" values are excluded from the lowest group, and categorized as `NA`! "0" values could be infants coded as age 0 so be careful! To change this, add the argument `include.lowest = TRUE` so that any "0" values will be included in the lowest group. The automatically-generated label for the lowest category will then be "[A],B]". Note that if you include the `include.lowest = TRUE` argument **and** `right = TRUE`, the extreme inclusion will now apply to the *highest* break point value and category, not the lowest.
+-   一番下のグループに"0"を入れたい場合は、このように指定する必要がある。
 
-You can provide a vector of customized labels using the `labels =` argument. As these are manually written, be very careful to ensure they are accurate! Check your work using cross-tabulation, as described below.
+`cut()`の基本的な構文は、まずカットしたい数値列 `(age_years)`を指定し、次に breaks の引数として分割ポイントの数値ベクトル`c()`を指定します。`cut()`を使用すると、結果として列は順序付けられたカテゴリーとなります。
 
-An example of `cut()` applied to `age_years` to make the new variable `age_cat` is below:
-
-**`cut()`**
-
-`cut()`は`age_categories()`に代わる R のベースとなるものですが、この処理を簡単にするために `age_categories()`が開発された理由がわかると思います。`age_categories()`との注目すべき違いは以下のとおりです。
-
--   別のパッケージをインストール/ロードする必要がない
-
--   グループが右か左に開いているか閉じているかを指定できる
-
--   正確なラベルを自分で用意する必要がある
-
--   一番下のグループに「0」を入れたい場合は、このように指定する必要がある
-
-`cut()`の基本的な構文は、まずカットしたい数値列`(age_years)`を指定し、次にbreaksの引数としてブレークポイントの数値ベクトル`c()`を指定します。`cut()`を使用すると、結果として列は順序付けられた因子となります。
-
-デフォルトでは、右/上側が「オープン」で包括的（左/下側が「クローズ」で排他的）になるように分類されます。これは、`age_categories()`関数とは逆の動作です。デフォルトのラベルでは「(A, B] 」という表記が使われていますが、これは「Aは含まれないがBは含まれる」という意味です。`right = TRUE`という引数を与えることで、この動作を逆にします。
-
-したがって、デフォルトでは、"0 "の値は低いグループから除外され、`NA`に分類されます。"0 "の値は、乳幼児が0歳としてコード化される可能性があるので、注意が必要です。これを変更するには、引数`include.latest = TRUE`を追加して、"0 "の値が最低グループに含まれるようにします。この場合、自動的に生成される低いカテゴリーのラベルは「[A],B]」となります。なお、`include.latest = TRUE`を指定し、かつ`right = TRUE`を指定した場合、含まれるのは最低値ではなく最高値のブレイクポイント値とカテゴリーに適用されます。
+　デフォルトでは、右/上側が"オープン"で包括的（左/下側が"クローズ"で排他的）になるように分類されます。これは、`age_categories()`関数とは逆の動作です。デフォルトのラベルでは"(A, B] "という表記が使われていますが、これは"Aは含まれないがBは含まれる"という意味です。`right = TRUE`という引数を与えることで、この動作を逆にします。したがって、デフォルトでは、"0 "の値は低いグループから除外され、`NA`に分類されます。"0 "の値は、乳幼児が0歳としてコード化される可能性があるので、注意が必要です。これを変更するには、引数 `include.latest = TRUE`を追加して、"0 "の値が最低グループに含まれるようにします。この場合、自動的に作成される低いカテゴリーのラベルは "[A],B]" となります。なお、`include.latest = TRUE`を指定し、かつ`right = TRUE`を指定した場合、含まれるのは最低値ではなく最高値の分割ポイント値とカテゴリーに適用されます。
 
 `labels =` 引数を使って、カスタマイズされたラベルのベクトルを提供することができます。これらは手作業で書かれているので、正確さには十分注意してください。後述するように、クロス集計を用いて作業を確認してください。
 
-age_yearsにcut()を適用して、新しい変数`age_cat`を作成した例を以下に示します。
+`age_years`に`cut()`を適用して、新しい変数`age_cat`を作成した例を以下に示します。
 
 ```{r}
-# Create new variable, by cutting the numeric age variable
-# lower break is excluded but upper break is included in each category
-# 年齢という数字の変数を切り取って新しい変数を作る
-# 下限値のブレイクは除外されるが、上限のブレイクは各カテゴリーに含まれる
+# 年齢という数字の変数を切り取って新しい変数を作る。
+# 下限値のブレイクは除外されるが、上限のブレイクは各カテゴリーに含まれる。
 linelist <- linelist %>% 
   mutate(
     age_cat = cut(
       age_years,
       breaks = c(0, 5, 10, 15, 20,
                  30, 50, 70, 100),
-      include.lowest = TRUE         # include 0 in lowest group
-      ))　　　　　　　　　　　　　　# 一番下のグループに0を入れる
+      include.lowest = TRUE         
+      ))　　　　　　　　　　　　　　# 一番下のグループに0を入れる。
 
-# tabulate the number of observations per group
-# グループごとの観測値の数を集計
+# グループごとの観測値の数を集計。
 table(linelist$age_cat, useNA = "always")
 ```
 
-**Check your work!!!** Verify that each age value was assigned to the correct category by cross-tabulating the numeric and category columns. Examine assignment of boundary values (e.g. 15, if neighboring categories are 10-15 and 16-20).
-
-作業を確認してください!!! 数値列とカテゴリー列をクロス集計して、各年齢値が正しいカテゴリーに割り当てられていることを確認します。境界値の割り当てを検証します（例：隣接するカテゴリーが 10-15 と 16-20 の場合、15）。
+　**作業を確認してください!!!** 数値列とカテゴリー列をクロス集計して、各年齢値が正しいカテゴリーに割り当てられていることを確認します。境界値の割り当てを検証します（例：隣接するカテゴリーが 10-15 と 16-20 の場合、15の値）。
 
 ```{r}
-# Cross tabulation of the numeric and category columns. 
 # 数値列とカテゴリー列のクロス集計。
-table("Numeric Values" = linelist$age_years,   # names specified in table for clarity.　　　　　　　# 分かりやすくするために、表の中に名前を入れています。
+table("Numeric Values" = linelist$age_years,   clarity.　　　　　　　
+      # 分かりやすくするために、表の中に名前を入れる。
       "Categories"     = linelist$age_cat,
-      useNA = "always")                        # don't forget to examine NA values
-　　　　　　　　　　　　　　　　　　　　　　　　# NA値の検証を忘れずに
+      useNA = "always")                       # NA値の検証を忘れずに
 ```
 
-**Re-labeling `NA` values**
+`NA`値の再ラベル付け
 
-You may want to assign `NA` values a label such as "Missing". Because the new column is class Factor (restricted values), you cannot simply mutate it with `replace_na()`, as this value will be rejected. Instead, use `fct_explicit_na()` from **forcats** as explained in the [Factors] page.
-
-[NA]{.ul}値の再ラベル付け
-
-`NA`値に "Missing "などのラベルを付けたい場合があります。新しい列はFactorクラス(制限付き値)なので、この値は拒否されるので、単純に`replace_na()`で変異させることはできません。代わりに、[Factors](https://epirhandbook.com/en/factors.html#factors) ページで説明されているように、`forcats`の `fct_explicit_na()`を使用してください。
+`NA`値に "Missing "などのラベルを付けたい場合があります。新しい列はFactor型(制限付き値)なので、この値は拒否されるので、単純に`replace_na()`で変異させることはできません。代わりに、[Factors](https://epirhandbook.com/en/factors.html#factors) ページで説明されているように、`forcats`の `fct_explicit_na()`を使用してください。
 
 ```{r}
 linelist <- linelist %>% 
   
-  # cut() creates age_cat, automatically of class Factor   
-   # cut()すると、Factorクラスのage_catが自動的に作成される。 
+   # cut()すると、Factor型スのage_catが自動的に作成される。 
   mutate(age_cat = cut(
     age_years,
     breaks = c(0, 5, 10, 15, 20, 30, 50, 70, 100),          
@@ -1942,121 +1304,80 @@ linelist <- linelist %>%
     include.lowest = TRUE,        
     labels = c("0-4", "5-9", "10-14", "15-19", "20-29", "30-49", "50-69", "70-100")),
          
-    # make missing values explicit
     # 欠損値を明示する
     age_cat = fct_explicit_na(
       age_cat,
-      na_level = "Missing age")  # you can specify the label
-  )    # ラベルを指定することができます
+      na_level = "Missing age")  
+  )    # ラベルを指定することができる。
 
-# table to view counts
 # テーブルからビューカウント
 table(linelist$age_cat, useNA = "always")
 ```
 
-**Quickly make breaks and labels**
-
-For a fast way to make breaks and label vectors, use something like below. See the [R basics] page for references on `seq()` and `rep()`.
-
 **切れ目やラベルを素早く作る**
 
-ベクトルの改行やラベルを素早く作成するには、以下のような方法があります。`seq()`や`rep()`については、[basics](https://epirhandbook.com/en/r-basics.html#r-basics)のページを参照してください。
+　ベクトルの改行やラベルを素早く作成するには、以下のような方法があります。`seq()`や`rep()`については、[basics](https://epirhandbook.com/en/r-basics.html#r-basics) のページを参照してください。
 
 ```{r, eval=F}
-# Make break points from 0 to 90 by 5
-# 0から90までのブレークポイントを5で割る
+# 0から90までのブレークポイントを5で割る。
 age_seq = seq(from = 0, to = 90, by = 5)
 age_seq
 
-# Make labels for the above categories, assuming default cut() settings
-# デフォルトのcut()の設定を前提に、上記のカテゴリのラベルを作成する
+# デフォルトのcut()の設定を前提に、上記のカテゴリのラベルを作成する。
 age_labels = paste0(age_seq + 1, "-", age_seq + 5)
 age_labels
 
-# check that both vectors are the same length
-# 両方のベクトルが同じ長さであることを確認する
+# 両方のベクトルが同じ長さであることを確認する。
 length(age_seq) == length(age_labels)
 ```
-
-Read more about `cut()` in its Help page by entering `?cut` in the R console.
-
-### Quantile breaks {.unnumbered}
-
-In common understanding, "quantiles" or "percentiles" typically refer to a value below which a proportion of values fall. For example, the 95th percentile of ages in `linelist` would be the age below which 95% of the age fall.
-
-However in common speech, "quartiles" and "deciles" can also refer to the *groups of data* as equally divided into 4, or 10 groups (note there will be one more break point than group).
-
-To get quantile break points, you can use `quantile()` from the **stats** package from **base** R. You provide a numeric vector (e.g. a column in a dataset) and vector of numeric probability values ranging from 0 to 1.0. The break points are returned as a numeric vector. Explore the details of the statistical methodologies by entering `?quantile`.
-
--   If your input numeric vector has any missing values it is best to set `na.rm = TRUE`\
--   Set `names = FALSE` to get an un-named numeric vector
 
 `cut()`の詳細については、Rコンソールで`?cut`と入力して、ヘルプページを参照してください。
 
 **分位値ブレーク**
 
-一般的な理解では、「クォンタイル」または「パーセンタイル」は、通常、値の割合が下になる値を指します。例えば、`linelist`の年齢の95パーセンタイルは、年齢の95%が該当する年齢になります。
+　一般的な理解では、"クォンタイル"または"パーセンタイル"は、通常、値の割合が下になる値を指します。例えば、`linelist`の年齢の95パーセンタイルは、年齢の95%が該当する年齢になります。
 
-しかし、一般的には、「4分位値」や「10分位値」は、データのグループを4つまたは10のグループに均等に分けたものを指すことがあります（グループよりもブレークポイントが1つ多いことに注意してください）。
+しかし、一般的には、"4分位値"や"10分位値"は、データのグループを4つまたは10のグループに均等に分けたものを指すことがあります（グループよりも分割ポイントが1つ多いことに注意してください）。
 
-分位点を取得するには、Rの基本パッケージである**stats**の`quantile()`を使用します。データセットの列などの数値ベクトルと、0から1.0までの確率の数値ベクトルを指定します。ブレークポイントは、数値ベクトルとして返されます。`?quantile`を入力すると、統計的手法の詳細を調べることができます。
+　分位点を取得するには、Rの基本パッケージである **stats** の `quantile()`を使用します。データセットの列などの数値ベクトルと、0から1.0までの確率の数値ベクトルを指定します。分割ポイントは、数値ベクトルとして返されます。`?quantile`を入力すると、統計的手法の詳細を調べることができます。
 
 入力された数値ベクトルに欠損値がある場合は、`na.rm = TRUE` を設定することをお勧めします。
 
 `names = FALSE`を設定すると、名前のない数値ベクトルが得られます。
 
 ```{r}
-quantile(linelist$age_years,               # specify numeric vector to work on
-         　　　　　　　　　　　　　　　　　# 演算する数値ベクトルを指定
-  probs = c(0, .25, .50, .75, .90, .95),   # specify the percentiles you want
-  　　　　　　　　　　　　　　　　　　　　# 欲しいパーセンタイルを指定する
-  na.rm = TRUE)                            # ignore missing values 
-　　　　　　　　　　　　　　　　　　　　　# 欠損値を無視する 
+quantile(linelist$age_years,           　　# 演算する数値ベクトルを指定。
+  probs = c(0, .25, .50, .75, .90, .95),  # 欲しいパーセンタイルを指定。
+  na.rm = TRUE)                         　# 欠損値を無視する。 
 ```
 
-You can use the results of `quantile()` as break points in `age_categories()` or `cut()`. Below we create a new column `deciles` using `cut()` where the breaks are defined using `quantiles()` on `age_years`. Below, we display the results using `tabyl()` from **janitor** so you can see the percentages (see the [Descriptive tables] page). Note how they are not exactly 10% in each group.
-
-`quantile()`の結果は、`age_categories()`や`cut()`のブレークポイントとして使用できます。以下では、`cut()`を使って新しい列`deciles`を作成し、`age_years`に対して`quantiles()`を使って区切りを定義しています。以下では、**janitor**の`tabyl()`を使って結果を表示し、パーセンテージを見ることができます（[Descriptive tables](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables) ページを参照）。各グループで正確に10%ではないことに注意してください。
+`quantile()`の結果は、`age_categories()`や`cut()`の分割ポイントとして使用できます。以下では、`cut()`を使って新しい列`deciles`を作成し、`age_years`に対して`quantiles()`を使って区切りを定義しています。**janitor**の`tabyl()`を使って結果を表示し、パーセンテージを見ることができます（[Descriptive tables](https://epirhandbook.com/en/descriptive-tables.html#descriptive-tables) ページを参照）。各グループで正確に10%ではないことに注意してください。
 
 ```{r}
-linelist %>%                                # begin with linelist
-      #linelistから開始
-  mutate(deciles = cut(age_years,           # create new column decile as cut() on column age_years　　　　　　　　　　　　　　# 新しい列を作る。 age_years列をcut()でdecileに格納
-    breaks = quantile(                      # define cut breaks using quantile()
-        　　　　　　　　　　　　　　 # quantile()を使ってカットオフを定義する
-      age_years,                               # operate on age_years
-      # age_yearsの操作
-      probs = seq(0, 1, by = 0.1),             # 0.0 to 1.0 by 0.1
-      　　　　　　　　　　　　　　　　　　　　　# 0.0から1.0へ0.1倍
-      na.rm = TRUE),                           # ignore missing values
-    # 欠損値を無視する
-    include.lowest = TRUE)) %>%             # for cut() include age 0
-      #  cut()でage 0を含む
-  janitor::tabyl(deciles)                   # pipe to table to display
-# 表示するテーブルへのパイプ
+linelist %>%                              #linelistから開始。
+  mutate(deciles = cut(age_years,        # 新しい列を作る。 age_years列をcut()でdecileに格納。
+    breaks = quantile(                   # quantile()を使ってカットオフを定義する。
+      age_years,                         # age_yearsの操作。
+      probs = seq(0, 1, by = 0.1),       # 0.0から1.0へ0.1倍。
+      na.rm = TRUE),                  　 # 欠損値を無視する
+    include.lowest = TRUE)) %>%          # cut()でage 0を含む。
+  janitor::tabyl(deciles)                # 表示するテーブルへのパイプ。
 ```
 
-### Evenly-sized groups {.unnumbered}
+### **均等な大きさのグループ** {.unnumbered}
 
-Another tool to make numeric groups is the the **dplyr** function `ntile()`, which attempts to break your data into n *evenly-sized groups* - *but be aware that unlike with `quantile()` the same value could appear in more than one group.* Provide the numeric vector and then the number of groups. The values in the new column created is just group "numbers" (e.g. 1 to 10), not the range of values themselves as when using `cut()`.
-
-**均等な大きさのグループ**
-
-数値グループを作成するもう1つのツールは、**dplyr**の関数`ntile()`で、データをn個の均等な大きさのグループに分けようとします。数値ベクトルとグループの数を指定します。作成される新しい列の値は、グループの「番号」（例：1から10）だけで、`cut()`を使ったときのように値の範囲そのものではありません。
+　数値グループを作成するもう1つのツールは、**dplyr** の関数 `ntile()`で、データをn個の均等な大きさのグループに分けようとします。数値ベクトルとグループの数を指定します。作成される新しい列の値は、グループの"番号"（例：1から10）だけで、`cut()`を使ったときのように値の範囲そのものではありません。
 
 ```{r}
-# make groups with ntile()
-# ntile()でグループを作る
+# ntile()でグループを作る。
 ntile_data <- linelist %>% 
   mutate(even_groups = ntile(age_years, 10))
 
-# make table of counts and proportions by group
-# グループ別の数と割合の表を作る
+# グループ別の数と割合の表を作る。
 ntile_table <- ntile_data %>% 
   janitor::tabyl(even_groups)
   
-# attach min/max values to demonstrate ranges
-# 範囲を示すために最小値と最大値を添付する
+# 範囲を示すために最小値と最大値を添付する。
 ntile_ranges <- ntile_data %>% 
   group_by(even_groups) %>% 
   summarise(
@@ -2064,8 +1385,7 @@ ntile_ranges <- ntile_data %>%
     max = max(age_years, na.rm=T)
   )
 
-# combine and print - note that values are present in multiple groups
-# 結合して表示 - 値が複数のグループに存在することに注意
+# 結合して表示 - 値が複数のグループに存在することに注意。
 left_join(ntile_table, ntile_ranges, by = "even_groups")
 ```
 
@@ -2073,41 +1393,29 @@ left_join(ntile_table, ntile_ranges, by = "even_groups")
 
 ### `case_when()` {.unnumbered}
 
-It is possible to use the **dplyr** function `case_when()` to create categories from a numeric column, but it is easier to use `age_categories()` from **epikit** or `cut()` because these will create an ordered factor automatically.
+**dplyr**の関数 `case_when()`を使って数値列からカテゴリを作成することは可能ですが、**epikit** の`age_categories()`や`cut()`を使った方が、自動的に順序付けられた要素を作成してくれるので、より簡単です。
 
-If using `case_when()`, please review the proper use as described earlier in the Re-code values section of this page. Also be aware that all right-hand side values must be of the same class. Thus, if you want `NA` on the right-side you should either write "Missing" or use the special `NA` value `NA_character_`.
-
-### Add to pipe chain {.unnumbered}
-
-Below, code to create two categorical age columns is added to the cleaning pipe chain:
-
-**`case_when()`**
-
-**dplyr**の関数`case_when()`を使って数値列からカテゴリを作成することは可能ですが、**epikit**の`age_categories()`や`cut()`を使った方が、自動的に順序付けられた要素を作成してくれるので、より簡単です。
-
-`case_when()`を使用する場合は、このページの「値の再コード化」で前述した適切な使用方法を確認してください。また、すべての右辺の値は同じクラスでなければならないことに注意してください。したがって、右辺の値を`NA`にしたい場合は、"Missing "と書くか、特別な`NA`値`NA_character_`を使用する必要があります。
+`case_when()`を使用する場合は、このページの"値の再定義"で前述した適切な使用方法を確認してください。また、すべての右辺の値は同じクラスでなければならないことに注意してください。したがって、右辺の値を`NA`にしたい場合は、"Missing "と書くか、特別な`NA`値`NA_character_`を使用する必要があります。
 
 **パイプチェーンへの追加**
 
 以下では、2つのカテゴリー化された年齢列を作成するコードを、クリーニング・パイプ・チェーンに追加しています。
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
-# パイプチェーン処理 (生データから始まり、クリーニングステップを経てパイプへ)
+# パイプチェーン処理 (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
+
 # パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
-      列名の構文の標準化
+    #列名の構文の標準化
     janitor::clean_names() %>% 
-    
-    # manually re-name columns
+
+     
      # 手動で列名を変更
-           # NEW name             # OLD name
+           # 新しい列名             # 既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
@@ -2116,28 +1424,24 @@ linelist <- linelist_raw %>%
      # 列を削除
     select(-c(row_num, merged_header, x28)) %>% 
   
-    # de-duplicate
      # 重複除去
     distinct() %>% 
 
-    # add column
      # 列の追加
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>%     
 
     # convert class of columns
-     # 列のクラスを変換
+     # 列の型を変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) %>% 
     
-    # add column: delay to hospitalisation
      # 列の追加:入院の遅延
     mutate(days_onset_hosp = as.numeric(date_hospitalisation - date_onset)) %>% 
     
-    # clean values of hospital column
      # 病院の列の値をきれいにする
     mutate(hospital = recode(hospital,
-                      # OLD = NEW
+                      　　　　　　　# 既存 = 新
                       "Mitylira Hopital"  = "Military Hospital",
                       "Mitylira Hospital" = "Military Hospital",
                       "Military Hopital"  = "Military Hospital",
@@ -2149,40 +1453,30 @@ linelist <- linelist_raw %>%
     
     mutate(hospital = replace_na(hospital, "Missing")) %>% 
 
-    # create age_years column (from age and age_unit)
      # age_yearsカラムの作成（from age and age_unit）
     mutate(age_years = case_when(
           age_unit == "years" ~ age,
           age_unit == "months" ~ age/12,
           is.na(age_unit) ~ age,
           TRUE ~ NA_real_)) %>% 
-  
-    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+
      # 上記は、すでに説明した上流側のクリーニング方法です
     ###################################################   
     mutate(
-          # age categories: custom
-         # 年齢別カテゴリー: カスタム
+         # 年齢別カテゴリー: 慣習
           age_cat = epikit::age_categories(age_years, breakers = c(0, 5, 10, 15, 20, 30, 50, 70)),
         
-          # age categories: 0 to 85 by 5s
           # 年齢カテゴリー 0～85歳までの5段階
           age_cat5 = epikit::age_categories(age_years, breakers = seq(0, 85, 5)))
 ```
 
 <!-- ======================================================= -->
 
-## Add rows
-
-### One-by-one {.unnumbered}
-
-Adding rows one-by-one manually is tedious but can be done with `add_row()` from **dplyr**. Remember that each column must contain values of only one class (either character, numeric, logical, etc.). So adding a row requires nuance to maintain this.
-
-**列の追加**
+## **列の追加**
 
 **一行ずつ**
 
-手作業で一行ずつ追加するのは面倒ですが、**dplyr**の`add_row()`を使えば可能です。各列は1つのクラス（文字、数値、論理など）の値のみを含む必要があることを覚えておいてください。そのため、行の追加にはこれを維持するためのニュアンスが必要です。
+　手作業で一行ずつ追加するのは面倒ですが、**dplyr** の `add_row()`を使えば可能です。各列は1つの型（factor型、numeric型、logic型など）の値のみを含む必要があることを覚えておいてください。そのため、行の追加にはこれを維持するための微妙な差異が必要です。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
@@ -2193,33 +1487,19 @@ linelist <- linelist %>%
           .before = 2)
 ```
 
-Use `.before` and `.after.` to specify the placement of the row you want to add. `.before = 3` will put the new row before the current 3rd row. The default behavior is to add the row to the end. Columns not specified will be left empty (`NA`).
-
-The new *row number* may look strange ("...23") but the row numbers in the pre-existing rows *have* changed. So if using the command twice, examine/test the insertion carefully.
-
-If a class you provide is off you will see an error like this:
-
-    Error: Can't combine ..1$infection date <date> and ..2$infection date <character>.
-
-(when inserting a row with a date value, remember to wrap the date in the function `as.Date()` like `as.Date("2020-10-10")`).
-
 `.before`と`.after.`を使って、追加したい行の配置を指定します。`.before = 3`は、新しい行を現在の3行目の前に配置します。デフォルトの動作では、行を最後に追加します。指定されていない列は空欄（NA）になります。
 
-新しい行番号は奇妙に見えるかもしれませんが（「...23」）、既存の行の行番号は変更されています。そのため、このコマンドを2回使用する場合は、挿入を慎重に検討/テストしてください。
+　新しい行番号は奇妙に見えるかもしれませんが（"...23"）、既存の行の行番号は変更されています。そのため、このコマンドを2回使用する場合は、挿入を慎重に検討/テストしてください。
 
 用意したクラスが外れている場合は、以下のようなエラーが表示されます。
 
-Error: Can't combine ..1\$infection date \<date\> and ..2\$infection date \<character\>.
+    Error: Can't combine ..1$infection date <date> and ..2$infection date <character>.
 
-(日付の値を持つ行を挿入する際には、as.Date("2020-10-10")のようにas.Date()という関数で日付をラップすることを忘れないでください)。
-
-### Bind rows {.unnumbered}
-
-To combine datasets together by binding the rows of one dataframe to the bottom of another data frame, you can use `bind_rows()` from **dplyr**. This is explained in more detail in the page [Joining data].
+(日付の値を持つ行を挿入する際には、as.Date("2020-10-10")のようにas.Date()という関数で日付を囲うことを忘れないでください)。
 
 **行の結合**
 
-あるデータフレームの行を別のデータフレームの下部に結合してデータセットを結合するには、**dplyr**の`bind_rows()`を使用します。これについては、[「データの結合」](https://epirhandbook.com/en/joining-data.html#joining-data)のページで詳しく説明しています。
+あるデータフレームの行を別のデータフレームの下部に結合してデータセットを結合するには、**dplyr**の `bind_rows()`を使用します。これについては、[Joining data](https://epirhandbook.com/en/joining-data.html#joining-data) のページで詳しく説明しています。
 
 <!-- ======================================================= -->
 
@@ -2227,166 +1507,136 @@ To combine datasets together by binding the rows of one dataframe to the bottom 
 
 <!-- ======================================================= -->
 
-## Filter rows
+## **行のフィルタリング**
 
-A typical cleaning step after you have cleaned the columns and re-coded values is to *filter* the data frame for specific rows using the **dplyr** verb `filter()`.
+　列を整理し、値を再定義した後の典型的なクリーニングステップは、**dplyr**の動詞 `filter()`を使ってデータフレームの特定の行をフィルタリングすることです。
 
-Within `filter()`, specify the logic that must be `TRUE` for a row in the dataset to be kept. Below we show how to filter rows based on simple and complex logical conditions.
-
-**行のフィルタリング**
-
-列を整理し、値を再コード化した後の典型的なクリーニングステップは、**dplyr**の動詞`filter()`を使ってデータフレームの特定の行をフィルタリングすることです。
-
-`filter()`では、データセット内のある行を保持するために`TRUE`でなければならない論理を指定します。以下では、単純な論理条件と複雑な論理条件に基づいて行をフィルタリングする方法を示します。
+`filter()`では、データセット内のある行を抜き出すために`TRUE`でなければならない論理を指定します。以下では、単純な論理条件と複雑な論理条件に基づいて行をフィルタリングする方法を示します。
 
 <!-- ======================================================= -->
 
-### Simple filter {.unnumbered}
+### **単純なフィルタ** {.unnumbered}
 
-This simple example re-defines the dataframe `linelist` as itself, having filtered the rows to meet a logical condition. **Only the rows where the logical statement within the parentheses evaluates to `TRUE` are kept.**
+　この単純な例では、論理的な条件を満たすように行をフィルタリングした上で、データフレームのラインリストを自分自身として再定義します。括弧内の論理条件が評価されて`TRUE`となる行のみが保持されます。
 
-In this example, the logical statement is `gender == "f"`, which is asking whether the value in the column `gender` is equal to "f" (case sensitive).
-
-Before the filter is applied, the number of rows in `linelist` is `nrow(linelist)`.
-
-**単純なフィルタ**
-
-この単純な例では、論理的な条件を満たすように行をフィルタリングした上で、データフレームのラインリストを自分自身として再定義します。括弧内の論理文が評価されて`TRUE`となる行のみが保持されます。
-
-この例では、論理文は`gender == "f "`で、列`gender`の値が`"f "`に等しいかどうかを問うています（大文字小文字を区別します）。
+この例では、論理条件は`gender == "f "`で、列`gender`の値が`"f "`に等しいかどうかを問いています（大文字小文字を区別します）。
 
 フィルタを適用する前の `linelist`の行数は `nrow(linelist)`です。
 
 ```{r, eval=F}
 linelist <- linelist %>% 
-  filter(gender == "f")   # keep only rows where gender is equal to "f"
+  filter(gender == "f")   # 性別が "f "である行だけを残す。
 ```
-
-After the filter is applied, the number of rows in `linelist` is `linelist %>% filter(gender == "f") %>% nrow()`.
 
 フィルタを適用した後の `linelist`の行数は`linelist %>% filter(gender == "f") %>% nrow()` となります。
 
-### Filter out missing values {.unnumbered}
+### **欠損値のフィルタリング** {.unnumbered}
 
-It is fairly common to want to filter out rows that have missing values. Resist the urge to write `filter(!is.na(column) & !is.na(column))` and instead use the **tidyr** function that is custom-built for this purpose: `drop_na()`. If run with empty parentheses, it removes rows with *any* missing values. Alternatively, you can provide names of specific columns to be evaluated for missingness, or use the "tidyselect" helper functions described [above](#clean_tidyselect).
-
-**欠損値のフィルタリング**
-
-欠損値のある行をフィルタリングしたいというのはよくあることです。`filter(!is.na(column) & !is.na(column))`と書きたい気持ちを抑えて、代わりにこの目的のためにカスタマイズされた**tidyr**の関数、`drop_na()`を使いましょう。空の括弧をつけて実行すると、欠損値のある行を削除します。あるいは、欠落を評価する特定の列の名前を指定したり、[上述の](https://epirhandbook.com/en/cleaning-data-and-core-functions.html#clean_tidyselect)"tidyselect "ヘルパー関数を使用することもできます。
+　欠損値のある行をフィルタリングしたいというのはよくあることです。`filter(!is.na(column) & !is.na(column))`と書きたい気持ちを抑えて、代わりにこの目的のためにカスタマイズされた **tidyr** の関数、`drop_na()`を使いましょう。空の括弧をつけて実行すると、欠損値のある行を削除します。あるいは、欠落を評価する特定の列の名前を指定したり、[上述の](https://epirhandbook.com/en/cleaning-data-and-core-functions.html#clean_tidyselect)"tidyselect "ヘルパー関数を使用することもできます。
 
 ```{r, eval=F}
 linelist %>% 
-  drop_na(case_id, age_years)  # drop rows with missing values for case_id or age_year
-# case_idやage_yearsの値が欠損している行を削除する
+  drop_na(case_id, age_years)  
+# case_idやage_yearsの値が欠損している行を削除する。
 ```
 
-See the page on [Missing data] for many techniques to analyse and manage missingness in your data.
+　データの欠落を分析・管理するための多くのテクニックについては、[Missing data](https://epirhandbook.com/en/missing-data.html#missing-data) のページをご覧ください。
 
-データの欠落を分析・管理するための多くのテクニックについては、[「欠損データ」](https://epirhandbook.com/en/missing-data.html#missing-data)のページをご覧ください。
+### **行番号によるフィルタリング** {.unnumbered}
 
-### Filter by row number {.unnumbered}
+　データフレームや Tibble では、各行には通常"行番号"があり、R Viewerで見ると最初の列の左側に表示されます。これは、それ自体はデータの真の列ではありませんが、`filter()`のステートメントで使用することができます。
 
-In a data frame or tibble, each row will usually have a "row number" that (when seen in R Viewer) appears to the left of the first column. It is not itself a true column in the data, but it can be used in a `filter()` statement.
-
-To filter based on "row number", you can use the **dplyr** function `row_number()` with open parentheses as part of a logical filtering statement. Often you will use the `%in%` operator and a range of numbers as part of that logical statement, as shown below. To see the *first* N rows, you can also use the special **dplyr** function `head()`.
-
-**行番号によるフィルタリング**
-
-データフレームやTibbleでは、各行には通常「行番号」があり、R Viewerで見ると最初の列の左側に表示されます。これは、それ自体はデータの真の列ではありませんが、`filter()`ステートメントで使用することができます。
-
-「行番号」に基づいてフィルタリングするには、論理的なフィルタリング文の一部として、**dplyr**の関数`row_number()`を開いた括弧で囲んで使用します。多くの場合、以下のように、論理的なステートメントの一部として、`%in%`演算子と数値の範囲を使用します。最初のN行を表示するには、特別な**dplyr**関数`head()`を使用することもできます。
+"行番号"に基づいてフィルタリングするには、論理的なフィルタリング文の一部として、**dplyr**の関数`row_number()`を開いた括弧で囲んで使用します。多くの場合、以下のように、論理的なステートメントの一部として、`%in%`演算子と数値の範囲を使用します。最初のN行を表示するには、特別な **dplyr** 関数 `head()`を使用することもできます。
 
 ```{r, eval=F}
-# View first 100 rows
-# 最初の100行を表示
-linelist %>% head(100)     # or use tail() to see the n last rows
-# またはtail()を使って最後のn行を見る
+# 最初の100行を表示。
+linelist %>% head(100)     
+# またはtail()を使って最後のn行を見る。
 
-# Show row 5 only
-# 5列目のみ表示
+# 5列目のみ表示。
 linelist %>% filter(row_number() == 5)
 
-# View rows 2 through 20, and three specific columns
-# 2行目から20行目までと、3つの特定の列を見る
+# 2行目から20行目までと、3つの特定の列を見る。
 linelist %>% filter(row_number() %in% 2:20) %>% select(date_onset, outcome, age)
 ```
 
-You can also convert the row numbers to a true column by piping your data frame to the **tibble** function `rownames_to_column()` (do not put anything in the parentheses).
-
-また、データフレームをtibble関数`rownames_to_column()`にパイプすることで、行番号を真の列に変換することができます（括弧の中には何も入れないでください）。
+また、データフレームを tibble関数 `rownames_to_column()`にパイプすることで、行番号を真の列に変換することができます（括弧の中には何も入れないでください）。
 
 <!-- ======================================================= -->
 
-### Complex filter {.unnumbered}
+### **複雑なフィルタ** {.unnumbered}
 
-More complex logical statements can be constructed using parentheses `( )`, OR `|`, negate `!`, `%in%`, and AND `&` operators. An example is below:
+　括弧（`）`、OR`｜`、ネゲート`！`、`％in％`、AND`＆`の各演算子を使って、より複雑な論理条件を作ることができます。その例を以下に示します。
 
-Note: You can use the `!` operator in front of a logical criteria to negate it. For example, `!is.na(column)` evaluates to true if the column value is *not* missing. Likewise `!column %in% c("a", "b", "c")` evaluates to true if the column value is *not* in the vector.
+注： 論理的条件の前に`!` 演算子を使うと、それを否定することができます。例えば、`！is.na(column)`は、列の値が欠損していない場合に真と評価されます。同様に、`！column %in% c("a", "b", "c")`は、列の値がベクトルに含まれていない場合に真と評価されます。
 
-#### Examine the data {.unnumbered}
+#### **データを調べる** {.unnumbered}
 
-Below is a simple one-line command to create a histogram of onset dates. See that a second smaller outbreak from 2012-2013 is also included in this raw dataset. **For our analyses, we want to remove entries from this earlier outbreak.**
+　以下は、発症日のヒストグラムを作成するためのシンプルな1のコマンドです。2012～2013年に発生した2つ目の小規模なアウトブレイクもこの未加工データセットに含まれていることがわかります。今回の分析では、この初期アウトブレイクを削除したいと思います。
 
 ```{r, out.width = "50%"}
 hist(linelist$date_onset, breaks = 50)
 ```
 
-#### How filters handle missing numeric and date values {.unnumbered}
+**数値や日付の欠損をフィルターで処理する方法**
 
-Can we just filter by `date_onset` to rows after June 2013? **Caution! Applying the code `filter(date_onset > as.Date("2013-06-01")))` would remove any rows in the later epidemic with a missing date of onset!**
+　date_onsetで2013年6月以降の行をフィルタリングすることはできるでしょうか。注意してください。`filter(date_onset > as.Date("2013-06-01")))`というコードを適用すると、発症日が欠落している後期流行の行がすべて削除されてしまいます!
 
-[***DANGER:*** Filtering to greater than (\>) or less than (\<) a date or number can remove any rows with missing values (`NA`)! This is because `NA` is treated as infinitely large and small.]{style="color: red;"}
+[要注意：日付や数値の"大"（\>）または"小"（\<）にフィルタリングすると、欠損値（NA）のある行が削除されてしまいます。これは、NAが無限に大きい、または小さいものとして扱われるためです。]{style="color: red;"}
 
-*(See the page on [Working with dates] for more information on working with dates and the package **lubridate**)*
+(日付とパッケージ**lubridate**を使った作業については、[*Working with dates*](https://epirhandbook.com/en/working-with-dates.html#working-with-dates-1)のページを参照してください）。
 
-#### Design the filter {.unnumbered}
+#### フィルターの設計 {.unnumbered}
 
-Examine a cross-tabulation to make sure we exclude only the correct rows:
+　クロス集計を見て、正しい行だけを除外していることを確認して下さい。
 
 ```{r}
-table(Hospital  = linelist$hospital,                     # hospital name
-      YearOnset = lubridate::year(linelist$date_onset),  # year of date_onset
-      useNA     = "always")                              # show missing values
+table(Hospital  = linelist$hospital,                     #病院名
+      YearOnset = lubridate::year(linelist$date_onset),  #発症した年
+      useNA     = "always")                              #欠損値の表示
 ```
 
-What other criteria can we filter on to remove the first outbreak (in 2012 & 2013) from the dataset? We see that:
+　データセットから最初の発生（2012年と2013年）を除外するために、他にどのような基準でフィルタリングできるでしょうか。次のことがわかりました。
 
--   The first epidemic in 2012 & 2013 occurred at Hospital A, Hospital B, and that there were also 10 cases at Port Hospital.\
--   Hospitals A & B did *not* have cases in the second epidemic, but Port Hospital did.
+-   2012年と2013年に発生した最初の流行は、A病院とB病院で発生し、ポート病院でも10件の症例がいます。
 
-We want to exclude:
+-   2回目の流行では、A病院とB病院には患者がいませんでしたが、ポート病院には患者がいました。
 
--   The `nrow(linelist %>% filter(hospital %in% c("Hospital A", "Hospital B") | date_onset < as.Date("2013-06-01")))` rows with onset in 2012 and 2013 at either hospital A, B, or Port:
+除外したい項目：
 
-    -   Exclude `nrow(linelist %>% filter(date_onset < as.Date("2013-06-01")))` rows with onset in 2012 and 2013
-    -   Exclude `nrow(linelist %>% filter(hospital %in% c('Hospital A', 'Hospital B') & is.na(date_onset)))` rows from Hospitals A & B with missing onset dates\
-    -   Do **not** exclude `nrow(linelist %>% filter(!hospital %in% c('Hospital A', 'Hospital B') & is.na(date_onset)))` other rows with missing onset dates.
+-   病院A、B、Portのいずれかで2012年と2013年に発症した`nrow(linelist %>% filter(hospital %in% c("Hospital A", "Hospital B") | date_onset < as.Date("2013-06-01")))` の行。
 
-We start with a linelist of nrow(linelist)\`. Here is our filter statement:
+-   2012年および2013年に発症した`nrow(linelist %>% filter(date_onset < as.Date("2013-06-01"))` の行。
+
+-   `nrow(linelist %>% filter(hospital %in% c('Hospital A', 'Hospital B') & is.na(date_onset)))`発症日が欠落している病院AおよびBの行。
+
+-   `nrow(linelist %>% filter(!hospital %in% c('Hospital A', 'Hospital B') & is.na(date_onset))`発症日が見つからない他の行。
+
+nrow(linelist)\`のラインリストを用意から始めます。これがフィルター文です。
 
 ```{r}
 linelist <- linelist %>% 
-  # keep rows where onset is after 1 June 2013 OR where onset is missing and it was a hospital OTHER than Hospital A or B
+ # 発症日が2013年6月1日以降の行、または発症日が不明でA病院またはB病院以外の病院であった行を残す。
   filter(date_onset > as.Date("2013-06-01") | (is.na(date_onset) & !hospital %in% c("Hospital A", "Hospital B")))
 
 nrow(linelist)
 ```
 
-When we re-make the cross-tabulation, we see that Hospitals A & B are removed completely, and the 10 Port Hospital cases from 2012 & 2013 are removed, and all other values are the same - just as we wanted.
+　クロス集計を作り直すと、A病院とB病院が完全に取り除かれ、2012年と2013年の港区の病院の10件が取り除かれ、その他の値はすべて同じになっていることがわかります。
 
 ```{r}
-table(Hospital  = linelist$hospital,                     # hospital name
-      YearOnset = lubridate::year(linelist$date_onset),  # year of date_onset
-      useNA     = "always")                              # show missing values
+table(Hospital  = linelist$hospital,                     # 病院名
+      YearOnset = lubridate::year(linelist$date_onset),  # 発症した年
+      useNA     = "always")                              # 欠損値の表示
 ```
 
-Multiple statements can be included within one filter command (separated by commas), or you can always pipe to a separate filter() command for clarity.
+　複数のステートメントを1つのfilterコマンドの中に含めることができます（カンマで区切ってください）。また、分かりやすくするために、常に別のfilter()コマンドにパイプすることもできます。
 
-*Note: some readers may notice that it would be easier to just filter by `date_hospitalisation` because it is 100% complete with no missing values. This is true. But `date_onset` is used for purposes of demonstrating a complex filter.*
+注：読者の中には、`date_hospitalisation`でフィルタリングする方が簡単だと思われる方もいるかもしれません。これは事実です。しかし、`date_onset`は複雑なフィルタを実際に見せる目的で使用されています。
 
-### Standalone {.unnumbered}
+### 独立型 {.unnumbered}
 
-Filtering can also be done as a stand-alone command (not part of a pipe chain). Like other **dplyr** verbs, in this case the first argument must be the dataset itself.
+　フィルタリングは、（パイプチェーンの一部ではなく）独立したコマンドとしても実行できます。他の`dplyr`の動詞と同様に、この場合、第1引数はデータセットそのものでなければなりません。
 
 ```{r, eval=F}
 # dataframe <- filter(dataframe, condition(s) for rows to keep)
@@ -2394,7 +1644,7 @@ Filtering can also be done as a stand-alone command (not part of a pipe chain). 
 linelist <- filter(linelist, !is.na(case_id))
 ```
 
-You can also use **base** R to subset using square brackets which reflect the [rows, columns] that you want to retain.
+**base** Rを使って、保持したい[行、列]を反映した角括弧を使ってサブセットすることもできます。
 
 ```{r, eval=F}
 # dataframe <- dataframe[row conditions, column conditions] (blank means keep all)
@@ -2402,21 +1652,21 @@ You can also use **base** R to subset using square brackets which reflect the [r
 linelist <- linelist[!is.na(case_id), ]
 ```
 
-### Quickly review records {.unnumbered}
+### **レコードを素早く確認** {.unnumbered}
 
-Often you want to quickly review a few records, for only a few columns. The **base** R function `View()` will print a data frame for viewing in your RStudio.
+　数列だけのレコードを素早く確認したいことがよくあります。R の基本関数である `View()`は、RStudio で表示できるようにデータフレームを表示します。
 
-View the linelist in RStudio:
+RStudio でラインリストを表示します。
 
 ```{r, eval=F}
 View(linelist)
 ```
 
-Here are two examples of viewing specific cells (specific rows, and specific columns):
+特定のセル（特定の行、特定の列）を表示する2つの例を紹介します。
 
-**With dplyr functions `filter()` and `select()`:**
+**dplyrの関数**`filter()`と`select()`を使用します。
 
-Within `View()`, pipe the dataset to `filter()` to keep certain rows, and then to `select()` to keep certain columns. For example, to review onset and hospitalization dates of 3 specific cases:
+`View()`の中で、データセットを　`filter()`にパイプして特定の行を残し、`select()`にパイプして特定の列を残します。例えば、3つの特定のケースの発症日と入院日を確認する場合です。
 
 ```{r, eval=F}
 View(linelist %>%
@@ -2424,49 +1674,50 @@ View(linelist %>%
        select(date_onset, date_hospitalisation))
 ```
 
-You can achieve the same with **base** R syntax, using brackets `[ ]` to subset you want to see.
+Rの基本的な構文でも同じことができ、見たいサブセットには[ ]を使ってください。
 
 ```{r, eval=F}
 View(linelist[linelist$case_id %in% c("11f8ea", "76b97a", "47a5f5"), c("date_onset", "date_hospitalisation")])
 ```
 
-#### Add to pipe chain {.unnumbered}
+パイプチェーンに追加
 
 ```{r}
-# CLEANING 'PIPE' CHAIN (starts with raw data and pipes it through cleaning steps)
+# パイプチェーン処理 (未加工データから始まり、クリーニングステップを経てパイプに送られる)
 ##################################################################################
 
-# begin cleaning pipe chain
+
+# パイプチェーンのクリーニング開始
 ###########################
 linelist <- linelist_raw %>%
     
-    # standardize column name syntax
+     #列名構文の標準化
     janitor::clean_names() %>% 
     
-    # manually re-name columns
-           # NEW name             # OLD name
+    # 手動で列名を変更
+           #新しい列名            　　# 既存の列名
     rename(date_infection       = infection_date,
            date_hospitalisation = hosp_date,
            date_outcome         = date_of_outcome) %>% 
     
-    # remove column
+    # 列の除去
     select(-c(row_num, merged_header, x28)) %>% 
   
-    # de-duplicate
+    # 重複除去
     distinct() %>% 
 
-    # add column
+    # 列を追加する
     mutate(bmi = wt_kg / (ht_cm/100)^2) %>%     
 
-    # convert class of columns
+    # 列のクラスを変換
     mutate(across(contains("date"), as.Date), 
            generation = as.numeric(generation),
            age        = as.numeric(age)) %>% 
     
-    # add column: delay to hospitalisation
+    # 列の追加: 入院までの時間
     mutate(days_onset_hosp = as.numeric(date_hospitalisation - date_onset)) %>% 
     
-    # clean values of hospital column
+     # 病院列の値を整える
     mutate(hospital = recode(hospital,
                       # OLD = NEW
                       "Mitylira Hopital"  = "Military Hospital",
@@ -2481,6 +1732,7 @@ linelist <- linelist_raw %>%
     mutate(hospital = replace_na(hospital, "Missing")) %>% 
 
     # create age_years column (from age and age_unit)
+      # age_years 列を作成 (ageとage_unit列から)
     mutate(age_years = case_when(
           age_unit == "years" ~ age,
           age_unit == "months" ~ age/12,
@@ -2488,19 +1740,20 @@ linelist <- linelist_raw %>%
           TRUE ~ NA_real_)) %>% 
   
     mutate(
-          # age categories: custom
+         # 年齢別カテゴリー: 慣例
           age_cat = epikit::age_categories(age_years, breakers = c(0, 5, 10, 15, 20, 30, 50, 70)),
         
-          # age categories: 0 to 85 by 5s
-          age_cat5 = epikit::age_categories(age_years, breakers = seq(0, 85, 5))) %>% 
+　　　# 年齢カテゴリー 0～85歳までの5段階
+          age_cat5 = epikit::age_categories(age_years, breakers = seq(0, 85, 5)))%>% 
     
-    # ABOVE ARE UPSTREAM CLEANING STEPS ALREADY DISCUSSED
+      # 上記は既に説明した上流側のクリーニング方法です。
+   
     ###################################################
     filter(
-          # keep only rows where case_id is not missing
+         # case_idが欠落していない行のみを残す
           !is.na(case_id),  
           
-          # also filter to keep only the second outbreak
+           #2回目の感染発生分だけを残すようにフィルターをかける
           date_onset > as.Date("2013-06-01") | (is.na(date_onset) & !hospital %in% c("Hospital A", "Hospital B")))
 ```
 
@@ -2510,26 +1763,27 @@ linelist <- linelist_raw %>%
 
 <!-- ======================================================= -->
 
-## Row-wise calculations
+## **行単位の計算**
 
-If you want to perform a calculation within a row, you can use `rowwise()` from **dplyr**. See this online vignette on [row-wise calculations](https://cran.r-project.org/web/packages/dplyr/vignettes/rowwise.html).\
-For example, this code applies `rowwise()` and then creates a new column that sums the number of the specified symptom columns that have value "yes", for each row in the linelist. The columns are specified within `sum()` by name within a vector `c()`. `rowwise()` is essentially a special kind of `group_by()`, so it is best to use `ungroup()` when you are done (page on [Grouping data]).
+　行内で計算を行いたい場合は、**dplyr** の`rowwise()`を利用することができます。例えば、このコードでは `rowwise()`を適用し、行リストの各行について、値が"はい"である指定された症状の列の数を合計する新しい列を作成しています。`rowwise()`は本質的に特別な種類の `group_by()`であるため、終わったら `ungroup()を`使うのがベストです（ [Grouping data](https://epirhandbook.com/en/grouping-data.html#grouping-data) ページを参照）。
 
 ```{r,}
 linelist %>%
   rowwise() %>%
   mutate(num_symptoms = sum(c(fever, chills, cough, aches, vomit) == "yes")) %>% 
   ungroup() %>% 
-  select(fever, chills, cough, aches, vomit, num_symptoms) # for display
+  select(fever, chills, cough, aches, vomit, num_symptoms) # 表示のため
 ```
 
-As you specify the column to evaluate, you may want to use the "tidyselect" helper functions described in the `select()` section of this page. You just have to make one adjustment (because you are not using them within a **dplyr** function like `select()` or `summarise()`).
+　評価する列を指定する際に、このページの `select()`セクションで説明されている "tidyselect" ヘルパー関数を使用したいと思うかもしれません。1つだけ調整が必要です（ `select()`や `summarise()`のような dplyr関数内で使用していないため）。
 
-Put the column-specification criteria within the **dplyr** function `c_across()`. This is because `c_across` ([documentation](https://dplyr.tidyverse.org/reference/c_across.html)) is designed to work with `rowwise()` specifically. For example, the following code:
+　列指定の基準を **dply**r 関数の`c_across()`の中に入れます。これは、`c_across（`[documentation](https://dplyr.tidyverse.org/reference/c_across.html)`）`が、特に`rowwise()`と連動するように設計されているからです。例えば、次のようなコードです。
 
--   Applies `rowwise()` so the following operation (`sum()`) is applied within each row (not summing entire columns)\
--   Creates new column `num_NA_dates`, defined for each row as the number of columns (with name containing "date") for which `is.na()` evaluated to TRUE (they are missing data).\
--   `ungroup()` to remove the effects of `rowwise()` for subsequent steps
+-   `rowwise()`を適用して、各行の中で以下の演算(`sum()`)が適用されます(列全体の合計ではありません)。
+
+-   新しい列 `num_NA_dates` を作成します。これは、各行について、`is.na()` が TRUE と評価された列 (名前が "date" を含むもの) の数として定義されます (これらはデータが欠損しています)。
+
+-   `ungroup()`により、後続のステップで `rowwise()`の影響を取り除きます。
 
 ```{r,}
 linelist %>%
@@ -2539,7 +1793,7 @@ linelist %>%
   select(num_NA_dates, contains("date")) # for display
 ```
 
-You could also provide other functions, such as `max()` to get the latest or most recent date for each row:
+また、max() のような他の関数を用意して、各行の最新または直近の日付を取得することもできます。
 
 ```{r}
 linelist %>%
@@ -2549,17 +1803,17 @@ linelist %>%
   select(latest_date, contains("date"))  # for display
 ```
 
-## Arrange and sort
+## **アレンジとソート**
 
-Use the **dplyr** function `arrange()` to sort or order the rows by column values.
+**dplyr**の関数 `arrange()`を使って、列の値で行を並べ替えたり、順番に並べたりします。
 
-Simple list the columns in the order they should be sorted on. Specify `.by_group = TRUE` if you want the sorting to to first occur by any *groupings* applied to the data (see page on [Grouping data]).
+　単純に、ソートされるべき順に列を列挙します。データに適用されたグループ化によって最初にソートを行いたい場合は、`.by_group = TRUE` を指定します（ [Grouping data](https://epirhandbook.com/en/grouping-data.html#grouping-data) のページを参照）。
 
-By default, column will be sorted in "ascending" order (which applies to numeric and also to character columns). You can sort a variable in "descending" order by wrapping it with `desc()`.
+デフォルトでは、列は "昇順 "でソートされます（これは、数字や文字の列にも適用されます）。変数を`desc()`で囲むと、"降順"でソートできます。
 
-Sorting data with `arrange()` is particularly useful when making [Tables for presentation], using `slice()` to take the "top" rows per group, or setting factor level order by order of appearance.
+`arrange()`によるデータのソートは、[プレゼンテーション用のテーブル]を作成するときや、`slice()`を使ってグループごとに"上位"の行を取り出すとき、あるいはファクタレベルの順序を出現順に設定するときなどに特に便利です。
 
-For example, to sort the our linelist rows by `hospital`, then by `date_onset` in descending order, we would use:
+例えば、linelistの行を病院別にソートし、次にdate_onsetで降順にソートするには、次のようにします。
 
 ```{r, eval=F}
 linelist %>% 
@@ -2569,7 +1823,7 @@ linelist %>%
 ```{r, echo=F}
 # HIDDEN
 #
-# convert one remaining old outbreak row to missing for ease
+# 残りの既存の感染発生行を簡単にmissingに変換します。
 linelist <- linelist %>% 
   mutate(
     date_hospitalisation = case_when(
@@ -2585,13 +1839,14 @@ linelist <- linelist %>%
 ```
 
 ```{r echo=F}
-# REARRANGE COLUMNS FOR EXPORT
+# エクスポート用に列を再配置
 linelist <- linelist %>% 
   select(case_id:gender, age, age_unit, age_years, age_cat, age_cat5, everything())
 ```
 
 ```{r echo=F}
-# EXPORT CLEANED LINELIST FILE TO "DATA" FOLDER
+
+# クリーニングされたラインリストファイルを "data "フォルダにエクスポートする
 rio::export(linelist, here::here("data", "case_linelists", "linelist_cleaned.xlsx"))
 rio::export(linelist, here::here("data", "case_linelists", "linelist_cleaned.rds"))
 ```
